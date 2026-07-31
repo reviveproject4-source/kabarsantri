@@ -40,7 +40,7 @@ export const MOCK_USERS_LIST: UserAccount[] = [
     schoolId: 'sch-01',
     classId: 'kelas-b',
     avatarEmoji: '👩‍🏫',
-    lastInputDate: '2026-07-20' // >7 hari -> Lampu Merah (Reminder Active!)
+    lastInputDate: '2026-07-20' // >7 hari -> Lampu Merah
   },
   {
     id: 'u-kepsek-1',
@@ -128,317 +128,405 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-md space-y-6">
-      {/* Switcher Account Bar */}
-      <div className="bg-indigo-900 text-white p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-3">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl p-1 bg-white/10 rounded-xl">{currentUser.avatarEmoji || '👤'}</span>
+    <div className="space-y-6">
+      {/* 4 LEVEL ROLE OVERVIEW MATRIX HEADER */}
+      <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-blue-900 text-white p-6 rounded-3xl shadow-xl space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-purple-700/50 pb-4">
           <div>
-            <span className="text-[10px] font-black uppercase text-amber-300 tracking-wider">Role Aktif: {currentUser.role.replace('_', ' ').toUpperCase()}</span>
-            <h3 className="text-lg font-black">{currentUser.nama}</h3>
-            <p className="text-xs text-indigo-200">{currentUser.email} • Tenant ID: {currentUser.tenantId}</p>
+            <span className="text-xs uppercase font-extrabold text-amber-300 tracking-wider">Sistem Keamanan & Hak Akses CeritaAnanda</span>
+            <h2 className="text-3xl font-black flex items-center gap-2">
+              <span>👥</span> Panel Manajemen 4 Level Role & Akses
+            </h2>
+            <p className="text-purple-200 text-xs mt-1">Pilih peran akun di bawah ini untuk mensimulasikan dan menguji tingkat hak akses.</p>
+          </div>
+
+          <div className="bg-white/10 p-2.5 rounded-2xl border border-white/20 flex items-center gap-3">
+            <span className="text-3xl">{currentUser.avatarEmoji || '👤'}</span>
+            <div>
+              <span className="text-[10px] uppercase font-bold text-amber-300">Role Aktif Saat Ini:</span>
+              <div className="font-black text-sm text-white capitalize">{currentUser.role.replace('_', ' ')}</div>
+            </div>
           </div>
         </div>
 
-        {/* MOCK LOGIN SWITCHER */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-amber-200">Ganti Role:</span>
-          <select
-            value={currentUser.id}
-            onChange={(e) => {
-              const u = MOCK_USERS_LIST.find((x) => x.id === e.target.value);
-              if (u) {
-                soundFx.playPop();
-                onSwitchUserRole(u);
-              }
+        {/* 4 CARDS MATRIX DISKRIPSI HAK AKSES */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+          {/* ROLE 1: GURU */}
+          <div
+            onClick={() => {
+              const u = MOCK_USERS_LIST.find((x) => x.role === 'guru')!;
+              soundFx.playSuccess();
+              onSwitchUserRole(u);
             }}
-            className="bg-indigo-950 border border-indigo-700 text-amber-300 font-bold text-xs p-2 rounded-xl"
+            className={`p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+              currentUser.role === 'guru' ? 'bg-emerald-500 text-white border-white scale-102 shadow-lg ring-4 ring-emerald-300' : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+            }`}
           >
-            {MOCK_USERS_LIST.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.avatarEmoji} {u.nama} ({u.role})
-              </option>
-            ))}
-          </select>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-3xl">👩‍🏫</span>
+              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white/20">Role 1</span>
+            </div>
+            <h4 className="font-black text-base">GURU PAUD</h4>
+            <ul className="text-xs space-y-1 mt-2 opacity-90 list-disc list-inside">
+              <li>Hanya murid di kelasnya</li>
+              <li>Input asesmen & observasi</li>
+              <li>Tolak akses kelas guru lain</li>
+            </ul>
+          </div>
+
+          {/* ROLE 2: KEPALA SEKOLAH */}
+          <div
+            onClick={() => {
+              const u = MOCK_USERS_LIST.find((x) => x.role === 'kepala_sekolah')!;
+              soundFx.playSuccess();
+              onSwitchUserRole(u);
+            }}
+            className={`p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+              currentUser.role === 'kepala_sekolah' ? 'bg-indigo-500 text-white border-white scale-102 shadow-lg ring-4 ring-indigo-300' : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+            }`}
+          >
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-3xl">🎓</span>
+              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white/20">Role 2</span>
+            </div>
+            <h4 className="font-black text-base">KEPALA SEKOLAH</h4>
+            <ul className="text-xs space-y-1 mt-2 opacity-90 list-disc list-inside">
+              <li>Lihat semua kelas sekolah</li>
+              <li>Dashboard agregat domain</li>
+              <li>Traffic Light input guru</li>
+              <li>Token invite Wali Murid</li>
+            </ul>
+          </div>
+
+          {/* ROLE 3: YAYASAN */}
+          <div
+            onClick={() => {
+              const u = MOCK_USERS_LIST.find((x) => x.role === 'yayasan')!;
+              soundFx.playSuccess();
+              onSwitchUserRole(u);
+            }}
+            className={`p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+              currentUser.role === 'yayasan' ? 'bg-purple-600 text-white border-white scale-102 shadow-lg ring-4 ring-purple-300' : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+            }`}
+          >
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-3xl">🏛️</span>
+              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white/20">Role 3</span>
+            </div>
+            <h4 className="font-black text-base">PENGURUS YAYASAN</h4>
+            <ul className="text-xs space-y-1 mt-2 opacity-90 list-disc list-inside">
+              <li>Lihat semua unit sekolah</li>
+              <li>Komparasi antar-sekolah</li>
+              <li>Kelola Tenant Sekolah</li>
+              <li>Read-only asesmen murid</li>
+            </ul>
+          </div>
+
+          {/* ROLE 4: WALI MURID */}
+          <div
+            onClick={() => {
+              const u = MOCK_USERS_LIST.find((x) => x.role === 'wali_murid')!;
+              soundFx.playSuccess();
+              onSwitchUserRole(u);
+            }}
+            className={`p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+              currentUser.role === 'wali_murid' ? 'bg-rose-500 text-white border-white scale-102 shadow-lg ring-4 ring-rose-300' : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+            }`}
+          >
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-3xl">🏡</span>
+              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white/20">Role 4</span>
+            </div>
+            <h4 className="font-black text-base">WALI MURID</h4>
+            <ul className="text-xs space-y-1 mt-2 opacity-90 list-disc list-inside">
+              <li>Hanya data anak sendiri</li>
+              <li>Akses via Token Unik</li>
+              <li>Bahasa ramah & hangat</li>
+              <li>Tanpa akses edit data</li>
+            </ul>
+          </div>
         </div>
       </div>
 
-      {/* ROLE 1: DASHBOARD GURU */}
-      {currentUser.role === 'guru' && (
-        <div className="space-y-6">
-          <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 flex justify-between items-center">
-            <div>
-              <span className="text-xs font-bold text-emerald-800 uppercase">Akses Guru Kelas</span>
-              <h4 className="text-xl font-black text-emerald-950">Ruang Kelas A (Anak Didik Saya)</h4>
-              <p className="text-xs text-emerald-700">Menampilkan murid di kelas yang Anda ampu saja.</p>
-            </div>
-            <span className="text-xs font-bold bg-emerald-200 text-emerald-900 px-3 py-1 rounded-full">
-              Terakhir Input: {currentUser.lastInputDate || 'Hari ini'}
-            </span>
-          </div>
-
-          {/* Notifikasi In-App Reminder Guru */}
-          {notifikasiList.filter((n) => n.userId === currentUser.id).map((n) => (
-            <div key={n.id} className="p-4 bg-amber-50 border-2 border-amber-300 rounded-2xl flex items-center justify-between animate-pulse">
+      {/* DETIL DASHBOARD SPESIFIK ROLE AKTIF */}
+      <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-md">
+        {/* ROLE 1: DASHBOARD GURU */}
+        {currentUser.role === 'guru' && (
+          <div className="space-y-6">
+            <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 flex justify-between items-center">
               <div>
-                <h5 className="font-black text-amber-950 text-sm">{n.judul}</h5>
-                <p className="text-xs text-amber-800">{n.pesan}</p>
+                <span className="text-xs font-bold text-emerald-800 uppercase">Akses Terisolasi Guru Kelas</span>
+                <h4 className="text-xl font-black text-emerald-950">Ruang Asesmen {currentUser.nama}</h4>
+                <p className="text-xs text-emerald-700">Hanya menampilkan daftar murid di Kelas A yang Anda ampu.</p>
               </div>
-              <span className="text-2xl">🔔</span>
+              <span className="text-xs font-bold bg-emerald-200 text-emerald-900 px-3 py-1 rounded-full">
+                Input Terakhir: {currentUser.lastInputDate || 'Hari ini'}
+              </span>
             </div>
-          ))}
 
-          {/* List Murid Kelas Guru & Export PDF */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {daftarMurid.map((m) => (
-              <div key={m.id} className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl p-1 bg-white rounded-xl shadow-sm">{m.fotoEmoji}</span>
-                  <div>
-                    <h5 className="font-bold text-slate-900 text-sm">{m.nama}</h5>
-                    <span className="text-xs text-slate-500">Usia {m.kategoriUsia.replace('_tahun', ' Tahun')}</span>
-                  </div>
+            {/* Notifikasi In-App Reminder Guru */}
+            {notifikasiList.filter((n) => n.userId === currentUser.id).map((n) => (
+              <div key={n.id} className="p-4 bg-amber-50 border-2 border-amber-300 rounded-2xl flex items-center justify-between animate-pulse">
+                <div>
+                  <h5 className="font-black text-amber-950 text-sm">{n.judul}</h5>
+                  <p className="text-xs text-amber-800">{n.pesan}</p>
                 </div>
-
-                <button
-                  onClick={() => generateRaporPDF(m, 'CeritaAnanda PAUD')}
-                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1"
-                >
-                  📄 Cetak PDF
-                </button>
+                <span className="text-2xl">🔔</span>
               </div>
             ))}
-          </div>
-        </div>
-      )}
 
-      {/* ROLE 2: DASHBOARD KEPALA SEKOLAH */}
-      {currentUser.role === 'kepala_sekolah' && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center border-b pb-3">
-            <div>
-              <span className="text-xs font-black text-indigo-600 uppercase">Dashboard Eksekutif Kepala Sekolah</span>
-              <h4 className="text-2xl font-black text-slate-900">Monitoring Asesmen & Kelola Akun</h4>
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => setActiveTabManage('overview')}
-                className={`px-3 py-1.5 rounded-xl font-bold text-xs ${activeTabManage === 'overview' ? 'bg-indigo-600 text-white' : 'bg-slate-100'}`}
-              >
-                📊 Agregat Kelas
-              </button>
-              <button
-                onClick={() => setActiveTabManage('reminder')}
-                className={`px-3 py-1.5 rounded-xl font-bold text-xs ${activeTabManage === 'reminder' ? 'bg-indigo-600 text-white' : 'bg-slate-100'}`}
-              >
-                🚥 Traffic Light Guru
-              </button>
-              <button
-                onClick={() => setActiveTabManage('invite')}
-                className={`px-3 py-1.5 rounded-xl font-bold text-xs ${activeTabManage === 'invite' ? 'bg-indigo-600 text-white' : 'bg-slate-100'}`}
-              >
-                🎟️ Link Wali Murid
-              </button>
-            </div>
-          </div>
-
-          {activeTabManage === 'overview' && (
+            {/* List Murid Kelas Guru & Export PDF */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {MOCK_KELAS_LIST.map((k) => (
-                <div key={k.id} className="bg-indigo-50/70 p-5 rounded-2xl border border-indigo-100 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <h5 className="font-black text-indigo-950 text-base">{k.namaKelas}</h5>
-                    <span className="text-xs font-bold text-indigo-700 bg-indigo-200 px-2.5 py-0.5 rounded-full">{k.guruNama}</span>
+              {daftarMurid.map((m) => (
+                <div key={m.id} className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl p-1 bg-white rounded-xl shadow-sm">{m.fotoEmoji}</span>
+                    <div>
+                      <h5 className="font-bold text-slate-900 text-sm">{m.nama}</h5>
+                      <span className="text-xs text-slate-500">Usia {m.kategoriUsia.replace('_tahun', ' Tahun')}</span>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                    <div className="bg-white p-2 rounded-xl shadow-sm">
-                      <span className="text-slate-500">Rata Logika</span>
-                      <div className="font-black text-emerald-600 text-base">88%</div>
+
+                  <button
+                    onClick={() => generateRaporPDF(m, 'CeritaAnanda PAUD')}
+                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1"
+                  >
+                    📄 Cetak PDF
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ROLE 2: DASHBOARD KEPALA SEKOLAH */}
+        {currentUser.role === 'kepala_sekolah' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-3">
+              <div>
+                <span className="text-xs font-black text-indigo-600 uppercase">Dashboard Eksekutif Kepala Sekolah</span>
+                <h4 className="text-2xl font-black text-slate-900">Monitoring Agregat & Traffic Light Guru</h4>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setActiveTabManage('overview')}
+                  className={`px-3 py-1.5 rounded-xl font-bold text-xs ${activeTabManage === 'overview' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}`}
+                >
+                  📊 Agregat Kelas
+                </button>
+                <button
+                  onClick={() => setActiveTabManage('reminder')}
+                  className={`px-3 py-1.5 rounded-xl font-bold text-xs ${activeTabManage === 'reminder' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}`}
+                >
+                  🚥 Traffic Light Input
+                </button>
+                <button
+                  onClick={() => setActiveTabManage('invite')}
+                  className={`px-3 py-1.5 rounded-xl font-bold text-xs ${activeTabManage === 'invite' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}`}
+                >
+                  🎟️ Link Undangan Wali
+                </button>
+              </div>
+            </div>
+
+            {activeTabManage === 'overview' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {MOCK_KELAS_LIST.map((k) => (
+                  <div key={k.id} className="bg-indigo-50/70 p-5 rounded-2xl border border-indigo-100 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <h5 className="font-black text-indigo-950 text-base">{k.namaKelas}</h5>
+                      <span className="text-xs font-bold text-indigo-700 bg-indigo-200 px-2.5 py-0.5 rounded-full">{k.guruNama}</span>
                     </div>
-                    <div className="bg-white p-2 rounded-xl shadow-sm">
-                      <span className="text-slate-500">Rata Halus</span>
-                      <div className="font-black text-blue-600 text-base">92%</div>
+                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                      <div className="bg-white p-2 rounded-xl shadow-sm">
+                        <span className="text-slate-500">Rata Logika</span>
+                        <div className="font-black text-emerald-600 text-base">88%</div>
+                      </div>
+                      <div className="bg-white p-2 rounded-xl shadow-sm">
+                        <span className="text-slate-500">Rata Halus</span>
+                        <div className="font-black text-blue-600 text-base">92%</div>
+                      </div>
+                      <div className="bg-white p-2 rounded-xl shadow-sm">
+                        <span className="text-slate-500">Rata Kasar</span>
+                        <div className="font-black text-purple-600 text-base">85%</div>
+                      </div>
                     </div>
-                    <div className="bg-white p-2 rounded-xl shadow-sm">
-                      <span className="text-slate-500">Rata Kasar</span>
-                      <div className="font-black text-purple-600 text-base">85%</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeTabManage === 'reminder' && (
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                <h5 className="font-black text-slate-900 text-sm">Status Kelengkapan Input Asesmen Guru (Traffic Light):</h5>
+                {MOCK_USERS_LIST.filter((u) => u.role === 'guru').map((g) => {
+                  const tf = getTeacherTrafficLight(g.lastInputDate);
+                  return (
+                    <div key={g.id} className="p-3 bg-white rounded-xl border border-slate-200 flex justify-between items-center text-xs">
+                      <div>
+                        <span className="font-bold text-slate-900">{g.nama}</span>
+                        <p className="text-slate-500">Terakhir Input: {g.lastInputDate || 'Belum pernah'}</p>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full font-black text-xs ${tf.color}`}>{tf.status}</span>
                     </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {activeTabManage === 'invite' && (
+              <div className="bg-amber-50 p-5 rounded-2xl border border-amber-200 space-y-4">
+                <h5 className="font-black text-amber-950 text-base">Buat Link Undangan Bertoken Unik untuk Wali Murid:</h5>
+                <div className="flex gap-2">
+                  <select
+                    value={selectedMuridForInvite}
+                    onChange={(e) => setSelectedMuridForInvite(e.target.value)}
+                    className="flex-1 p-2.5 rounded-xl border border-amber-300 text-xs font-bold"
+                  >
+                    {daftarMurid.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.fotoEmoji} {m.nama} (Usia {m.kategoriUsia.replace('_tahun', ' Thn')})
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleGenerateInvite}
+                    className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-amber-950 font-black rounded-xl text-xs shadow"
+                  >
+                    Generate Link 🎟️
+                  </button>
+                </div>
+
+                {generatedInviteLink && (
+                  <div className="p-3 bg-white rounded-xl border border-amber-300 text-xs text-slate-800 break-all space-y-1">
+                    <span className="font-bold text-amber-900">Link Undangan Akses Wali Murid:</span>
+                    <div className="p-2 bg-slate-100 rounded font-mono text-[11px] select-all">{generatedInviteLink}</div>
+                    <p className="text-[10px] text-slate-500">Kirimkan link ini ke WhatsApp Wali Murid. Akses hanya khusus untuk anak tersebut.</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ROLE 3: DASHBOARD YAYASAN */}
+        {currentUser.role === 'yayasan' && (
+          <div className="space-y-6">
+            <div className="bg-purple-900 text-white p-5 rounded-2xl flex justify-between items-center">
+              <div>
+                <span className="text-xs font-black uppercase text-purple-300">Dashboard Pengurus Yayasan</span>
+                <h4 className="text-2xl font-black">Komparasi Unit Sekolah & Management Tenant</h4>
+              </div>
+              <span className="text-xs font-bold bg-purple-800 px-3 py-1.5 rounded-full text-purple-200">Total: {daftarTenant.length} Unit Sekolah</span>
+            </div>
+
+            {/* Form Tambah Tenant / Unit Sekolah */}
+            <div className="bg-purple-50 p-4 rounded-2xl border border-purple-200 space-y-3">
+              <h5 className="font-black text-purple-950 text-sm">Tambah Unit Sekolah / Tenant Baru:</h5>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="text"
+                  placeholder="Nama Sekolah PAUD Baru..."
+                  value={namaSekolahBaru}
+                  onChange={(e) => setNamaSekolahBaru(e.target.value)}
+                  className="flex-1 p-2.5 rounded-xl border border-purple-300 text-xs font-bold"
+                />
+                <input
+                  type="text"
+                  placeholder="Kode Yayasan (contoh: YYS-04)..."
+                  value={kodeYayasanBaru}
+                  onChange={(e) => setKodeYayasanBaru(e.target.value)}
+                  className="w-full sm:w-48 p-2.5 rounded-xl border border-purple-300 text-xs font-bold"
+                />
+                <button
+                  onClick={() => {
+                    if (namaSekolahBaru.trim()) {
+                      onAddTenant(namaSekolahBaru, kodeYayasanBaru || 'YYS-NEW');
+                      setNamaSekolahBaru('');
+                      setKodeYayasanBaru('');
+                    }
+                  }}
+                  className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow"
+                >
+                  Tambah Unit ➕
+                </button>
+              </div>
+            </div>
+
+            {/* List Tenant Komparasi */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {daftarTenant.map((t) => (
+                <div key={t.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h5 className="font-black text-slate-900 text-sm">{t.namaSekolah}</h5>
+                      <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">{t.kodeYayasan}</span>
+                    </div>
+                    <button
+                      onClick={() => onDeleteTenant(t.id)}
+                      className="text-xs text-rose-600 hover:text-rose-800 font-bold"
+                    >
+                      Hapus 🗑️
+                    </button>
+                  </div>
+                  <div className="text-xs text-slate-600 space-y-1">
+                    <p>Alamat: {t.alamat || 'Jl. Pendidikan No. 1'}</p>
+                    <p className="font-bold text-emerald-600">Status Capaian: Sangat Baik (89%)</p>
                   </div>
                 </div>
               ))}
             </div>
-          )}
+          </div>
+        )}
 
-          {activeTabManage === 'reminder' && (
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
-              <h5 className="font-black text-slate-900 text-sm">Status Kelengkapan Input Asesmen Guru (Traffic Light):</h5>
-              {MOCK_USERS_LIST.filter((u) => u.role === 'guru').map((g) => {
-                const tf = getTeacherTrafficLight(g.lastInputDate);
-                return (
-                  <div key={g.id} className="p-3 bg-white rounded-xl border border-slate-200 flex justify-between items-center text-xs">
-                    <div>
-                      <span className="font-bold text-slate-900">{g.nama}</span>
-                      <p className="text-slate-500">Terakhir Input: {g.lastInputDate || 'Belum pernah'}</p>
+        {/* ROLE 4: TAMPILAN KHUSUS WALI MURID */}
+        {currentUser.role === 'wali_murid' && (
+          <div className="bg-gradient-to-b from-rose-50 to-amber-50 p-6 rounded-3xl border-4 border-rose-200 space-y-6">
+            {(() => {
+              const childM = daftarMurid.find((m) => m.id === (currentUser.assignedMuridId || 'm-1')) || daftarMurid[0];
+              return (
+                <>
+                  <div className="text-center space-y-2">
+                    <span className="text-5xl p-2 bg-white rounded-full shadow inline-block">{childM.fotoEmoji}</span>
+                    <h3 className="text-3xl font-black text-rose-950">Jurnal Tumbuh Kembang {childM.nama} ❤️</h3>
+                    <p className="text-rose-700 font-bold text-sm max-w-md mx-auto">
+                      Selamat datang Ayah & Bunda! Berikut adalah rangkuman ceria aktivitas & capaian Ananda di sekolah.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                    <div className="bg-white p-4 rounded-2xl shadow border border-amber-200">
+                      <span className="text-3xl">🧠</span>
+                      <h5 className="font-black text-amber-900 text-sm mt-1">Dunia Berpikir & Logika</h5>
+                      <div className="text-2xl font-black text-amber-600 mt-1">{childM.skorLogika.pencocokanBentuk}%</div>
+                      <p className="text-[11px] text-slate-500 mt-1">Sangat pintar mengenali bentuk & warna!</p>
                     </div>
-                    <span className={`px-3 py-1 rounded-full font-black text-xs ${tf.color}`}>{tf.status}</span>
+
+                    <div className="bg-white p-4 rounded-2xl shadow border border-pink-200">
+                      <span className="text-3xl">✍️</span>
+                      <h5 className="font-black text-pink-900 text-sm mt-1">Kreativitas Jemari</h5>
+                      <div className="text-2xl font-black text-pink-600 mt-1">{childM.skorMotorikHalus.tracingGaris}%</div>
+                      <p className="text-[11px] text-slate-500 mt-1">Mulai terampil menebalkan garis & puzzle.</p>
+                    </div>
+
+                    <div className="bg-white p-4 rounded-2xl shadow border border-sky-200">
+                      <span className="text-3xl">🏃</span>
+                      <h5 className="font-black text-sky-900 text-sm mt-1">Keaktifan Fisik</h5>
+                      <div className="text-2xl font-black text-sky-600 mt-1">Sangat Ceria</div>
+                      <p className="text-[11px] text-slate-500 mt-1">Aktif bergerak & melompat ikuti irama.</p>
+                    </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
 
-          {activeTabManage === 'invite' && (
-            <div className="bg-amber-50 p-5 rounded-2xl border border-amber-200 space-y-4">
-              <h5 className="font-black text-amber-950 text-base">Buat Link Undangan Bertoken Unik untuk Wali Murid:</h5>
-              <div className="flex gap-2">
-                <select
-                  value={selectedMuridForInvite}
-                  onChange={(e) => setSelectedMuridForInvite(e.target.value)}
-                  className="flex-1 p-2.5 rounded-xl border border-amber-300 text-xs font-bold"
-                >
-                  {daftarMurid.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.fotoEmoji} {m.nama} (Usia {m.kategoriUsia.replace('_tahun', ' Thn')})
-                    </option>
-                  ))}
-                </select>
-                <button
-                  onClick={handleGenerateInvite}
-                  className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-amber-950 font-black rounded-xl text-xs shadow"
-                >
-                  Generate Link 🎟️
-                </button>
-              </div>
-
-              {generatedInviteLink && (
-                <div className="p-3 bg-white rounded-xl border border-amber-300 text-xs text-slate-800 break-all space-y-1">
-                  <span className="font-bold text-amber-900">Link Undangan Akses Wali Murid:</span>
-                  <div className="p-2 bg-slate-100 rounded font-mono text-[11px] select-all">{generatedInviteLink}</div>
-                  <p className="text-[10px] text-slate-500">Kirimkan link ini ke WhatsApp Wali Murid. Akses hanya khusus untuk anak tersebut.</p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ROLE 3: DASHBOARD YAYASAN */}
-      {currentUser.role === 'yayasan' && (
-        <div className="space-y-6">
-          <div className="bg-purple-900 text-white p-5 rounded-2xl flex justify-between items-center">
-            <div>
-              <span className="text-xs font-black uppercase text-purple-300">Dashboard Pengurus Yayasan</span>
-              <h4 className="text-2xl font-black">Komparasi Unit Sekolah & Management Tenant</h4>
-            </div>
-            <span className="text-xs font-bold bg-purple-800 px-3 py-1.5 rounded-full text-purple-200">Total: {daftarTenant.length} Unit Sekolah</span>
+                  <div className="bg-white p-4 rounded-2xl border border-rose-200 text-xs text-rose-900">
+                    💖 <strong>Pesan Hangat Ustadzah:</strong> Ananda {childM.panggilan} anak yang periang dan suka menolong teman di kelas. Tetap dukung Ananda di rumah ya Ayah & Bunda!
+                  </div>
+                </>
+              );
+            })()}
           </div>
-
-          {/* Form Tambah Tenant / Unit Sekolah */}
-          <div className="bg-purple-50 p-4 rounded-2xl border border-purple-200 space-y-3">
-            <h5 className="font-black text-purple-950 text-sm">Tambah Unit Sekolah / Tenant Baru:</h5>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input
-                type="text"
-                placeholder="Nama Sekolah PAUD Baru..."
-                value={namaSekolahBaru}
-                onChange={(e) => setNamaSekolahBaru(e.target.value)}
-                className="flex-1 p-2.5 rounded-xl border border-purple-300 text-xs font-bold"
-              />
-              <input
-                type="text"
-                placeholder="Kode Yayasan (contoh: YYS-04)..."
-                value={kodeYayasanBaru}
-                onChange={(e) => setKodeYayasanBaru(e.target.value)}
-                className="w-full sm:w-48 p-2.5 rounded-xl border border-purple-300 text-xs font-bold"
-              />
-              <button
-                onClick={() => {
-                  if (namaSekolahBaru.trim()) {
-                    onAddTenant(namaSekolahBaru, kodeYayasanBaru || 'YYS-NEW');
-                    setNamaSekolahBaru('');
-                    setKodeYayasanBaru('');
-                  }
-                }}
-                className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow"
-              >
-                Tambah Unit ➕
-              </button>
-            </div>
-          </div>
-
-          {/* List Tenant Komparasi */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {daftarTenant.map((t) => (
-              <div key={t.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h5 className="font-black text-slate-900 text-sm">{t.namaSekolah}</h5>
-                    <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">{t.kodeYayasan}</span>
-                  </div>
-                  <button
-                    onClick={() => onDeleteTenant(t.id)}
-                    className="text-xs text-rose-600 hover:text-rose-800 font-bold"
-                  >
-                    Hapus 🗑️
-                  </button>
-                </div>
-                <div className="text-xs text-slate-600 space-y-1">
-                  <p>Alamat: {t.alamat || 'Jl. Pendidikan No. 1'}</p>
-                  <p className="font-bold text-emerald-600">Status Capaian: Sangat Baik (89%)</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ROLE 4: TAMPILAN KHUSUS WALI MURID */}
-      {currentUser.role === 'wali_murid' && (
-        <div className="bg-gradient-to-b from-rose-50 to-amber-50 p-6 rounded-3xl border-4 border-rose-200 space-y-6">
-          {(() => {
-            const childM = daftarMurid.find((m) => m.id === (currentUser.assignedMuridId || 'm-1')) || daftarMurid[0];
-            return (
-              <>
-                <div className="text-center space-y-2">
-                  <span className="text-5xl p-2 bg-white rounded-full shadow inline-block">{childM.fotoEmoji}</span>
-                  <h3 className="text-3xl font-black text-rose-950">Jurnal Tumbuh Kembang {childM.nama} ❤️</h3>
-                  <p className="text-rose-700 font-bold text-sm max-w-md mx-auto">
-                    Selamat datang Ayah & Bunda! Berikut adalah rangkuman ceria aktivitas & capaian Ananda di sekolah.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-                  <div className="bg-white p-4 rounded-2xl shadow border border-amber-200">
-                    <span className="text-3xl">🧠</span>
-                    <h5 className="font-black text-amber-900 text-sm mt-1">Dunia Berpikir & Logika</h5>
-                    <div className="text-2xl font-black text-amber-600 mt-1">{childM.skorLogika.pencocokanBentuk}%</div>
-                    <p className="text-[11px] text-slate-500 mt-1">Sangat pintar mengenali bentuk & warna!</p>
-                  </div>
-
-                  <div className="bg-white p-4 rounded-2xl shadow border border-pink-200">
-                    <span className="text-3xl">✍️</span>
-                    <h5 className="font-black text-pink-900 text-sm mt-1">Kreativitas Jemari</h5>
-                    <div className="text-2xl font-black text-pink-600 mt-1">{childM.skorMotorikHalus.tracingGaris}%</div>
-                    <p className="text-[11px] text-slate-500 mt-1">Mulai terampil menebalkan garis & puzzle.</p>
-                  </div>
-
-                  <div className="bg-white p-4 rounded-2xl shadow border border-sky-200">
-                    <span className="text-3xl">🏃</span>
-                    <h5 className="font-black text-sky-900 text-sm mt-1">Keaktifan Fisik</h5>
-                    <div className="text-2xl font-black text-sky-600 mt-1">Sangat Ceria</div>
-                    <p className="text-[11px] text-slate-500 mt-1">Aktif bergerak & melompat ikuti irama.</p>
-                  </div>
-                </div>
-
-                <div className="bg-white p-4 rounded-2xl border border-rose-200 text-xs text-rose-900">
-                  💖 <strong>Pesan Hangat Ustadzah:</strong> Ananda {childM.panggilan} anak yang periang dan suka menolong teman di kelas. Tetap dukung Ananda di rumah ya Ayah & Bunda!
-                </div>
-              </>
-            );
-          })()}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

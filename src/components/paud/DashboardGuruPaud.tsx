@@ -5,16 +5,22 @@ import { soundFx } from '../../utils/soundEffects';
 
 interface DashboardGuruPaudProps {
   daftarRekapMurid: RekapMuridPaud[];
+  initialTab?: 'rapor' | 'kurikulum';
   onAddMurid?: (murid: MuridPaud) => void;
   onSelectChildForPlay?: (murid: MuridPaud) => void;
 }
 
 export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
   daftarRekapMurid,
+  initialTab = 'rapor',
   onAddMurid,
   onSelectChildForPlay
 }) => {
-  const [activeTabGuru, setActiveTabGuru] = useState<'rapor' | 'kurikulum'>('rapor');
+  const [activeTabGuru, setActiveTabGuru] = useState<'rapor' | 'kurikulum'>(initialTab);
+
+  React.useEffect(() => {
+    if (initialTab) setActiveTabGuru(initialTab);
+  }, [initialTab]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedMuridId, setSelectedMuridId] = useState<string | null>(daftarRekapMurid[0]?.id || null);
   const [selectedSemesterPlan, setSelectedSemesterPlan] = useState<1 | 2>(1);

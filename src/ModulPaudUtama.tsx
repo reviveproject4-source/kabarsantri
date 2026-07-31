@@ -110,6 +110,7 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
   });
 
   const [activeView, setActiveView] = useState<'dashboard' | 'kasar' | 'anak' | 'roles'>('dashboard');
+  const [dashboardTab, setDashboardTab] = useState<'rapor' | 'kurikulum'>('rapor');
   const [selectedChildForPlay, setSelectedChildForPlay] = useState<RekapMuridPaud>(daftarMurid[0] || INITIAL_MURID[0]);
 
   // Simpan otomatis per tenantId
@@ -299,13 +300,23 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
 
           <div className="flex flex-wrap gap-2 justify-center">
             <button
-              onClick={() => { soundFx.playPop(); setActiveView('dashboard'); }}
+              onClick={() => { soundFx.playPop(); setDashboardTab('rapor'); setActiveView('dashboard'); }}
               className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
-                activeView === 'dashboard' ? 'bg-amber-400 text-indigo-950 shadow' : 'bg-indigo-900 text-indigo-200 hover:bg-indigo-800'
+                activeView === 'dashboard' && dashboardTab === 'rapor' ? 'bg-amber-400 text-indigo-950 shadow' : 'bg-indigo-900 text-indigo-200 hover:bg-indigo-800'
               }`}
             >
               <span>👩‍🏫</span> Dashboard Guru
             </button>
+
+            <button
+              onClick={() => { soundFx.playPop(); setDashboardTab('kurikulum'); setActiveView('dashboard'); }}
+              className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
+                activeView === 'dashboard' && dashboardTab === 'kurikulum' ? 'bg-amber-400 text-indigo-950 shadow' : 'bg-indigo-900 text-indigo-200 hover:bg-indigo-800'
+              }`}
+            >
+              <span>📅</span> Kurikulum 12 Bulan
+            </button>
+
             <button
               onClick={() => { soundFx.playPop(); setActiveView('roles'); }}
               className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
@@ -342,6 +353,7 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
         {activeView === 'dashboard' && (
           <DashboardGuruPaud
             daftarRekapMurid={daftarMurid}
+            initialTab={dashboardTab}
             onAddMurid={handleAddMurid}
             onSelectChildForPlay={startPlayForChild}
           />
