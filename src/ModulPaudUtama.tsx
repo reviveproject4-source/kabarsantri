@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { MuridPaud, RekapMuridPaud, StatusCapaian, BulanCurriculum, TenantPaud } from './types/paudTypes';
+import { MuridPaud, RekapMuridPaud, StatusCapaian, BulanCurriculum, TenantPaud, UserAccount } from './types/paudTypes';
 import { DashboardGuruPaud } from './components/paud/DashboardGuruPaud';
 import { ModulMotorikKasar } from './components/paud/ModulMotorikKasar';
 import { ModeMainAnak } from './components/paud/ModeMainAnak';
+import { RoleSystemManager, MOCK_USERS_LIST } from './components/paud/RoleSystemManager';
 import { soundFx } from './utils/soundEffects';
 
 export const DAFTAR_TENANT_DEFAULT: TenantPaud[] = [
@@ -89,6 +90,9 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
   const [newSekolahNama, setNewSekolahNama] = useState('');
   const [newSekolahKode, setNewSekolahKode] = useState('');
 
+  // USER & ROLE SYSTEM STATE
+  const [currentUser, setCurrentUser] = useState<UserAccount>(MOCK_USERS_LIST[0]);
+
   const currentTenant = daftarTenant.find((t) => t.id === activeTenantId) || daftarTenant[0];
 
   // Isolated LocalStorage Per Tenant ID
@@ -105,7 +109,7 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
     return INITIAL_MURID;
   });
 
-  const [activeView, setActiveView] = useState<'dashboard' | 'kasar' | 'anak'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'kasar' | 'anak' | 'roles'>('dashboard');
   const [selectedChildForPlay, setSelectedChildForPlay] = useState<RekapMuridPaud>(daftarMurid[0] || INITIAL_MURID[0]);
 
   // Simpan otomatis per tenantId
@@ -137,18 +141,30 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
     setDaftarMurid([]);
   };
 
-  const handleAddTenantSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newSekolahNama.trim()) return;
+  const handleAddTenant = (namaSekolah: string, kodeYayasan: string) => {
     soundFx.playSuccess();
     const newT: TenantPaud = {
       id: `tenant-paud-${Date.now()}`,
-      namaSekolah: newSekolahNama,
-      kodeYayasan: newSekolahKode || `YYS-${Date.now()}`
+      namaSekolah: namaSekolah,
+      kodeYayasan: kodeYayasan || `YYS-${Date.now()}`
     };
     setDaftarTenant([...daftarTenant, newT]);
     setActiveTenantId(newT.id);
     setDaftarMurid([]);
+  };
+
+  const handleDeleteTenant = (tenantId: string) => {
+    if (daftarTenant.length <= 1) return;
+    soundFx.playPop();
+    const updated = daftarTenant.filter((t) => t.id !== tenantId);
+    setDaftarTenant(updated);
+    setActiveTenantId(updated[0].id);
+  };
+
+  const handleAddTenantSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSekolahNama.trim()) return;
+    handleAddTenant(newSekolahNama, newSekolahKode);
     setNewSekolahNama('');
     setNewSekolahKode('');
     setShowTenantModal(false);
@@ -245,7 +261,7 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans">
-      {/* Top Navbar Guru dengan Multi-Tenant Selector */}
+      {/* Top Navbar Guru dengan Multi-Tenant & Role System Selector */}
       <header className="bg-indigo-950 text-white p-4 shadow-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">
@@ -253,7 +269,7 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-black tracking-tight text-amber-300">CeritaAnanda PAUD Multi-Tenant</h1>
-                <span className="text-[10px] font-extrabold bg-emerald-500 text-white px-2 py-0.5 rounded-full uppercase">Multi-School Isolated</span>
+                <span className="text-[10px] font-extrabold bg-emerald-500 text-white px-2 py-0.5 rounded-full uppercase">Role & Multi-Tenant Isolated</span>
               </div>
               
               {/* TENANT / SEKOLAH SELECTOR */}
@@ -281,18 +297,26 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 justify-center">
             <button
               onClick={() => { soundFx.playPop(); setActiveView('dashboard'); }}
-              className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
+              className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
                 activeView === 'dashboard' ? 'bg-amber-400 text-indigo-950 shadow' : 'bg-indigo-900 text-indigo-200 hover:bg-indigo-800'
               }`}
             >
-              <span>👩‍🏫</span> Dashboard & Kurikulum
+              <span>👩‍🏫</span> Dashboard Guru
+            </button>
+            <button
+              onClick={() => { soundFx.playPop(); setActiveView('roles'); }}
+              className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
+                activeView === 'roles' ? 'bg-purple-500 text-white shadow' : 'bg-indigo-900 text-indigo-200 hover:bg-indigo-800'
+              }`}
+            >
+              <span>👥</span> 4 Level Role & Akses
             </button>
             <button
               onClick={() => { soundFx.playPop(); setActiveView('kasar'); }}
-              className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
+              className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
                 activeView === 'kasar' ? 'bg-sky-400 text-indigo-950 shadow' : 'bg-indigo-900 text-indigo-200 hover:bg-indigo-800'
               }`}
             >
@@ -300,7 +324,7 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
             </button>
             <button
               onClick={() => { soundFx.playSuccess(); startPlayForChild(selectedChildForPlay); }}
-              className="px-4 py-2.5 rounded-xl font-bold text-xs bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg transition-transform active:scale-95 flex items-center gap-1.5"
+              className="px-3 py-2 rounded-xl font-bold text-xs bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg transition-transform active:scale-95 flex items-center gap-1.5"
             >
               <span>🎮</span> Mode Main Anak
             </button>
@@ -311,8 +335,8 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
       {/* Main Content Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
         <div className="mb-4 bg-indigo-50 border border-indigo-200 p-3 rounded-2xl flex justify-between items-center text-xs text-indigo-900 font-bold">
-          <span>🏫 Aktif di Tenant: <strong>{currentTenant.namaSekolah}</strong> ({currentTenant.kodeYayasan}) — Isolation Status: Active ✅</span>
-          <span className="text-indigo-600">Data tersimpan terisolasi per Tenant ID</span>
+          <span>🏫 Aktif di Tenant: <strong>{currentTenant.namaSekolah}</strong> ({currentTenant.kodeYayasan}) — Role: <strong className="uppercase">{currentUser.role.replace('_', ' ')}</strong></span>
+          <span className="text-indigo-600">Data terisolasi aman per Yayasan & Level Akses</span>
         </div>
 
         {activeView === 'dashboard' && (
@@ -320,6 +344,17 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
             daftarRekapMurid={daftarMurid}
             onAddMurid={handleAddMurid}
             onSelectChildForPlay={startPlayForChild}
+          />
+        )}
+
+        {activeView === 'roles' && (
+          <RoleSystemManager
+            currentUser={currentUser}
+            daftarTenant={daftarTenant}
+            daftarMurid={daftarMurid}
+            onSwitchUserRole={(u) => setCurrentUser(u)}
+            onAddTenant={handleAddTenant}
+            onDeleteTenant={handleDeleteTenant}
           />
         )}
 

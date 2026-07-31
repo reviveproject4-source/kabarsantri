@@ -5,11 +5,37 @@ export type BulanCurriculum = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 
 export type KategoriMateri = 'buah' | 'sayur' | 'kendaraan' | 'hewan' | 'bentuk_warna' | 'angka' | 'motorik_halus' | 'motorik_kasar';
 
+export type UserRole = 'guru' | 'kepala_sekolah' | 'yayasan' | 'wali_murid';
+
+export interface UserAccount {
+  id: string;
+  nama: string;
+  email: string;
+  role: UserRole;
+  tenantId: string; // Yayasan
+  schoolId?: string; // Unit Sekolah
+  classId?: string; // Kelas (Khusus Guru & Murid)
+  assignedMuridId?: string; // Khusus Wali Murid
+  inviteToken?: string; // Khusus Wali Murid & Guru
+  avatarEmoji?: string;
+  lastInputDate?: string; // Tanggal terakhir input asesmen (untuk Guru)
+}
+
 export interface TenantPaud {
   id: string;
   namaSekolah: string;
   kodeYayasan: string;
   alamat?: string;
+  unitSekolahList?: Array<{ id: string; namaUnit: string; kepalaSekolah?: string }>;
+}
+
+export interface KelasPaud {
+  id: string;
+  schoolId: string;
+  namaKelas: string;
+  kategoriUsia: KategoriUsiaSpesifik;
+  guruId?: string;
+  guruNama?: string;
 }
 
 export interface TemaBulanan {
@@ -24,6 +50,8 @@ export interface TemaBulanan {
 export interface MuridPaud {
   id: string;
   tenantId?: string;
+  schoolId?: string;
+  classId?: string;
   namaSekolah?: string;
   nama: string;
   panggilan: string;
@@ -31,6 +59,7 @@ export interface MuridPaud {
   fotoEmoji: string;
   catatanGuru?: string;
   tanggalLahir?: string;
+  inviteTokenWali?: string; // Token undangan wali murid
 }
 
 export interface SkorLogika {
@@ -52,6 +81,8 @@ export type StatusCapaian = 'belum_berkembang' | 'mulai_berkembang' | 'berkemban
 
 export interface EvaluasiMotorikKasar {
   tenantId?: string;
+  schoolId?: string;
+  classId?: string;
   bulan: BulanCurriculum;
   mingguKe: number;
   aktivitasId: string;
@@ -81,4 +112,14 @@ export interface KartuAktivitasKasar {
   ikon: string;
   tingkatKesulitan: 'Sangat Mudah' | 'Mudah' | 'Sedang' | 'Tantangan';
   variasiGerak: string[];
+}
+
+export interface NotifikasiApp {
+  id: string;
+  userId: string;
+  judul: string;
+  pesan: string;
+  tanggal: string;
+  dibaca: boolean;
+  tipe: 'reminder' | 'info' | 'warning';
 }
