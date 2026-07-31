@@ -58,6 +58,13 @@ export const Sidebar = ({
           📊 Dashboard
         </button>
 
+        <button
+          onClick={() => setActiveTab('paud')}
+          className={menuClass('paud')}
+        >
+          🧸 PAUD (Logika & Motorik 2-5th)
+        </button>
+
         {isYayasan && (
           <>
             <button

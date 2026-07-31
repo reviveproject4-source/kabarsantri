@@ -34,6 +34,7 @@ import { usePegawaiList } from './hooks/usePegawai';
 import { usePresensiPegawaiList } from './hooks/usePresensi';
 import { useRingkasanKeuangan } from './hooks/useRingkasanKeuangan';
 import { bulanEnamTerakhir, GrafikGaris, WARNA_STATUS } from './Grafik';
+import ModulPaudUtama from './ModulPaudUtama';
 
 function Memuat() {
   return (
@@ -47,12 +48,22 @@ export default function App() {
   const [isAllowed, setIsAllowed] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [modeDaftar, setModeDaftar] = useState(false);
+  const [modePaudDirect, setModePaudDirect] = useState(true);
 
   const { memuat, session, profil, yayasan, peran, keluar, modePemulihanPassword } =
     useAuth();
 
+  if (modePaudDirect) {
+    return <ModulPaudUtama onKembaliKeUtama={() => setModePaudDirect(false)} />;
+  }
+
   if (!isAllowed) {
-    return <SplashWelcomeScreen onConfirm={() => setIsAllowed(true)} />;
+    return (
+      <SplashWelcomeScreen
+        onConfirm={() => setIsAllowed(true)}
+        onBukaPaud={() => setModePaudDirect(true)}
+      />
+    );
   }
 
   if (memuat) {
@@ -573,6 +584,8 @@ function RuteStaff({
           )}
 
         {isKepsek && activeTab === 'kepsek-progres' && <ModulKepsek />}
+
+        {activeTab === 'paud' && <ModulPaudUtama />}
 
       </main>
     </div>
