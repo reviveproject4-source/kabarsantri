@@ -20,84 +20,153 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
   >('bentuk');
   const [selectedTopic, setSelectedTopic] = useState<KategoriMateri>(materiKhusus);
 
-  // DATA ITEM GAMBAR SESUAI TOPIK
-  const getTopicItems = (topic: KategoriMateri) => {
-    switch (topic) {
-      case 'buah':
-        return [
+  // INDEKS VARIASI GAME (BATAS MAKSIMAL 3 VARIASI: 0, 1, 2)
+  const [shapesVariationIndex, setShapesVariationIndex] = useState<number>(0);
+  const [sizeVariationIndex, setSizeVariationIndex] = useState<number>(0);
+  const [memoryVariationIndex, setMemoryVariationIndex] = useState<number>(0);
+  const [patternVariationIndex, setPatternVariationIndex] = useState<number>(0);
+  const [classifyVariationIndex, setClassifyVariationIndex] = useState<number>(0);
+
+  // DATA ITEM SHAPE/BAYANGAN (3 VARIASI PER TOPIK)
+  const getTopicItemsWithVariations = (topic: KategoriMateri, variation: number) => {
+    const varIdx = variation % 3; // Maksimal 3 variasi (0, 1, 2)
+    if (topic === 'buah') {
+      const sets = [
+        [
           { id: 'apel', name: 'Apel', symbol: '🍎' },
           { id: 'pisang', name: 'Pisang', symbol: '🍌' },
           { id: 'jeruk', name: 'Jeruk', symbol: '🍊' },
           { id: 'semangka', name: 'Semangka', symbol: '🍉' }
-        ];
-      case 'sayur':
-        return [
+        ],
+        [
+          { id: 'nanas', name: 'Nanas', symbol: '🍍' },
+          { id: 'pir', name: 'Pir', symbol: '🍐' },
+          { id: 'stroberi', name: 'Stroberi', symbol: '🍓' },
+          { id: 'anggur', name: 'Anggur', symbol: '🍇' }
+        ],
+        [
+          { id: 'mangga', name: 'Mangga', symbol: '🥭' },
+          { id: 'melon', name: 'Melon', symbol: '🍈' },
+          { id: 'alpukat', name: 'Alpukat', symbol: '🥑' },
+          { id: 'ceri', name: 'Ceri', symbol: '🍒' }
+        ]
+      ];
+      return sets[varIdx];
+    }
+    if (topic === 'sayur') {
+      const sets = [
+        [
           { id: 'wortel', name: 'Wortel', symbol: '🥕' },
           { id: 'brokoli', name: 'Brokoli', symbol: '🥦' },
           { id: 'jagung', name: 'Jagung', symbol: '🌽' },
           { id: 'terong', name: 'Terong', symbol: '🍆' }
-        ];
-      case 'kendaraan':
-        return [
+        ],
+        [
+          { id: 'jamur', name: 'Jamur', symbol: '🍄' },
+          { id: 'labu', name: 'Labu', symbol: '🎃' },
+          { id: 'tomat', name: 'Tomat', symbol: '🍅' },
+          { id: 'timun', name: 'Timun', symbol: '🥒' }
+        ],
+        [
+          { id: 'bawang', name: 'Bawang', symbol: '🧅' },
+          { id: 'kentang', name: 'Kentang', symbol: '🥔' },
+          { id: 'cabai', name: 'Cabai', symbol: '🌶️' },
+          { id: 'lobak', name: 'Lobak', symbol: '🥬' }
+        ]
+      ];
+      return sets[varIdx];
+    }
+    if (topic === 'kendaraan') {
+      const sets = [
+        [
           { id: 'mobil', name: 'Mobil', symbol: '🚗' },
           { id: 'pesawat', name: 'Pesawat', symbol: '✈️' },
           { id: 'sepeda', name: 'Sepeda', symbol: '🚲' },
           { id: 'truk', name: 'Truk', symbol: '🚚' }
-        ];
-      case 'hewan':
-        return [
-          { id: 'singa', name: 'Singa', symbol: '🦁' },
-          { id: 'katak', name: 'Katak', symbol: '🐸' },
-          { id: 'kelinci', name: 'Kelinci', symbol: '🐰' },
-          { id: 'burung', name: 'Burung', symbol: '🦜' }
-        ];
-      default:
-        return [
-          { id: 'bintang', name: 'Bintang', symbol: '⭐' },
-          { id: 'lingkaran', name: 'Lingkaran', symbol: '🔴' },
-          { id: 'persegi', name: 'Persegi', symbol: '🟦' },
-          { id: 'segitiga', name: 'Segitiga', symbol: '🔺' }
-        ];
+        ],
+        [
+          { id: 'kapal', name: 'Kapal', symbol: '🚢' },
+          { id: 'kereta', name: 'Kereta', symbol: '🚂' },
+          { id: 'helikopter', name: 'Helikopter', symbol: '🚁' },
+          { id: 'bus', name: 'Bus', symbol: '🚌' }
+        ],
+        [
+          { id: 'roket', name: 'Roket', symbol: '🚀' },
+          { id: 'motor', name: 'Motor', symbol: '🛵' },
+          { id: 'taksi', name: 'Taksi', symbol: '🚕' },
+          { id: 'pemadam', name: 'Pemadam', symbol: '🚒' }
+        ]
+      ];
+      return sets[varIdx];
     }
+    // Hewan / Bentuk
+    const sets = [
+      [
+        { id: 'singa', name: 'Singa', symbol: '🦁' },
+        { id: 'katak', name: 'Katak', symbol: '🐸' },
+        { id: 'kelinci', name: 'Kelinci', symbol: '🐰' },
+        { id: 'burung', name: 'Burung', symbol: '🦜' }
+      ],
+      [
+        { id: 'gajah', name: 'Gajah', symbol: '🐘' },
+        { id: 'jerapah', name: 'Jerapah', symbol: '🦒' },
+        { id: 'kucing', name: 'Kucing', symbol: '🐱' },
+        { id: 'anjing', name: 'Anjing', symbol: '🐶' }
+      ],
+      [
+        { id: 'ikan', name: 'Ikan', symbol: '🐟' },
+        { id: 'kupu', name: 'Kupu-kupu', symbol: '🦋' },
+        { id: 'panda', name: 'Panda', symbol: '🐼' },
+        { id: 'koala', name: 'Koala', symbol: '🐨' }
+      ]
+    ];
+    return sets[varIdx];
   };
 
-  const shapesList = getTopicItems(selectedTopic);
+  const shapesList = getTopicItemsWithVariations(selectedTopic, shapesVariationIndex);
   const [selectedShape, setSelectedShape] = useState<string | null>(null);
   const [matchedShapes, setMatchedShapes] = useState<string[]>([]);
 
-  // SIZE SORTING TEMATIK
-  const getSizeItemsByTopic = (topic: KategoriMateri) => {
-    if (topic === 'buah') {
-      return [
+  const resetShapesGame = () => {
+    soundFx.playPop();
+    setShapesVariationIndex((prev) => (prev + 1) % 3); // Rotasi 3 variasi
+    setMatchedShapes([]);
+    setSelectedShape(null);
+  };
+
+  // SIZE SORTING (3 VARIASI)
+  const getSizeItemsWithVariations = (topic: KategoriMateri, variation: number) => {
+    const varIdx = variation % 3;
+    const sets = [
+      [
         { id: 3, label: 'Besar 🍉', sizeClass: 'text-6xl p-6', order: 3 },
         { id: 1, label: 'Kecil 🍓', sizeClass: 'text-2xl p-2', order: 1 },
         { id: 2, label: 'Sedang 🍎', sizeClass: 'text-4xl p-4', order: 2 }
-      ];
-    }
-    if (topic === 'sayur') {
-      return [
+      ],
+      [
         { id: 3, label: 'Besar 🎃', sizeClass: 'text-6xl p-6', order: 3 },
         { id: 1, label: 'Kecil 🍄', sizeClass: 'text-2xl p-2', order: 1 },
         { id: 2, label: 'Sedang 🥕', sizeClass: 'text-4xl p-4', order: 2 }
-      ];
-    }
-    if (topic === 'kendaraan') {
-      return [
+      ],
+      [
         { id: 3, label: 'Besar ✈️', sizeClass: 'text-6xl p-6', order: 3 },
         { id: 1, label: 'Kecil 🚲', sizeClass: 'text-2xl p-2', order: 1 },
         { id: 2, label: 'Sedang 🚗', sizeClass: 'text-4xl p-4', order: 2 }
-      ];
-    }
-    return [
-      { id: 3, label: 'Besar 🐘', sizeClass: 'text-6xl p-6', order: 3 },
-      { id: 1, label: 'Kecil 🐭', sizeClass: 'text-2xl p-2', order: 1 },
-      { id: 2, label: 'Sedang 🐱', sizeClass: 'text-4xl p-4', order: 2 }
+      ]
     ];
+    return sets[varIdx];
   };
 
-  const sizeItems = getSizeItemsByTopic(selectedTopic);
+  const sizeItems = getSizeItemsWithVariations(selectedTopic, sizeVariationIndex);
   const [userSizeOrder, setUserSizeOrder] = useState<number[]>([]);
   const [sizeCompleted, setSizeCompleted] = useState(false);
+
+  const resetSizeGame = () => {
+    soundFx.playPop();
+    setSizeVariationIndex((prev) => (prev + 1) % 3); // Rotasi 3 variasi
+    setUserSizeOrder([]);
+    setSizeCompleted(false);
+  };
 
   // TARGET HITUNG SESUAI UMUR
   const getTargetCountByAge = (age: KategoriUsiaSpesifik) => {
@@ -114,17 +183,100 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
   const [countedItems, setCountedItems] = useState<number[]>([]);
   const countingIcon = selectedTopic === 'buah' ? '🍎' : selectedTopic === 'sayur' ? '🥕' : selectedTopic === 'kendaraan' ? '🚗' : selectedTopic === 'hewan' ? '🐰' : '⭐';
 
-  // POLA URUTAN
-  const [patternIndex, setPatternIndex] = useState(0);
+  // 🃏 MEMORI KARTU FLIP (3 VARIASI ROTASI)
+  const getMemoryCardsSet = (variation: number) => {
+    const varIdx = variation % 3;
+    const sets = [
+      // Variasi 1: Apel & Pisang (Apel, Pisang, Apel, Pisang)
+      [
+        { id: 1, symbol: '🍎', flipped: false, matched: false },
+        { id: 2, symbol: '🍌', flipped: false, matched: false },
+        { id: 3, symbol: '🍎', flipped: false, matched: false },
+        { id: 4, symbol: '🍌', flipped: false, matched: false }
+      ],
+      // Variasi 2: Nanas & Pir (Nanas, Pir, Pir, Nanas)
+      [
+        { id: 1, symbol: '🍍', flipped: false, matched: false },
+        { id: 2, symbol: '🍐', flipped: false, matched: false },
+        { id: 3, symbol: '🍐', flipped: false, matched: false },
+        { id: 4, symbol: '🍍', flipped: false, matched: false }
+      ],
+      // Variasi 3: Mangga & Semangka (Mangga, Semangka, Mangga, Semangka)
+      [
+        { id: 1, symbol: '🥭', flipped: false, matched: false },
+        { id: 2, symbol: '🍉', flipped: false, matched: false },
+        { id: 3, symbol: '🥭', flipped: false, matched: false },
+        { id: 4, symbol: '🍉', flipped: false, matched: false }
+      ]
+    ];
+    return sets[varIdx];
+  };
+
+  const [memoryCards, setMemoryCards] = useState(() => getMemoryCardsSet(0));
+  const [flippedIds, setFlippedIds] = useState<number[]>([]);
+
+  const resetMemoryGame = () => {
+    soundFx.playPop();
+    const nextVar = (memoryVariationIndex + 1) % 3; // Rotasi 3 variasi
+    setMemoryVariationIndex(nextVar);
+    setMemoryCards(getMemoryCardsSet(nextVar));
+    setFlippedIds([]);
+  };
+
+  // POLA URUTAN (3 VARIASI)
   const patternsByTopic = [
     { sequence: ['🍎', '🍌', '🍎'], answer: '🍌', options: ['🍎', '🍌', '🍊'] },
-    { sequence: ['🥦', '🥕', '🥦'], answer: '🥕', options: ['🥦', '🥕', '🌽'] },
-    { sequence: ['🚗', '✈️', '🚗'], answer: '✈️', options: ['🚗', '✈️', '🚲'] },
-    { sequence: ['🦁', '🐰', '🦁'], answer: '🐰', options: ['🦁', '🐰', '🐸'] }
+    { sequence: ['🍍', '🍐', '🍍'], answer: '🍐', options: ['🍍', '🍐', '🍓'] },
+    { sequence: ['🥦', '🥕', '🥦'], answer: '🥕', options: ['🥦', '🥕', '🌽'] }
   ];
   const [polaSuccess, setPolaSuccess] = useState(false);
 
-  // 🧭 NEW MODUL 1: LABIRIN ARAH & PATHFINDING
+  const nextPattern = () => {
+    soundFx.playPop();
+    setPolaSuccess(false);
+    setPatternVariationIndex((prev) => (prev + 1) % 3); // Rotasi 3 variasi
+  };
+
+  // ⚖️ KLASIFIKASI KERANJANG (3 VARIASI)
+  const getClassificationSet = (variation: number) => {
+    const varIdx = variation % 3;
+    const sets = [
+      [
+        { id: 'i1', name: 'Apel', symbol: '🍎', type: 'buah' },
+        { id: 'i2', name: 'Wortel', symbol: '🥕', type: 'sayur' },
+        { id: 'i3', name: 'Pisang', symbol: '🍌', type: 'buah' },
+        { id: 'i4', name: 'Brokoli', symbol: '🥦', type: 'sayur' }
+      ],
+      [
+        { id: 'i1', name: 'Nanas', symbol: '🍍', type: 'buah' },
+        { id: 'i2', name: 'Terong', symbol: '🍆', type: 'sayur' },
+        { id: 'i3', name: 'Pir', symbol: '🍐', type: 'buah' },
+        { id: 'i4', name: 'Jagung', symbol: '🌽', type: 'sayur' }
+      ],
+      [
+        { id: 'i1', name: 'Semangka', symbol: '🍉', type: 'buah' },
+        { id: 'i2', name: 'Jamur', symbol: '🍄', type: 'sayur' },
+        { id: 'i3', name: 'Mangga', symbol: '🥭', type: 'buah' },
+        { id: 'i4', name: 'Labu', symbol: '🎃', type: 'sayur' }
+      ]
+    ];
+    return sets[varIdx];
+  };
+
+  const itemsToClassify = getClassificationSet(classifyVariationIndex);
+  const [classifiedIds, setClassifiedIds] = useState<string[]>([]);
+  const [basketFruit, setBasketFruit] = useState<string[]>([]);
+  const [basketVeggie, setBasketVeggie] = useState<string[]>([]);
+
+  const resetClassifyGame = () => {
+    soundFx.playPop();
+    setClassifyVariationIndex((prev) => (prev + 1) % 3); // Rotasi 3 variasi
+    setClassifiedIds([]);
+    setBasketFruit([]);
+    setBasketVeggie([]);
+  };
+
+  // 🧭 LABIRIN ARAH & PATHFINDING
   const [mazePos, setMazePos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const mazeTarget = { x: 2, y: 2 };
   const playerIcon = selectedTopic === 'kendaraan' ? '🚗' : selectedTopic === 'sayur' ? '🐰' : '👦';
@@ -149,20 +301,12 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
   };
 
   const resetMaze = () => {
+    soundFx.playPop();
     setMazePos({ x: 0, y: 0 });
     setMazeCompleted(false);
   };
 
-  // 🔊 NEW MODUL 2: KARTU MEMORI FLIP (PAIR CARDS)
-  const initialMemoryCards = [
-    { id: 1, symbol: '🍎', flipped: false, matched: false },
-    { id: 2, symbol: '🍌', flipped: false, matched: false },
-    { id: 3, symbol: '🍎', flipped: false, matched: false },
-    { id: 4, symbol: '🍌', flipped: false, matched: false }
-  ];
-  const [memoryCards, setMemoryCards] = useState(initialMemoryCards);
-  const [flippedIds, setFlippedIds] = useState<number[]>([]);
-
+  // MEMORI CARD HANDLER
   const handleCardClick = (id: number) => {
     if (flippedIds.length === 2) return;
     const card = memoryCards.find((c) => c.id === id);
@@ -192,71 +336,6 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
           setFlippedIds([]);
         }, 1000);
       }
-    }
-  };
-
-  const resetMemory = () => {
-    setMemoryCards(initialMemoryCards);
-    setFlippedIds([]);
-  };
-
-  // ⚖️ NEW MODUL 3: TIMBANGAN & KLASIFIKASI KERANJANG
-  const [basketFruit, setBasketFruit] = useState<string[]>([]);
-  const [basketVeggie, setBasketVeggie] = useState<string[]>([]);
-  const itemsToClassify = [
-    { id: 'i1', name: 'Apel', symbol: '🍎', type: 'buah' },
-    { id: 'i2', name: 'Wortel', symbol: '🥕', type: 'sayur' },
-    { id: 'i3', name: 'Pisang', symbol: '🍌', type: 'buah' },
-    { id: 'i4', name: 'Brokoli', symbol: '🥦', type: 'sayur' }
-  ];
-  const [classifiedIds, setClassifiedIds] = useState<string[]>([]);
-
-  const handleClassifyItem = (itemId: string, targetType: 'buah' | 'sayur') => {
-    const item = itemsToClassify.find((i) => i.id === itemId);
-    if (!item || classifiedIds.includes(itemId)) return;
-
-    if (item.type === targetType) {
-      soundFx.playSuccess();
-      setClassifiedIds([...classifiedIds, itemId]);
-      if (targetType === 'buah') setBasketFruit([...basketFruit, item.symbol]);
-      else setBasketVeggie([...basketVeggie, item.symbol]);
-
-      if (classifiedIds.length + 1 === itemsToClassify.length) {
-        soundFx.playFanfare();
-      }
-    } else {
-      soundFx.playTryAgain();
-    }
-  };
-
-  // 🎯 NEW MODUL 4: REFLEKS KETUK SASARAN KECEPATAN
-  const [refleksTarget, setRefleksTarget] = useState<number>(0);
-  const [refleksScore, setRefleksScore] = useState<number>(0);
-  const [refleksActive, setRefleksActive] = useState<boolean>(false);
-
-  const startRefleksGame = () => {
-    soundFx.playSuccess();
-    setRefleksScore(0);
-    setRefleksActive(true);
-    let count = 0;
-    const interval = setInterval(() => {
-      count += 1;
-      setRefleksTarget(Math.floor(Math.random() * 4));
-      if (count >= 10) {
-        clearInterval(interval);
-        setRefleksActive(false);
-        soundFx.playFanfare();
-      }
-    }, 1200);
-  };
-
-  const handleTapRefleksTarget = (index: number) => {
-    if (!refleksActive) return;
-    if (index === refleksTarget) {
-      soundFx.playPop();
-      setRefleksScore((prev) => prev + 10);
-    } else {
-      soundFx.playTryAgain();
     }
   };
 
@@ -298,11 +377,6 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
     }
   };
 
-  const resetSizeGame = () => {
-    setUserSizeOrder([]);
-    setSizeCompleted(false);
-  };
-
   const handleCountItem = (index: number) => {
     if (countedItems.includes(index)) return;
     const nextCount = countedItems.length + 1;
@@ -316,11 +390,12 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
   };
 
   const resetCountGame = () => {
+    soundFx.playPop();
     setCountedItems([]);
   };
 
   const handleChoosePatternAnswer = (choice: string) => {
-    const currentPattern = patternsByTopic[patternIndex % patternsByTopic.length];
+    const currentPattern = patternsByTopic[patternVariationIndex % patternsByTopic.length];
     if (choice === currentPattern.answer) {
       soundFx.playSuccess();
       setPolaSuccess(true);
@@ -330,9 +405,53 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
     }
   };
 
-  const nextPattern = () => {
-    setPolaSuccess(false);
-    setPatternIndex((prev) => (prev + 1) % patternsByTopic.length);
+  const handleClassifyItem = (itemId: string, targetType: 'buah' | 'sayur') => {
+    const item = itemsToClassify.find((i) => i.id === itemId);
+    if (!item || classifiedIds.includes(itemId)) return;
+
+    if (item.type === targetType) {
+      soundFx.playSuccess();
+      setClassifiedIds([...classifiedIds, itemId]);
+      if (targetType === 'buah') setBasketFruit([...basketFruit, item.symbol]);
+      else setBasketVeggie([...basketVeggie, item.symbol]);
+
+      if (classifiedIds.length + 1 === itemsToClassify.length) {
+        soundFx.playFanfare();
+      }
+    } else {
+      soundFx.playTryAgain();
+    }
+  };
+
+  // REFLEKS KETUK SASARAN
+  const [refleksTarget, setRefleksTarget] = useState<number>(0);
+  const [refleksScore, setRefleksScore] = useState<number>(0);
+  const [refleksActive, setRefleksActive] = useState<boolean>(false);
+
+  const startRefleksGame = () => {
+    soundFx.playSuccess();
+    setRefleksScore(0);
+    setRefleksActive(true);
+    let count = 0;
+    const interval = setInterval(() => {
+      count += 1;
+      setRefleksTarget(Math.floor(Math.random() * 4));
+      if (count >= 10) {
+        clearInterval(interval);
+        setRefleksActive(false);
+        soundFx.playFanfare();
+      }
+    }, 1200);
+  };
+
+  const handleTapRefleksTarget = (index: number) => {
+    if (!refleksActive) return;
+    if (index === refleksTarget) {
+      soundFx.playPop();
+      setRefleksScore((prev) => prev + 10);
+    } else {
+      soundFx.playTryAgain();
+    }
   };
 
   return (
@@ -405,7 +524,7 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
             activeSubMode === 'labirin' ? 'bg-blue-600 text-white ring-4 ring-blue-300' : 'bg-white text-blue-700 hover:bg-blue-50'
           }`}
         >
-          <span>🧭</span> Labirin Arah (NEW!)
+          <span>🧭</span> Labirin Arah
         </button>
         <button
           onClick={() => { soundFx.playPop(); setActiveSubMode('memori'); }}
@@ -413,7 +532,7 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
             activeSubMode === 'memori' ? 'bg-rose-600 text-white ring-4 ring-rose-300' : 'bg-white text-rose-700 hover:bg-rose-50'
           }`}
         >
-          <span>🃏</span> Memori Kartu (NEW!)
+          <span>🃏</span> Memori Kartu
         </button>
         <button
           onClick={() => { soundFx.playPop(); setActiveSubMode('klasifikasi'); }}
@@ -421,7 +540,7 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
             activeSubMode === 'klasifikasi' ? 'bg-teal-600 text-white ring-4 ring-teal-300' : 'bg-white text-teal-700 hover:bg-teal-50'
           }`}
         >
-          <span>⚖️</span> Klasifikasi (NEW!)
+          <span>⚖️</span> Klasifikasi
         </button>
         <button
           onClick={() => { soundFx.playPop(); setActiveSubMode('refleks'); }}
@@ -429,15 +548,23 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
             activeSubMode === 'refleks' ? 'bg-orange-600 text-white ring-4 ring-orange-300' : 'bg-white text-orange-700 hover:bg-orange-50'
           }`}
         >
-          <span>🎯</span> Refleks Tap (NEW!)
+          <span>🎯</span> Refleks Tap
         </button>
       </div>
 
       {/* GAME 1: SHAPE/ITEM MATCHING */}
       {activeSubMode === 'bentuk' && (
         <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-inner text-center">
-          <h3 className="text-2xl font-black text-amber-900 mb-1">Pilih Gambar {selectedTopic.toUpperCase()} & Sentuh Bayangannya!</h3>
-          <p className="text-amber-700 text-sm mb-6">Cocokkan gambar untuk Usia {usiaSpesifik.replace('_tahun', ' Tahun')}.</p>
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-xl font-black text-amber-900">Cocokkan Gambar (Variasi #{shapesVariationIndex + 1} dari 3)</h3>
+            <button
+              onClick={resetShapesGame}
+              className="px-3 py-1.5 bg-amber-500 text-white font-bold text-xs rounded-xl shadow hover:bg-amber-600 flex items-center gap-1"
+            >
+              🔄 Ulangi (Variasi Berbeda)
+            </button>
+          </div>
+          <p className="text-amber-700 text-xs mb-6">Cocokkan gambar untuk Usia {usiaSpesifik.replace('_tahun', ' Tahun')}.</p>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
             {shapesList.map((shape) => {
@@ -485,12 +612,12 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
           {matchedShapes.length === shapesList.length && (
             <div className="mt-6 p-4 bg-emerald-100 border-2 border-emerald-400 rounded-2xl animate-pulse">
               <span className="text-3xl">🎉 HEBAT SEKALI! 🎉</span>
-              <p className="text-emerald-800 font-bold mt-1">Semua gambar {selectedTopic} sudah cocok!</p>
+              <p className="text-emerald-800 font-bold mt-1">Semua gambar sudah cocok!</p>
               <button
-                onClick={() => { setMatchedShapes([]); setSelectedShape(null); }}
+                onClick={resetShapesGame}
                 className="mt-3 px-4 py-2 bg-emerald-600 text-white font-bold rounded-xl shadow hover:bg-emerald-700"
               >
-                Main Lagi 🔄
+                Ulangi dengan Gambar Baru 🔄
               </button>
             </div>
           )}
@@ -500,8 +627,16 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
       {/* GAME 2: SIZE SORTING */}
       {activeSubMode === 'ukuran' && (
         <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-inner text-center">
-          <h3 className="text-2xl font-black text-amber-900 mb-2">Urutkan dari Paling KECIL ke BESAR!</h3>
-          <p className="text-amber-700 text-sm mb-6">Tekan benda yang paling kecil terlebih dahulu.</p>
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-xl font-black text-amber-900">Urutkan Ukuran (Variasi #{sizeVariationIndex + 1} dari 3)</h3>
+            <button
+              onClick={resetSizeGame}
+              className="px-3 py-1.5 bg-amber-500 text-white font-bold text-xs rounded-xl shadow hover:bg-amber-600 flex items-center gap-1"
+            >
+              🔄 Ulangi (Variasi Berbeda)
+            </button>
+          </div>
+          <p className="text-amber-700 text-xs mb-6">Tekan benda dari yang paling KECIL ke BESAR.</p>
 
           <div className="flex flex-wrap items-end justify-center gap-6 min-h-[160px] mb-6">
             {sizeItems.map((item) => {
@@ -527,12 +662,12 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
           {sizeCompleted && (
             <div className="p-4 bg-emerald-100 border-2 border-emerald-400 rounded-2xl">
               <span className="text-3xl">🌟 PINTAR! 🌟</span>
-              <p className="text-emerald-800 font-bold">Kamu berhasil mengurutkannya dengan benar!</p>
+              <p className="text-emerald-800 font-bold">Kamu berhasil mengurutkannya!</p>
               <button
                 onClick={resetSizeGame}
                 className="mt-3 px-4 py-2 bg-emerald-600 text-white font-bold rounded-xl shadow hover:bg-emerald-700"
               >
-                Ulangi Urutan 🔄
+                Ulangi dengan Ukuran Baru 🔄
               </button>
             </div>
           )}
@@ -586,11 +721,19 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
       {/* GAME 4: COLOR PATTERN */}
       {activeSubMode === 'pola' && (
         <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-inner text-center">
-          <h3 className="text-2xl font-black text-amber-900 mb-2">Lengkapi Pola {selectedTopic.toUpperCase()}!</h3>
-          <p className="text-amber-700 text-sm mb-6">Pilih gambar berikutnya yang cocok dengan urutan di bawah.</p>
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-xl font-black text-amber-900">Lengkapi Pola (Variasi #{patternVariationIndex + 1} dari 3)</h3>
+            <button
+              onClick={nextPattern}
+              className="px-3 py-1.5 bg-amber-500 text-white font-bold text-xs rounded-xl shadow hover:bg-amber-600 flex items-center gap-1"
+            >
+              🔄 Ulangi (Variasi Berbeda)
+            </button>
+          </div>
+          <p className="text-amber-700 text-xs mb-6">Pilih gambar berikutnya yang cocok dengan urutan di bawah.</p>
 
           <div className="flex justify-center items-center gap-4 mb-8">
-            {patternsByTopic[patternIndex % patternsByTopic.length].sequence.map((item, idx) => (
+            {patternsByTopic[patternVariationIndex % patternsByTopic.length].sequence.map((item, idx) => (
               <div key={idx} className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-4xl border-2 border-slate-300 shadow">
                 {item}
               </div>
@@ -602,7 +745,7 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
 
           <p className="font-bold text-slate-700 mb-4">Pilih Jawaban:</p>
           <div className="flex justify-center gap-4 mb-6">
-            {patternsByTopic[patternIndex % patternsByTopic.length].options.map((option, idx) => (
+            {patternsByTopic[patternVariationIndex % patternsByTopic.length].options.map((option, idx) => (
               <button
                 key={idx}
                 onClick={() => handleChoosePatternAnswer(option)}
@@ -621,14 +764,14 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
                 onClick={nextPattern}
                 className="px-4 py-2 bg-purple-600 text-white font-bold rounded-xl shadow hover:bg-purple-700"
               >
-                Soal Berikutnya ➡️
+                Ulangi dengan Pola Baru ➡️
               </button>
             </div>
           )}
         </div>
       )}
 
-      {/* 🧭 GAME 5 (NEW!): LABIRIN ARAH & PATHFINDING */}
+      {/* 🧭 GAME 5: LABIRIN ARAH & PATHFINDING */}
       {activeSubMode === 'labirin' && (
         <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-inner text-center space-y-4">
           <h3 className="text-2xl font-black text-blue-900">🧭 Labirin Arah & Jalan Pintu</h3>
@@ -671,11 +814,21 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
         </div>
       )}
 
-      {/* 🃏 GAME 6 (NEW!): MEMORI KARTU FLIP (PAIR CARDS) */}
+      {/* 🃏 GAME 6: MEMORI KARTU FLIP (3 VARIASI ROTASI) */}
       {activeSubMode === 'memori' && (
         <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-inner text-center space-y-4">
-          <h3 className="text-2xl font-black text-rose-900">🃏 Tebak & Ingat Pasangan Kartu!</h3>
-          <p className="text-rose-700 text-sm">Buka 2 kartu dan temukan gambar yang sama.</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-2xl font-black text-rose-900">🃏 Memori Kartu (Variasi #{memoryVariationIndex + 1} dari 3)</h3>
+              <p className="text-rose-700 text-xs">Buka 2 kartu dan temukan gambar yang sama.</p>
+            </div>
+            <button
+              onClick={resetMemoryGame}
+              className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white font-black text-xs rounded-xl shadow flex items-center gap-1"
+            >
+              🔄 Ulangi Kartu (Ganti Buah)
+            </button>
+          </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-72 mx-auto">
             {memoryCards.map((card) => (
@@ -694,17 +847,30 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
           {memoryCards.every((c) => c.matched) && (
             <div className="p-4 bg-emerald-100 border-2 border-emerald-400 rounded-2xl">
               <span className="text-3xl">👏 INGATAN HEBAT! 👏</span>
-              <button onClick={resetMemory} className="mt-2 px-4 py-2 bg-emerald-600 text-white font-bold rounded-xl shadow">Ulangi Kartu 🔄</button>
+              <p className="text-emerald-800 font-bold mt-1">Kartu berhasil dipasangkan!</p>
+              <button onClick={resetMemoryGame} className="mt-3 px-4 py-2 bg-emerald-600 text-white font-bold rounded-xl shadow hover:bg-emerald-700">
+                Ulangi Kartu dengan Gambar Baru (Variasi #{((memoryVariationIndex + 1) % 3) + 1}) 🔄
+              </button>
             </div>
           )}
         </div>
       )}
 
-      {/* ⚖️ GAME 7 (NEW!): KLASIFIKASI KERANJANG CATEGORY */}
+      {/* ⚖️ GAME 7: KLASIFIKASI KERANJANG (3 VARIASI ROTASI) */}
       {activeSubMode === 'klasifikasi' && (
         <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-inner text-center space-y-4">
-          <h3 className="text-2xl font-black text-teal-900">⚖️ Pisahkan Buah & Sayur!</h3>
-          <p className="text-teal-700 text-sm">Tekan makanan di atas lalu pilih keranjang yang tepat.</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-2xl font-black text-teal-900">⚖️ Klasifikasi Makanan (Variasi #{classifyVariationIndex + 1} dari 3)</h3>
+              <p className="text-teal-700 text-xs">Tekan makanan di atas lalu pilih keranjang yang tepat.</p>
+            </div>
+            <button
+              onClick={resetClassifyGame}
+              className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1"
+            >
+              🔄 Ulangi (Ganti Makanan)
+            </button>
+          </div>
 
           <div className="flex justify-center gap-4 my-4">
             {itemsToClassify.map((item) => {
@@ -743,10 +909,17 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
               <div className="flex justify-center gap-1 mt-2 text-2xl">{basketVeggie.map((s, i) => <span key={i}>{s}</span>)}</div>
             </div>
           </div>
+
+          {classifiedIds.length === itemsToClassify.length && (
+            <div className="p-4 bg-emerald-100 border-2 border-emerald-400 rounded-2xl">
+              <span className="text-3xl">🎉 SEMUA PISAH DENGAN BENAR! 🎉</span>
+              <button onClick={resetClassifyGame} className="mt-2 px-4 py-2 bg-emerald-600 text-white font-bold rounded-xl shadow">Ulangi dengan Makanan Baru 🔄</button>
+            </div>
+          )}
         </div>
       )}
 
-      {/* 🎯 GAME 8 (NEW!): REFLEKS KETUK SASARAN KECEPATAN */}
+      {/* 🎯 GAME 8: REFLEKS KETUK SASARAN */}
       {activeSubMode === 'refleks' && (
         <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-inner text-center space-y-4">
           <h3 className="text-2xl font-black text-orange-900">🎯 Ketuk Sasaran Cepat!</h3>
