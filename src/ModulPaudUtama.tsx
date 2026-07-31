@@ -252,7 +252,7 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
             <span className="text-3xl p-1 bg-amber-400 rounded-xl">🧸</span>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-black tracking-tight text-amber-300">KidStep PAUD Multi-Tenant</h1>
+                <h1 className="text-xl font-black tracking-tight text-amber-300">CeritaAnanda PAUD Multi-Tenant</h1>
                 <span className="text-[10px] font-extrabold bg-emerald-500 text-white px-2 py-0.5 rounded-full uppercase">Multi-School Isolated</span>
               </div>
               
@@ -383,7 +383,7 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
       )}
 
       <footer className="bg-indigo-950 text-indigo-300 text-center text-xs py-4 border-t border-indigo-900">
-        © 2026 KidStep PAUD Multi-Tenant Enterprise Architecture. Data terisolasi aman per Yayasan / Sekolah.
+        © 2026 CeritaAnanda PAUD Multi-Tenant Enterprise Architecture. Data terisolasi aman per Yayasan / Sekolah.
       </footer>
     </div>
   );
