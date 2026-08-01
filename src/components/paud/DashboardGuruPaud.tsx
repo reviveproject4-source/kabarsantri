@@ -31,6 +31,9 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
   const [panggilan, setPanggilan] = useState('');
   const [kategoriUsia, setKategoriUsia] = useState<KategoriUsiaSpesifik>('3_tahun');
   const [fotoEmoji, setFotoEmoji] = useState('👶');
+  const [namaAyah, setNamaAyah] = useState('');
+  const [namaIbu, setNamaIbu] = useState('');
+  const [kontakOrangTua, setKontakOrangTua] = useState('');
 
   const selectedChild = daftarRekapMurid.find((m) => m.id === selectedMuridId) || daftarRekapMurid[0];
 
@@ -43,11 +46,17 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
       nama: namaMurid,
       panggilan: panggilan || namaMurid,
       kategoriUsia,
-      fotoEmoji
+      fotoEmoji,
+      namaAyah: namaAyah.trim() || undefined,
+      namaIbu: namaIbu.trim() || undefined,
+      kontakOrangTua: kontakOrangTua.trim() || undefined
     };
     if (onAddMurid) onAddMurid(newChild);
     setNamaMurid('');
     setPanggilan('');
+    setNamaAyah('');
+    setNamaIbu('');
+    setKontakOrangTua('');
     setShowAddForm(false);
   };
 
@@ -206,7 +215,7 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
           <h3 className="font-bold text-slate-800 text-lg">Tambah Profil Anak Didik Baru</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1">Nama Lengkap:</label>
+              <label className="block text-xs font-bold text-slate-600 mb-1">Nama Lengkap Murid:</label>
               <input
                 type="text"
                 required
@@ -253,6 +262,37 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1">Nama Ayah:</label>
+              <input
+                type="text"
+                placeholder="Contoh: Abdullah"
+                value={namaAyah}
+                onChange={(e) => setNamaAyah(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1">Nama Ibu:</label>
+              <input
+                type="text"
+                placeholder="Contoh: Khadijah"
+                value={namaIbu}
+                onChange={(e) => setNamaIbu(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-bold text-slate-600 mb-1">No. WhatsApp / Kontak Orang Tua:</label>
+              <input
+                type="tel"
+                placeholder="Contoh: 081234567890"
+                value={kontakOrangTua}
+                onChange={(e) => setKontakOrangTua(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-400"
+              />
             </div>
           </div>
           <button type="submit" className="px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl shadow hover:bg-indigo-700">
@@ -308,9 +348,23 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
                   <span className="text-5xl p-2 bg-indigo-50 rounded-2xl">{selectedChild.fotoEmoji}</span>
                   <div>
                     <h3 className="text-2xl font-black text-slate-900">{selectedChild.nama}</h3>
-                    <p className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full inline-block mt-1">
-                      Kategori Usia: {selectedChild.kategoriUsia.replace('_tahun', ' Tahun')}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                      <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">
+                        Kategori Usia: {selectedChild.kategoriUsia.replace('_tahun', ' Tahun')}
+                      </span>
+                      {selectedChild.kontakOrangTua && (
+                        <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                          📱 {selectedChild.kontakOrangTua}
+                        </span>
+                      )}
+                    </div>
+
+                    {(selectedChild.namaAyah || selectedChild.namaIbu) && (
+                      <div className="flex flex-wrap gap-3 text-xs text-slate-600 mt-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                        {selectedChild.namaAyah && <div>👨 Ayah: <strong className="text-slate-800">{selectedChild.namaAyah}</strong></div>}
+                        {selectedChild.namaIbu && <div>👩 Ibu: <strong className="text-slate-800">{selectedChild.namaIbu}</strong></div>}
+                      </div>
+                    )}
                   </div>
                 </div>
 

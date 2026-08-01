@@ -59,6 +59,9 @@ export interface MuridPaud {
   fotoEmoji: string;
   catatanGuru?: string;
   tanggalLahir?: string;
+  namaAyah?: string;
+  namaIbu?: string;
+  kontakOrangTua?: string;
   inviteTokenWali?: string; // Token undangan wali murid
 }
 
