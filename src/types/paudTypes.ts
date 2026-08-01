@@ -144,6 +144,7 @@ export interface CatatanObservasiHarian {
   mingguKe: number;
   domainUtama: DomainUtamaKurikulum;
   kegiatanId: string;
+  kegiatanJudul?: string;
   status: StatusObservasiAdab;
   catatanGuru?: string;
   fotoUrl?: string;

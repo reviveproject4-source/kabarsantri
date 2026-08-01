@@ -35,18 +35,31 @@ export const generateRaporPDF = (murid: RekapMuridPaud, namaSekolah: string = 'C
             font-weight: 900;
             font-size: 14px;
           }
-          .card {
+          .student-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 20px;
             background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 16px;
+          }
+          .card {
+            background: #ffffff;
             border: 2px solid #e2e8f0;
             border-radius: 16px;
             padding: 16px;
             margin-top: 16px;
           }
           .title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 900;
             color: #1e1b4b;
             margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
           }
           .grid {
             display: grid;
@@ -54,14 +67,14 @@ export const generateRaporPDF = (murid: RekapMuridPaud, namaSekolah: string = 'C
             gap: 12px;
           }
           .score-box {
-            background: white;
+            background: #f1f5f9;
             border: 1px solid #cbd5e1;
             padding: 12px;
             border-radius: 12px;
             text-align: center;
           }
           .score-val {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 900;
             color: #059669;
           }
@@ -71,6 +84,13 @@ export const generateRaporPDF = (murid: RekapMuridPaud, namaSekolah: string = 'C
             padding: 12px;
             border-radius: 8px;
             font-size: 13px;
+          }
+          .parent-box {
+            font-size: 12px;
+            color: #475569;
+            margin-top: 6px;
+            display: flex;
+            gap: 16px;
           }
           .footer {
             margin-top: 32px;
@@ -91,15 +111,26 @@ export const generateRaporPDF = (murid: RekapMuridPaud, namaSekolah: string = 'C
           <div class="badge">Usia ${murid.kategoriUsia.replace('_tahun', ' Tahun')}</div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 16px; margin-top: 20px;">
+        <div class="student-info">
           <div style="font-size: 50px; background: #e0e7ff; padding: 12px; border-radius: 20px;">${murid.fotoEmoji}</div>
-          <div>
+          <div style="flex: 1;">
             <h2 style="margin: 0; font-size: 22px; color: #1e293b;">${murid.nama} (${murid.panggilan})</h2>
             <p style="margin: 4px 0 0 0; color: #64748b; font-size: 13px;">ID Murid: ${murid.id} • Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}</p>
+            ${
+              murid.namaAyah || murid.namaIbu || murid.kontakOrangTua
+                ? `
+              <div class="parent-box">
+                ${murid.namaAyah ? `<span>👨 Ayah: <strong>${murid.namaAyah}</strong></span>` : ''}
+                ${murid.namaIbu ? `<span>👩 Ibu: <strong>${murid.namaIbu}</strong></span>` : ''}
+                ${murid.kontakOrangTua ? `<span>📱 Kontak: <strong>${murid.kontakOrangTua}</strong></span>` : ''}
+              </div>
+            `
+                : ''
+            }
           </div>
         </div>
 
-        <!-- LOGIKA & KOGNITIF -->
+        <!-- DOMAIN 1: LOGIKA & KOGNITIF -->
         <div class="card">
           <div class="title">🧠 Domain Logika & Kognitif</div>
           <div class="grid">
@@ -122,7 +153,7 @@ export const generateRaporPDF = (murid: RekapMuridPaud, namaSekolah: string = 'C
           </div>
         </div>
 
-        <!-- MOTORIK HALUS -->
+        <!-- DOMAIN 2: MOTORIK HALUS -->
         <div class="card">
           <div class="title">✍️ Domain Motorik Halus</div>
           <div class="grid">
@@ -134,12 +165,16 @@ export const generateRaporPDF = (murid: RekapMuridPaud, namaSekolah: string = 'C
               <div style="font-size: 11px; color: #64748b;">Puzzle Kepingan</div>
               <div class="score-val">${murid.skorMotorikHalus.puzzleBentuk}%</div>
             </div>
+            <div class="score-box" style="grid-column: span 2;">
+              <div style="font-size: 11px; color: #64748b;">Pop Bubble Sensory</div>
+              <div class="score-val">${murid.skorMotorikHalus.bubblePopSensory}%</div>
+            </div>
           </div>
         </div>
 
-        <!-- MOTORIK KASAR -->
+        <!-- DOMAIN 3: MOTORIK KASAR & OLAHRAGA -->
         <div class="card">
-          <div class="title">🏃 Domain Motorik Kasar & Fisik</div>
+          <div class="title">🏃 Domain Motorik Kasar & Olahraga Outdoor</div>
           ${
             murid.evaluasiMotorikKasar.length === 0
               ? '<p style="font-size: 13px; color: #94a3b8;">Belum ada aktivitas fisik yang dicatat.</p>'
@@ -157,8 +192,16 @@ export const generateRaporPDF = (murid: RekapMuridPaud, namaSekolah: string = 'C
           }
         </div>
 
+        <!-- CATATAN KHUSUS GURU -->
+        <div class="card" style="background: #fffbeb; border-color: #fde68a;">
+          <div class="title" style="color: #78350f;">💖 Pesan & Catatan Perkembangan Guru</div>
+          <p style="font-size: 13px; color: #92400e; margin: 0; leading-relaxed: 1.6;">
+            Ananda ${murid.panggilan} berkembang dengan sangat baik di kelas. Ananda aktif berinteraksi dengan teman-teman, senang mengikuti kegiatan gerak dan lagu, serta memiliki rasa ingin tahu yang tinggi.
+          </p>
+        </div>
+
         <div class="footer">
-          Laporan Otomatis Sistem CeritaAnanda PAUD • Dokumen Resmi Pendidikan Anak Usia Dini
+          Dokumen Resmi Rapor Perkembangan Anak • CeritaAnanda PAUD Multi-Tenant System
         </div>
 
         <script>

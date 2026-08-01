@@ -12,6 +12,7 @@ import {
 import { KEBIASAAN_ADAB_LIST, KURIKULUM_BULAN_1_LIST } from '../../data/kurikulum5HariData';
 import { soundFx } from '../../utils/soundEffects';
 import { GameSosialBahasa } from './GameSosialBahasa';
+import { GaleriPerkembanganAnak } from './GaleriPerkembanganAnak';
 
 interface DashboardGuruPaudProps {
   daftarRekapMurid: RekapMuridPaud[];
@@ -130,10 +131,16 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
   };
 
   // Handler Simpan Observasi Harian Per Murid (Isolasi Tenant)
-  const handleLogObservasiHarian = (muridId: string, status: StatusObservasiAdab, catatan?: string) => {
+  const handleLogObservasiHarian = (
+    muridId: string,
+    status: StatusObservasiAdab,
+    catatan?: string,
+    fotoBase64?: string
+  ) => {
     soundFx.playPop();
+    const existing = catatanObservasiList.find((x) => x.muridId === muridId && x.kegiatanId === kegiatanHariIni.id);
     const newObs: CatatanObservasiHarian = {
-      id: `obs-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
+      id: existing?.id || `obs-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
       tenantId: activeTenantId,
       sekolahId: 'sch-01',
       kelasId: 'kelas-a',
@@ -145,8 +152,10 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
       mingguKe: activeMinggu,
       domainUtama: kegiatanHariIni.domainUtama,
       kegiatanId: kegiatanHariIni.id,
+      kegiatanJudul: kegiatanHariIni.inti.judul,
       status,
-      catatanGuru: catatan,
+      catatanGuru: catatan !== undefined ? catatan : existing?.catatanGuru,
+      fotoUrl: fotoBase64 !== undefined ? fotoBase64 : existing?.fotoUrl,
       jenisPenilaian: 'manual'
     };
     setCatatanObservasiList((prev) => [newObs, ...prev.filter((x) => !(x.muridId === muridId && x.kegiatanId === kegiatanHariIni.id))]);
@@ -634,7 +643,7 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
                     (o) => o.muridId === m.id && o.kegiatanId === kegiatanHariIni.id
                   );
                   return (
-                    <div key={m.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2 text-xs">
+                    <div key={m.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5 text-xs">
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
                           <span className="text-xl">{m.fotoEmoji}</span>
@@ -643,7 +652,8 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
                         <span className="text-[10px] text-slate-400">Usia {m.kategoriUsia.replace('_tahun', 'Thn')}</span>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-1 pt-1">
+                      {/* INDIKATOR STATUS */}
+                      <div className="grid grid-cols-3 gap-1">
                         <button
                           onClick={() => handleLogObservasiHarian(m.id, 'belum_terlihat')}
                           className={`py-1 rounded-lg text-[10px] font-bold transition-colors ${
@@ -669,6 +679,51 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
                           Sendiri
                         </button>
                       </div>
+
+                      {/* CATATAN TEKS BEBAS */}
+                      <input
+                        type="text"
+                        placeholder="Catatan pengamatan guru..."
+                        value={obsLog?.catatanGuru || ''}
+                        onChange={(e) => handleLogObservasiHarian(m.id, obsLog?.status || 'mulai_muncul', e.target.value)}
+                        className="w-full p-2 bg-white rounded-lg border border-slate-300 text-[11px] focus:ring-1 focus:ring-indigo-400"
+                      />
+
+                      {/* LAMPIRAN FOTO MODAL / INPUT FILE */}
+                      <div className="flex items-center justify-between pt-1">
+                        <label className="cursor-pointer text-[10px] font-bold text-indigo-700 hover:text-indigo-900 bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-200 flex items-center gap-1">
+                          <span>📷</span> {obsLog?.fotoUrl ? 'Ganti Foto' : 'Lampirkan Foto HP'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  handleLogObservasiHarian(
+                                    m.id,
+                                    obsLog?.status || 'mulai_muncul',
+                                    obsLog?.catatanGuru,
+                                    reader.result as string
+                                  );
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+                        </label>
+                        {obsLog?.fotoUrl && (
+                          <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-0.5">
+                            ✓ Ada Foto
+                          </span>
+                        )}
+                      </div>
+
+                      {obsLog?.fotoUrl && (
+                        <img src={obsLog.fotoUrl} alt="Dokumentasi HP" className="w-full h-20 object-cover rounded-lg border" />
+                      )}
                     </div>
                   );
                 })}
@@ -816,6 +871,9 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
                   ))}
                 </div>
               </div>
+
+              {/* GALERI PERKEMBANGAN & DOKUMENTASI FOTO */}
+              <GaleriPerkembanganAnak murid={selectedChild} catatanObservasiList={catatanObservasiList} />
             </div>
           )}
         </div>
