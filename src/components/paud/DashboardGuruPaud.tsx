@@ -7,12 +7,14 @@ import {
   HariAktif,
   StatusObservasiAdab,
   CatatanObservasiHarian,
-  CatatanAdabMingguan
+  CatatanAdabMingguan,
+  RentangWaktu
 } from '../../types/paudTypes';
 import { KEBIASAAN_ADAB_LIST, KURIKULUM_BULAN_1_LIST } from '../../data/kurikulum5HariData';
 import { soundFx } from '../../utils/soundEffects';
 import { GameSosialBahasa } from './GameSosialBahasa';
 import { GaleriPerkembanganAnak } from './GaleriPerkembanganAnak';
+import { DropdownRentangWaktu } from './DropdownRentangWaktu';
 
 interface DashboardGuruPaudProps {
   daftarRekapMurid: RekapMuridPaud[];
@@ -29,6 +31,7 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
   onAddMurid,
   onSelectChildForPlay
 }) => {
+  const [rentangWaktu, setRentangWaktu] = useState<RentangWaktu>('harian');
   const [activeTabGuru, setActiveTabGuru] = useState<'rapor' | 'kurikulum' | 'harian'>(initialTab);
 
   useEffect(() => {
@@ -183,6 +186,23 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
 
   return (
     <div className="bg-slate-50 min-h-full p-4 md:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+      {/* UNIFIED DROPDOWN RENTANG WAKTU CONTROLLER (KONSISTEN DI POSISI SAMA) */}
+      <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div>
+          <span className="text-[10px] uppercase font-black tracking-widest text-indigo-600">Unified Time-Range Controller</span>
+          <h3 className="text-xl font-black text-slate-900">Dashboard Guru PAUD</h3>
+        </div>
+
+        <DropdownRentangWaktu
+          value={rentangWaktu}
+          onChange={(val) => {
+            setRentangWaktu(val);
+            if (val === 'harian') setActiveTabGuru('harian');
+            else if (val === 'bulanan' || val === 'semester') setActiveTabGuru('kurikulum');
+          }}
+        />
+      </div>
+
       {/* Header Panel Guru */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-indigo-900 text-white p-6 rounded-3xl shadow-lg gap-4">
         <div>

@@ -189,3 +189,18 @@ export interface KebiasaanAdabMingguan {
   indikator: string[];
   contohSituasi: string;
 }
+
+export type RentangWaktu = 'harian' | 'bulanan' | 'semester';
+
+export interface LaporanMingguanOtomatis {
+  tenantId: string;
+  kelasId: string;
+  mingguKe: number;
+  bulan: number;
+  hariTerisiCount: number; // 0 - 5 hari
+  totalMuridCount: number;
+  muridTerobservasiCount: number;
+  distribusiDomain: Record<DomainUtamaKurikulum, { belum: number; mulai: number; mandiri: number }>;
+  adabStats: Record<string, StatusObservasiAdab>;
+  muridBelumDiobservasiList: string[];
+}
