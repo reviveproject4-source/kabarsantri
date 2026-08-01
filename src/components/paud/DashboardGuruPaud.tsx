@@ -252,6 +252,29 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
         </div>
       </div>
 
+      {/* BANNER DUA JALUR PENILAIAN (PROMPT 9) */}
+      <div className="bg-gradient-to-r from-amber-50 to-indigo-50 border-2 border-indigo-200 p-4 rounded-3xl grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+        <div className="flex items-start gap-3 bg-white p-3.5 rounded-2xl border border-amber-200 shadow-sm">
+          <span className="text-3xl p-1.5 bg-amber-100 rounded-xl">🤖</span>
+          <div>
+            <span className="font-black text-amber-900 uppercase text-[11px]">JALUR OTOMATIS (Tanpa Mengetik)</span>
+            <p className="text-slate-700 font-semibold mt-0.5">
+              Domain Logika & Kognitif, Motorik Halus, Numerasi ➔ Langsung otomatis tercatat dari <strong>Mode Kelas Proyektor</strong> saat guru memencet tombol kendali.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-3 bg-white p-3.5 rounded-2xl border border-indigo-200 shadow-sm">
+          <span className="text-3xl p-1.5 bg-indigo-100 rounded-xl">✍️</span>
+          <div>
+            <span className="font-black text-indigo-950 uppercase text-[11px]">JALUR MANUAL (Pengamatan Singkat)</span>
+            <p className="text-slate-700 font-semibold mt-0.5">
+              Domain Adab & Menghargai, Sosial-Emosional, Agama & Akhlak, Bahasa, Motorik Kasar ➔ Diisi dari lembar observasi singkat perilaku nyata anak.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* FORM TAMBAH MURID BARU */}
       {showAddForm && (
         <form onSubmit={handleAddSubmit} className="bg-white p-6 rounded-2xl border-2 border-indigo-100 shadow-md space-y-4">

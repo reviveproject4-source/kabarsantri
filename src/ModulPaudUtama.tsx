@@ -3,6 +3,7 @@ import { MuridPaud, RekapMuridPaud, StatusCapaian, BulanCurriculum, TenantPaud, 
 import { DashboardGuruPaud } from './components/paud/DashboardGuruPaud';
 import { ModulMotorikKasar } from './components/paud/ModulMotorikKasar';
 import { ModeMainAnak } from './components/paud/ModeMainAnak';
+import { ModeKelasProyektor } from './components/paud/ModeKelasProyektor';
 import { RoleSystemManager, MOCK_USERS_LIST } from './components/paud/RoleSystemManager';
 import { soundFx } from './utils/soundEffects';
 
@@ -109,7 +110,7 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
     return INITIAL_MURID;
   });
 
-  const [activeView, setActiveView] = useState<'dashboard' | 'kasar' | 'anak' | 'roles'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'kasar' | 'anak' | 'roles' | 'proyektor'>('dashboard');
   const [dashboardTab, setDashboardTab] = useState<'rapor' | 'kurikulum'>('rapor');
   const [selectedChildForPlay, setSelectedChildForPlay] = useState<RekapMuridPaud>(daftarMurid[0] || INITIAL_MURID[0]);
 
@@ -250,6 +251,18 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
     setActiveView('anak');
   };
 
+  if (activeView === 'proyektor') {
+    return (
+      <ModeKelasProyektor
+        daftarMurid={daftarMurid}
+        judulMateri="Tantangan Kognitif & Logika Proyektor HP"
+        gameId="logika"
+        onExit={() => setActiveView('dashboard')}
+        onAutoScoreLogged={(muridId, domain, score) => handleScoreUpdateChild('logika', 'pencocokanBentuk', score)}
+      />
+    );
+  }
+
   if (activeView === 'anak') {
     return (
       <ModeMainAnak
@@ -332,6 +345,12 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
               }`}
             >
               <span>🏃</span> Motorik Kasar
+            </button>
+            <button
+              onClick={() => { soundFx.playSuccess(); setActiveView('proyektor'); }}
+              className="px-3 py-2 rounded-xl font-bold text-xs bg-amber-400 text-indigo-950 hover:bg-amber-300 shadow-lg transition-transform active:scale-95 flex items-center gap-1.5 border border-amber-300"
+            >
+              <span>📺</span> Mode Kelas (Proyektor)
             </button>
             <button
               onClick={() => { soundFx.playSuccess(); startPlayForChild(selectedChildForPlay); }}
