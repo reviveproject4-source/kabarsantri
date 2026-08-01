@@ -352,9 +352,10 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
 
         {activeView === 'dashboard' && (
           <DashboardGuruPaud
-            key={dashboardTab}
+            key={`${activeTenantId}-${dashboardTab}`}
             daftarRekapMurid={daftarMurid}
-            initialTab={dashboardTab}
+            activeTenantId={activeTenantId}
+            initialTab={dashboardTab === 'kurikulum' ? 'kurikulum' : 'harian'}
             onAddMurid={handleAddMurid}
             onSelectChildForPlay={startPlayForChild}
           />

@@ -126,3 +126,65 @@ export interface NotifikasiApp {
   dibaca: boolean;
   tipe: 'reminder' | 'info' | 'warning';
 }
+
+export type HariAktif = 'senin' | 'selasa' | 'rabu' | 'kamis' | 'jumat';
+export type DomainUtamaKurikulum = 'logika' | 'motorik_halus' | 'motorik_kasar_olahraga' | 'sosial_bahasa' | 'agama_akhlak';
+export type StatusObservasiAdab = 'belum_terlihat' | 'mulai_muncul' | 'muncul_sendiri';
+
+export interface CatatanObservasiHarian {
+  id: string;
+  tenantId: string;
+  sekolahId: string;
+  kelasId: string;
+  muridId: string;
+  guruId: string;
+  tanggal: string;
+  hari: HariAktif;
+  bulan: number;
+  mingguKe: number;
+  domainUtama: DomainUtamaKurikulum;
+  kegiatanId: string;
+  status: StatusObservasiAdab;
+  catatanGuru?: string;
+  fotoUrl?: string;
+  jenisPenilaian: 'otomatis' | 'manual';
+}
+
+export interface CatatanAdabMingguan {
+  id: string;
+  tenantId: string;
+  muridId: string;
+  mingguKe: number;
+  status: StatusObservasiAdab;
+  catatanGuru?: string;
+}
+
+export interface KegiatanHarianKurikulum {
+  id: string;
+  bulan: number;
+  mingguKe: number;
+  hari: HariAktif;
+  domainUtama: DomainUtamaKurikulum;
+  isOutdoor: boolean;
+  pembuka: { durasi: string; aktivitas: string };
+  inti: {
+    durasi: string;
+    judul: string;
+    deskripsi: string;
+    alatAlat: string[];
+    instruksiGuru: string[];
+  };
+  penutup: { durasi: string; aktivitas: string };
+  alternatif: Array<{ judul: string; deskripsi: string; alasanDigunakan: string }>;
+  cadanganIndoor?: { judul: string; deskripsi: string; instruksiGuru: string[] };
+  variasiUsia: { usia2_3: string; usia4: string; usia5: string };
+  gameIdRef?: string;
+}
+
+export interface KebiasaanAdabMingguan {
+  mingguKe: number;
+  judulAdab: string;
+  deskripsi: string;
+  indikator: string[];
+  contohSituasi: string;
+}
