@@ -8,77 +8,10 @@ import { RoleSystemManager, MOCK_USERS_LIST } from './components/paud/RoleSystem
 import { soundFx } from './utils/soundEffects';
 
 export const DAFTAR_TENANT_DEFAULT: TenantPaud[] = [
-  { id: 'tenant-paud-01', namaSekolah: 'PAUD Tunas Harapan', kodeYayasan: 'YYS-PAUD-01', alamat: 'Jl. Pemuda No. 12' },
-  { id: 'tenant-paud-02', namaSekolah: 'PAUD Bintang Ceria', kodeYayasan: 'YYS-PAUD-02', alamat: 'Jl. Melati No. 45' },
-  { id: 'tenant-paud-03', namaSekolah: 'TK Islam Terpadu Santri Cendekia', kodeYayasan: 'YYS-PAUD-03', alamat: 'Kompleks Pesantren' }
+  { id: 'tenant-paud-01', namaSekolah: 'PAUD CeritaAnanda (Sekolah Pertama)', kodeYayasan: 'YYS-PAUD-01', alamat: 'Jl. Utama Sekolah' }
 ];
 
-const INITIAL_MURID: RekapMuridPaud[] = [
-  {
-    id: 'm-1',
-    tenantId: 'tenant-paud-01',
-    namaSekolah: 'PAUD Tunas Harapan',
-    nama: 'Ananda Hafiz',
-    panggilan: 'Hafiz',
-    kategoriUsia: '2_tahun',
-    fotoEmoji: '👦',
-    skorLogika: {
-      pencocokanBentuk: 100,
-      mengurutkanUkuran: 100,
-      menghitungBenda: 80,
-      polaWarna: 60
-    },
-    skorMotorikHalus: {
-      tracingGaris: 70,
-      puzzleBentuk: 100,
-      bubblePopSensory: 100
-    },
-    evaluasiMotorikKasar: [
-      {
-        tenantId: 'tenant-paud-01',
-        bulan: 1,
-        mingguKe: 1,
-        aktivitasId: 'b1-tepuk-irama',
-        namaAktivitas: 'Tepuk Irama & Melangkah 👏',
-        status: 'berkembang_sesuai_harapan',
-        tanggal: '2026-07-30',
-        catatanGuru: 'Sudah dapat melangkah mengikuti tepukan irama.'
-      }
-    ]
-  },
-  {
-    id: 'm-2',
-    tenantId: 'tenant-paud-01',
-    namaSekolah: 'PAUD Tunas Harapan',
-    nama: 'Aisyah Humaira',
-    panggilan: 'Aisyah',
-    kategoriUsia: '5_tahun',
-    fotoEmoji: '👧',
-    skorLogika: {
-      pencocokanBentuk: 100,
-      mengurutkanUkuran: 100,
-      menghitungBenda: 100,
-      polaWarna: 100
-    },
-    skorMotorikHalus: {
-      tracingGaris: 90,
-      puzzleBentuk: 100,
-      bubblePopSensory: 100
-    },
-    evaluasiMotorikKasar: [
-      {
-        tenantId: 'tenant-paud-01',
-        bulan: 5,
-        mingguKe: 17,
-        aktivitasId: 'b5-burung-bangau',
-        namaAktivitas: 'Keseimbangan Bangau & Pesawat 🦩',
-        status: 'sangat_baik',
-        tanggal: '2026-07-30',
-        catatanGuru: 'Keseimbangan sangat baik, berdiri 6 detik tanpa goyah.'
-      }
-    ]
-  }
-];
+const INITIAL_MURID: RekapMuridPaud[] = [];
 
 interface ModulPaudUtamaProps {
   onKembaliKeUtama?: () => void;

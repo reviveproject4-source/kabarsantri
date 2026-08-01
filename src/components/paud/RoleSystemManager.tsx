@@ -336,10 +336,27 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
       {currentUser.role === 'yayasan' && (
         <div className="bg-purple-900 text-white p-6 rounded-3xl space-y-4">
           <div className="flex justify-between items-center">
-            <h4 className="text-xl font-black">Dashboard Pengurus Yayasan ({rentangWaktu.toUpperCase()})</h4>
-            <span className="text-xs bg-purple-800 px-3 py-1 rounded-full text-purple-200 font-bold">
-              Total {daftarTenant.length} Unit Sekolah
-            </span>
+            <div>
+              <h4 className="text-xl font-black">Dashboard Pengurus Yayasan ({rentangWaktu.toUpperCase()})</h4>
+              <span className="text-xs text-purple-200">Pengawasan Multi-Tenant & Manajemen Sistem</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  if (window.confirm('Apakah Anda yakin ingin meriset seluruh penyimpanan data lokal ke kondisi rilis awal?')) {
+                    localStorage.clear();
+                    window.location.reload();
+                  }
+                }}
+                className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow transition-transform active:scale-95"
+              >
+                🔄 Reset ke Data Awal
+              </button>
+              <span className="text-xs bg-purple-800 px-3 py-1 rounded-full text-purple-200 font-bold">
+                Total {daftarTenant.length} Unit Sekolah
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
