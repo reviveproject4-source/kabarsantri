@@ -5,7 +5,7 @@ export type BulanCurriculum = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 
 export type KategoriMateri = 'buah' | 'sayur' | 'kendaraan' | 'hewan' | 'bentuk_warna' | 'angka' | 'motorik_halus' | 'motorik_kasar';
 
-export type UserRole = 'guru' | 'kepala_sekolah' | 'yayasan' | 'wali_murid';
+export type UserRole = 'guru' | 'kepala_sekolah' | 'yayasan';
 
 export interface UserAccount {
   id: string;

@@ -323,7 +323,7 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
                 activeView === 'roles' ? 'bg-purple-500 text-white shadow' : 'bg-indigo-900 text-indigo-200 hover:bg-indigo-800'
               }`}
             >
-              <span>👥</span> 4 Level Role & Akses
+              <span>👥</span> 3 Level Role & Akses
             </button>
             <button
               onClick={() => { soundFx.playPop(); setActiveView('kasar'); }}
@@ -352,6 +352,7 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
 
         {activeView === 'dashboard' && (
           <DashboardGuruPaud
+            key={dashboardTab}
             daftarRekapMurid={daftarMurid}
             initialTab={dashboardTab}
             onAddMurid={handleAddMurid}
