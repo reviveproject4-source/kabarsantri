@@ -392,6 +392,28 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
+                  soundFx.playSuccess();
+                  const dataToExport = {
+                    sekolah: currentUser.tenantId,
+                    tanggalEkspor: new Date().toISOString(),
+                    totalMurid: daftarMurid.length,
+                    daftarMurid: daftarMurid
+                  };
+                  const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `Backup_Data_Sekolah_${currentUser.tenantId}_${new Date().toISOString().split('T')[0]}.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition-transform active:scale-95 flex items-center gap-1"
+              >
+                <span>📥</span> Unduh Semua Data (Backup)
+              </button>
+
+              <button
+                onClick={() => {
                   if (window.confirm('Apakah Anda yakin ingin meriset seluruh penyimpanan data lokal ke kondisi rilis awal?')) {
                     localStorage.clear();
                     window.location.reload();

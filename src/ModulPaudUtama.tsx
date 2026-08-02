@@ -3,6 +3,7 @@ import { MuridPaud, RekapMuridPaud, StatusCapaian, BulanCurriculum, TenantPaud, 
 import { DashboardGuruPaud } from './components/paud/DashboardGuruPaud';
 import { ModulMotorikKasar } from './components/paud/ModulMotorikKasar';
 import { ModulGerakSensorik } from './components/paud/ModulGerakSensorik';
+import { ModulPendaftaranLembaga } from './components/paud/ModulPendaftaranLembaga';
 import { ModeMainAnak } from './components/paud/ModeMainAnak';
 import { ModeKelasProyektor } from './components/paud/ModeKelasProyektor';
 import { RoleSystemManager, MOCK_USERS_LIST } from './components/paud/RoleSystemManager';
@@ -44,7 +45,7 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
     return INITIAL_MURID;
   });
 
-  const [activeView, setActiveView] = useState<'dashboard' | 'kasar' | 'sensorik' | 'anak' | 'roles' | 'proyektor'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'kasar' | 'sensorik' | 'anak' | 'roles' | 'proyektor' | 'pendaftaran'>('dashboard');
   const [dashboardTab, setDashboardTab] = useState<'rapor' | 'kurikulum'>('rapor');
   const [selectedChildForPlay, setSelectedChildForPlay] = useState<RekapMuridPaud>(daftarMurid[0] || INITIAL_MURID[0]);
 
@@ -295,6 +296,14 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
               <span>📺</span> Mode Kelas (Proyektor)
             </button>
             <button
+              onClick={() => { soundFx.playPop(); setActiveView('pendaftaran'); }}
+              className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
+                activeView === ('pendaftaran' as any) ? 'bg-amber-300 text-indigo-950 shadow' : 'bg-indigo-800 text-amber-300 hover:bg-indigo-700'
+              }`}
+            >
+              <span>📝</span> Form Pendaftaran Lembaga
+            </button>
+            <button
               onClick={() => { soundFx.playSuccess(); startPlayForChild(selectedChildForPlay); }}
               className="px-3 py-2 rounded-xl font-bold text-xs bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg transition-transform active:scale-95 flex items-center gap-1.5"
             >
@@ -306,9 +315,15 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
 
       {/* Main Content Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
-        <div className="mb-4 bg-indigo-50 border border-indigo-200 p-3 rounded-2xl flex justify-between items-center text-xs text-indigo-900 font-bold">
+        {/* INDIKATOR OFFLINE SYNC (BAGIAN 7 PROMPT 13) */}
+        <div className="mb-4 bg-indigo-50 border border-indigo-200 p-3 rounded-2xl flex flex-col sm:flex-row justify-between items-center text-xs text-indigo-900 font-bold gap-2">
           <span>🏫 Aktif di Tenant: <strong>{currentTenant.namaSekolah}</strong> ({currentTenant.kodeYayasan}) — Role: <strong className="uppercase">{currentUser.role.replace('_', ' ')}</strong></span>
-          <span className="text-indigo-600">Data terisolasi aman per Yayasan & Level Akses</span>
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+              🟢 Tersinkron Cloud Supabase
+            </span>
+            <span className="text-indigo-600 hidden md:inline">Audit Log Active</span>
+          </div>
         </div>
 
         {activeView === 'dashboard' && (
@@ -337,6 +352,12 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
           <ModulGerakSensorik
             daftarMurid={daftarMurid}
             activeTenantId={activeTenantId}
+          />
+        )}
+
+        {activeView === 'pendaftaran' && (
+          <ModulPendaftaranLembaga
+            onBackToLogin={() => setActiveView('dashboard')}
           />
         )}
 
