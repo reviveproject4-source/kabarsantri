@@ -56,10 +56,16 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
   const [panggilan, setPanggilan] = useState('');
   const [kategoriUsia, setKategoriUsia] = useState<KategoriUsiaSpesifik>('3_tahun');
   const [fotoEmoji, setFotoEmoji] = useState('👶');
+  const [tempatLahir, setTempatLahir] = useState('');
   const [tanggalLahir, setTanggalLahir] = useState('');
   const [namaAyah, setNamaAyah] = useState('');
   const [namaIbu, setNamaIbu] = useState('');
-  const [kontakOrangTua, setKontakOrangTua] = useState('');
+  const [namaWali, setNamaWali] = useState('');
+  const [pekerjaanAyah, setPekerjaanAyah] = useState('');
+  const [pekerjaanIbu, setPekerjaanIbu] = useState('');
+  const [kontakAyah, setKontakAyah] = useState('');
+  const [kontakIbu, setKontakIbu] = useState('');
+  const [emailOrangTua, setEmailOrangTua] = useState('');
 
   // OBSERVASILOGS & TENANT ISOLATION PERSISTENCE
   const [catatanObservasiList, setCatatanObservasiList] = useState<CatatanObservasiHarian[]>(() => {
@@ -122,18 +128,31 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
       panggilan: panggilan || namaMurid,
       kategoriUsia,
       fotoEmoji,
+      tempatLahir: tempatLahir.trim() || undefined,
       tanggalLahir: tanggalLahir.trim() || undefined,
       namaAyah: namaAyah.trim() || undefined,
       namaIbu: namaIbu.trim() || undefined,
-      kontakOrangTua: kontakOrangTua.trim() || undefined
+      namaWali: namaWali.trim() || undefined,
+      pekerjaanAyah: pekerjaanAyah.trim() || undefined,
+      pekerjaanIbu: pekerjaanIbu.trim() || undefined,
+      kontakAyah: kontakAyah.trim() || undefined,
+      kontakIbu: kontakIbu.trim() || undefined,
+      emailOrangTua: emailOrangTua.trim() || undefined,
+      kontakOrangTua: kontakAyah.trim() || kontakIbu.trim() || undefined
     };
     if (onAddMurid) onAddMurid(newChild);
     setNamaMurid('');
     setPanggilan('');
+    setTempatLahir('');
     setTanggalLahir('');
     setNamaAyah('');
     setNamaIbu('');
-    setKontakOrangTua('');
+    setNamaWali('');
+    setPekerjaanAyah('');
+    setPekerjaanIbu('');
+    setKontakAyah('');
+    setKontakIbu('');
+    setEmailOrangTua('');
     setShowAddForm(false);
   };
 
@@ -320,6 +339,17 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
             </div>
 
             <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1">Tempat Lahir Murid:</label>
+              <input
+                type="text"
+                placeholder="Contoh: Jakarta"
+                value={tempatLahir}
+                onChange={(e) => setTempatLahir(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
+
+            <div>
               <label className="block text-xs font-bold text-slate-600 mb-1">Tanggal Lahir (Wajib untuk Hitung Usia):</label>
               <input
                 type="date"
@@ -346,7 +376,7 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1">Nama Ayah:</label>
+              <label className="block text-xs font-bold text-slate-600 mb-1">Nama Ayah Kandung:</label>
               <input
                 type="text"
                 placeholder="Contoh: Abdullah"
@@ -356,7 +386,28 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1">Nama Ibu:</label>
+              <label className="block text-xs font-bold text-slate-600 mb-1">Pekerjaan Ayah:</label>
+              <input
+                type="text"
+                placeholder="Contoh: PNS / Swasta"
+                value={pekerjaanAyah}
+                onChange={(e) => setPekerjaanAyah(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1">No. Kontak Ayah:</label>
+              <input
+                type="tel"
+                placeholder="Contoh: 081234567890"
+                value={kontakAyah}
+                onChange={(e) => setKontakAyah(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1">Nama Ibu Kandung:</label>
               <input
                 type="text"
                 placeholder="Contoh: Khadijah"
@@ -365,13 +416,44 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
                 className="w-full p-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-400"
               />
             </div>
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-bold text-slate-600 mb-1">No. WhatsApp / Kontak Orang Tua:</label>
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1">Pekerjaan Ibu:</label>
+              <input
+                type="text"
+                placeholder="Contoh: Ibu Rumah Tangga / Guru"
+                value={pekerjaanIbu}
+                onChange={(e) => setPekerjaanIbu(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1">No. Kontak Ibu:</label>
               <input
                 type="tel"
-                placeholder="Contoh: 081234567890"
-                value={kontakOrangTua}
-                onChange={(e) => setKontakOrangTua(e.target.value)}
+                placeholder="Contoh: 081987654321"
+                value={kontakIbu}
+                onChange={(e) => setKontakIbu(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1">Nama Wali (Jika Ada):</label>
+              <input
+                type="text"
+                placeholder="Contoh: Kakek / Paman"
+                value={namaWali}
+                onChange={(e) => setNamaWali(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1">Alamat Email Orang Tua/Wali:</label>
+              <input
+                type="email"
+                placeholder="orangtua@email.com"
+                value={emailOrangTua}
+                onChange={(e) => setEmailOrangTua(e.target.value)}
                 className="w-full p-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-400"
               />
             </div>

@@ -140,6 +140,7 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
   const [drillDownClass, setDrillDownClass] = useState<KelasPaud | null>(null);
   const [editingMuridId, setEditingMuridId] = useState<string | null>(null);
   const [editBirthdateInput, setEditBirthdateInput] = useState('');
+  const [editingMurid, setEditingMurid] = useState<RekapMuridPaud | null>(null);
 
   // Load Saved Observations per Tenant
   const [obsList] = useState<CatatanObservasiHarian[]>(() => {
@@ -846,13 +847,13 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
                             <button
                               onClick={() => {
                                 setEditingMuridId(m.id);
-                                setEditBirthdateInput(m.tanggalLahir || '');
+                                setEditingMurid(m);
+                                setEditBirthdateInput(m.tempatLahir || '');
                               }}
                               className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-[11px] shadow"
                             >
-                              ✏️ Lengkapi Tanggal Lahir
+                              ✏️ Lengkapi / Edit Biodata
                             </button>
-                            {/* KEPALA SEKOLAH BISA MENAMBAH TAPI TIDAK BISA MENGHAPUS (NO DELETE BUTTON) */}
                           </td>
                         </tr>
                       );
@@ -938,21 +939,127 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
         </div>
       )}
 
-      {/* MODAL EDIT TANGGAL LAHIR */}
+      {/* MODAL EDIT BIODATA LENGKAP MURID & ORANG TUA */}
       {editingMuridId && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white p-6 rounded-3xl max-w-md w-full space-y-4 border-4 border-indigo-200 shadow-2xl">
-            <h4 className="text-lg font-black text-slate-900">✏️ Lengkapi Tanggal Lahir Murid</h4>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Tanggal Lahir (YYYY-MM-DD):</label>
-              <input
-                type="date"
-                value={editBirthdateInput}
-                onChange={(e) => setEditBirthdateInput(e.target.value)}
-                className="w-full p-3 rounded-xl border border-slate-300 font-bold text-sm"
-              />
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white p-6 rounded-3xl max-w-2xl w-full space-y-4 border-4 border-indigo-200 shadow-2xl my-8">
+            <div className="flex justify-between items-center border-b pb-3">
+              <h4 className="text-lg font-black text-slate-900">✏️ Edit Biodata Lengkap Murid & Orang Tua</h4>
+              <button onClick={() => setEditingMuridId(null)} className="text-slate-400 hover:text-slate-600 font-bold">✕</button>
             </div>
-            <div className="flex justify-end gap-2 pt-2">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Tempat Lahir:</label>
+                <input
+                  type="text"
+                  placeholder="Jakarta"
+                  value={editBirthdateInput}
+                  onChange={(e) => setEditBirthdateInput(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Tanggal Lahir (YYYY-MM-DD):</label>
+                <input
+                  type="date"
+                  value={editingMurid?.tanggalLahir || ''}
+                  onChange={(e) => setEditingMurid((prev) => prev ? { ...prev, tanggalLahir: e.target.value } : null)}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Nama Ayah Kandung:</label>
+                <input
+                  type="text"
+                  placeholder="Abdullah"
+                  value={editingMurid?.namaAyah || ''}
+                  onChange={(e) => setEditingMurid((prev) => prev ? { ...prev, namaAyah: e.target.value } : null)}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Pekerjaan Ayah:</label>
+                <input
+                  type="text"
+                  placeholder="PNS / Swasta"
+                  value={editingMurid?.pekerjaanAyah || ''}
+                  onChange={(e) => setEditingMurid((prev) => prev ? { ...prev, pekerjaanAyah: e.target.value } : null)}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">No. Kontak Ayah:</label>
+                <input
+                  type="tel"
+                  placeholder="081234567890"
+                  value={editingMurid?.kontakAyah || ''}
+                  onChange={(e) => setEditingMurid((prev) => prev ? { ...prev, kontakAyah: e.target.value } : null)}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Nama Ibu Kandung:</label>
+                <input
+                  type="text"
+                  placeholder="Khadijah"
+                  value={editingMurid?.namaIbu || ''}
+                  onChange={(e) => setEditingMurid((prev) => prev ? { ...prev, namaIbu: e.target.value } : null)}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Pekerjaan Ibu:</label>
+                <input
+                  type="text"
+                  placeholder="Ibu Rumah Tangga / Guru"
+                  value={editingMurid?.pekerjaanIbu || ''}
+                  onChange={(e) => setEditingMurid((prev) => prev ? { ...prev, pekerjaanIbu: e.target.value } : null)}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">No. Kontak Ibu:</label>
+                <input
+                  type="tel"
+                  placeholder="081987654321"
+                  value={editingMurid?.kontakIbu || ''}
+                  onChange={(e) => setEditingMurid((prev) => prev ? { ...prev, kontakIbu: e.target.value } : null)}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Nama Wali (Jika Ada):</label>
+                <input
+                  type="text"
+                  placeholder="Kakek / Paman"
+                  value={editingMurid?.namaWali || ''}
+                  onChange={(e) => setEditingMurid((prev) => prev ? { ...prev, namaWali: e.target.value } : null)}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Alamat Email Orang Tua/Wali:</label>
+                <input
+                  type="email"
+                  placeholder="orangtua@email.com"
+                  value={editingMurid?.emailOrangTua || ''}
+                  onChange={(e) => setEditingMurid((prev) => prev ? { ...prev, emailOrangTua: e.target.value } : null)}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 font-bold"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t">
               <button
                 onClick={() => setEditingMuridId(null)}
                 className="px-4 py-2 bg-slate-200 text-slate-800 font-bold text-xs rounded-xl"
@@ -964,13 +1071,24 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
                   soundFx.playSuccess();
                   const target = daftarMurid.find((m) => m.id === editingMuridId);
                   if (target) {
-                    target.tanggalLahir = editBirthdateInput;
+                    target.tempatLahir = editBirthdateInput || target.tempatLahir;
+                    if (editingMurid) {
+                      target.tanggalLahir = editingMurid.tanggalLahir || target.tanggalLahir;
+                      target.namaAyah = editingMurid.namaAyah || target.namaAyah;
+                      target.namaIbu = editingMurid.namaIbu || target.namaIbu;
+                      target.namaWali = editingMurid.namaWali || target.namaWali;
+                      target.pekerjaanAyah = editingMurid.pekerjaanAyah || target.pekerjaanAyah;
+                      target.pekerjaanIbu = editingMurid.pekerjaanIbu || target.pekerjaanIbu;
+                      target.kontakAyah = editingMurid.kontakAyah || target.kontakAyah;
+                      target.kontakIbu = editingMurid.kontakIbu || target.kontakIbu;
+                      target.emailOrangTua = editingMurid.emailOrangTua || target.emailOrangTua;
+                    }
                   }
                   setEditingMuridId(null);
                 }}
                 className="px-4 py-2 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow"
               >
-                Simpan Tanggal Lahir
+                Simpan Biodata Murid 💾
               </button>
             </div>
           </div>

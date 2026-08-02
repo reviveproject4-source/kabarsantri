@@ -77,11 +77,18 @@ export interface MuridPaud {
   kategoriUsia: KategoriUsiaSpesifik;
   fotoEmoji: string;
   catatanGuru?: string;
+  tempatLahir?: string;
   tanggalLahir?: string; // Format YYYY-MM-DD
-  inviteTokenWali?: string;
   namaAyah?: string;
   namaIbu?: string;
+  namaWali?: string;
+  pekerjaanAyah?: string;
+  pekerjaanIbu?: string;
+  kontakAyah?: string;
+  kontakIbu?: string;
+  emailOrangTua?: string;
   kontakOrangTua?: string;
+  inviteTokenWali?: string;
 }
 
 export interface SkorLogika {
