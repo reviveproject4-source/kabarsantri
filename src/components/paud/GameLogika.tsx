@@ -15,9 +15,25 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
   materiKhusus = 'buah',
   bulan = 1
 }) => {
+  const isTkLevel = usiaSpesifik === '4_tahun' || usiaSpesifik === '5_tahun';
+
   const [activeSubMode, setActiveSubMode] = useState<
-    'bentuk' | 'ukuran' | 'hitung' | 'pola' | 'labirin' | 'memori' | 'klasifikasi' | 'refleks' | 'cocok_angka' | 'cocok_huruf' | 'suku_kata' | 'matematika_belasan'
-  >('bentuk');
+    | 'bentuk'
+    | 'ukuran'
+    | 'hitung'
+    | 'pola'
+    | 'labirin'
+    | 'memori'
+    | 'klasifikasi'
+    | 'refleks'
+    | 'cocok_angka'
+    | 'cocok_huruf'
+    | 'suku_kata'
+    | 'matematika_belasan'
+    | 'sudoku_logika'
+    | 'sebab_akibat'
+  >(isTkLevel ? 'sudoku_logika' : 'bentuk');
+
   const [selectedTopic, setSelectedTopic] = useState<KategoriMateri>(materiKhusus);
 
   // INDEKS VARIASI GAME (ROTASI 3 VARIASI: 0, 1, 2)
@@ -31,7 +47,118 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
   const [sukuKataVarIndex, setSukuKataVarIndex] = useState<number>(0);
   const [mathBelasanVarIndex, setMathBelasanVarIndex] = useState<number>(0);
 
-  // 1. DATA SHAPE MATCHING (3 VARIASI)
+  // 🌟 MODUL TK A & TK B: SUDOKU MATRIKS 2x2 (Pengganti Cocok Bentuk)
+  const [sudokuVarIdx, setSudokuVarIdx] = useState(0);
+  const [selectedSudokuAns, setSelectedSudokuAns] = useState<string | null>(null);
+  const [sudokuSuccess, setSudokuSuccess] = useState(false);
+
+  const sudokuSets = [
+    {
+      row1: ['🍎', '🍌'],
+      row2: ['🍌', '❓'],
+      correctAns: '🍎',
+      options: ['🍎', '🍌', '🍊']
+    },
+    {
+      row1: ['🚗', '✈️'],
+      row2: ['❓', '🚗'],
+      correctAns: '✈️',
+      options: ['🚗', '✈️', '🚲']
+    },
+    {
+      row1: ['🥦', '🥕'],
+      row2: ['🥕', '❓'],
+      correctAns: '🥦',
+      options: ['🥦', '🥕', '🌽']
+    }
+  ];
+
+  const currentSudoku = sudokuSets[sudokuVarIdx % sudokuSets.length];
+
+  const handleChooseSudoku = (ans: string) => {
+    soundFx.playPop();
+    setSelectedSudokuAns(ans);
+    if (ans === currentSudoku.correctAns) {
+      soundFx.playSuccess();
+      setSudokuSuccess(true);
+      if (onScoreUpdate) onScoreUpdate('pencocokanBentuk', 100);
+    } else {
+      soundFx.playTryAgain();
+    }
+  };
+
+  const resetSudokuGame = () => {
+    soundFx.playPop();
+    setSudokuVarIdx((prev) => (prev + 1) % 3);
+    setSelectedSudokuAns(null);
+    setSudokuSuccess(false);
+  };
+
+  // 🌟 MODUL TK A & TK B: URUTAN SEBAB-AKIBAT 3-LANGKAH (Pengganti Ukuran)
+  const [sebabVarIdx, setSebabVarIdx] = useState(0);
+  const [userSequence, setUserSequence] = useState<string[]>([]);
+  const [sebabSuccess, setSebabSuccess] = useState(false);
+
+  const sebabSets = [
+    {
+      judul: 'Urutan Pertumbuhan Ayam 🐣',
+      items: [
+        { id: '3', text: '🐔 Ayam Jantan' },
+        { id: '1', text: '🥚 Telur' },
+        { id: '2', text: '🐥 Anak Ayam' }
+      ],
+      correctOrder: ['1', '2', '3']
+    },
+    {
+      judul: 'Urutan Hujan & Pelangi 🌧️',
+      items: [
+        { id: '2', text: '☂️ Buka Payung' },
+        { id: '3', text: '🌈 Pelangi' },
+        { id: '1', text: '☁️ Awan Hujan' }
+      ],
+      correctOrder: ['1', '2', '3']
+    },
+    {
+      judul: 'Urutan Pertumbuhan Tumbuhan 🌱',
+      items: [
+        { id: '2', text: '🌿 Tunas Kecil' },
+        { id: '1', text: '🌱 Biji Ditanam' },
+        { id: '3', text: '🌳 Pohon Rindang' }
+      ],
+      correctOrder: ['1', '2', '3']
+    }
+  ];
+
+  const currentSebab = sebabSets[sebabVarIdx % sebabSets.length];
+
+  const handleChooseSebabItem = (id: string) => {
+    if (userSequence.includes(id)) return;
+    soundFx.playPop();
+    const updated = [...userSequence, id];
+    setUserSequence(updated);
+
+    const stepIndex = updated.length - 1;
+    if (id !== currentSebab.correctOrder[stepIndex]) {
+      soundFx.playTryAgain();
+      setTimeout(() => setUserSequence([]), 800);
+      return;
+    }
+
+    if (updated.length === currentSebab.correctOrder.length) {
+      soundFx.playSuccess();
+      setSebabSuccess(true);
+      if (onScoreUpdate) onScoreUpdate('mengurutkanUkuran', 100);
+    }
+  };
+
+  const resetSebabGame = () => {
+    soundFx.playPop();
+    setSebabVarIdx((prev) => (prev + 1) % 3);
+    setUserSequence([]);
+    setSebabSuccess(false);
+  };
+
+  // 1. DATA SHAPE MATCHING (3 VARIASI - USIA 2-3 TAHUN)
   const getTopicItemsWithVariations = (topic: KategoriMateri, variation: number) => {
     const varIdx = variation % 3;
     if (topic === 'buah') {
@@ -91,7 +218,7 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
     setSelectedShape(null);
   };
 
-  // 2. SIZE SORTING
+  // 2. SIZE SORTING (USIA 2-3 TAHUN)
   const getSizeItemsWithVariations = (topic: KategoriMateri, variation: number) => {
     const varIdx = variation % 3;
     const sets = [
@@ -138,7 +265,7 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
 
   const targetCount = getTargetCountByAge(usiaSpesifik);
   const [countedItems, setCountedItems] = useState<number[]>([]);
-  const countingIcon = selectedTopic === 'buah' ? '🍎' : selectedTopic === 'sayur' ? '🥕' : selectedTopic === 'kendaraan' ? '🚗' : selectedTopic === 'hewan' ? '🐰' : '⭐';
+  const countingIcon = selectedTopic === 'buah' ? '🍎' : selectedTopic === 'sayur' ? '🥦' : selectedTopic === 'kendaraan' ? '🚗' : selectedTopic === 'hewan' ? '🐰' : '⭐';
 
   // 4. MEMORI KARTU FLIP
   const getMemoryCardsSet = (variation: number) => {
@@ -634,24 +761,49 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
         </span>
       </div>
 
-      {/* MODUL SELEKTOR GAME (12 MODUL LENGKAP) */}
+      {/* MODUL SELEKTOR GAME (DISESUAIKAN BERDASARKAN TINGKAT USIA: PAUD 2-3 TH vs TK A & TK B 4-5 TH) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2">
-        <button
-          onClick={() => { soundFx.playPop(); setActiveSubMode('bentuk'); }}
-          className={`px-2.5 py-2 rounded-xl font-bold text-xs shadow flex items-center justify-center gap-1 transition-transform active:scale-95 ${
-            activeSubMode === 'bentuk' ? 'bg-red-500 text-white ring-2 ring-red-300' : 'bg-white text-red-600 hover:bg-red-50'
-          }`}
-        >
-          <span>🧩</span> Cocok Bentuk
-        </button>
-        <button
-          onClick={() => { soundFx.playPop(); setActiveSubMode('ukuran'); }}
-          className={`px-2.5 py-2 rounded-xl font-bold text-xs shadow flex items-center justify-center gap-1 transition-transform active:scale-95 ${
-            activeSubMode === 'ukuran' ? 'bg-amber-500 text-white ring-2 ring-amber-300' : 'bg-white text-amber-600 hover:bg-amber-50'
-          }`}
-        >
-          <span>📏</span> Ukuran
-        </button>
+        {/* JIKA TK (4 & 5 THN): TAMPILKAN SUDOKU MATRIKS & SEBAB AKIBAT 3-LANGKAH. JIKA KB (2-3 THN): TAMPILKAN COCOK BENTUK & UKURAN */}
+        {isTkLevel ? (
+          <>
+            <button
+              onClick={() => { soundFx.playPop(); setActiveSubMode('sudoku_logika'); }}
+              className={`px-2.5 py-2 rounded-xl font-bold text-xs shadow flex items-center justify-center gap-1 transition-transform active:scale-95 ${
+                activeSubMode === 'sudoku_logika' ? 'bg-purple-600 text-white ring-2 ring-purple-300' : 'bg-white text-purple-700 hover:bg-purple-50'
+              }`}
+            >
+              <span>🧱</span> Sudoku Matriks 2x2
+            </button>
+            <button
+              onClick={() => { soundFx.playPop(); setActiveSubMode('sebab_akibat'); }}
+              className={`px-2.5 py-2 rounded-xl font-bold text-xs shadow flex items-center justify-center gap-1 transition-transform active:scale-95 ${
+                activeSubMode === 'sebab_akibat' ? 'bg-indigo-600 text-white ring-2 ring-indigo-300' : 'bg-white text-indigo-700 hover:bg-indigo-50'
+              }`}
+            >
+              <span>🔄</span> Sebab-Akibat (3 Langkah)
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={() => { soundFx.playPop(); setActiveSubMode('bentuk'); }}
+              className={`px-2.5 py-2 rounded-xl font-bold text-xs shadow flex items-center justify-center gap-1 transition-transform active:scale-95 ${
+                activeSubMode === 'bentuk' ? 'bg-red-500 text-white ring-2 ring-red-300' : 'bg-white text-red-600 hover:bg-red-50'
+              }`}
+            >
+              <span>🧩</span> Cocok Bentuk
+            </button>
+            <button
+              onClick={() => { soundFx.playPop(); setActiveSubMode('ukuran'); }}
+              className={`px-2.5 py-2 rounded-xl font-bold text-xs shadow flex items-center justify-center gap-1 transition-transform active:scale-95 ${
+                activeSubMode === 'ukuran' ? 'bg-amber-500 text-white ring-2 ring-amber-300' : 'bg-white text-amber-600 hover:bg-amber-50'
+              }`}
+            >
+              <span>📏</span> Ukuran
+            </button>
+          </>
+        )}
+
         <button
           onClick={() => { soundFx.playPop(); setActiveSubMode('hitung'); }}
           className={`px-2.5 py-2 rounded-xl font-bold text-xs shadow flex items-center justify-center gap-1 transition-transform active:scale-95 ${
@@ -660,6 +812,7 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
         >
           <span>🔢</span> Hitung (1-{targetCount})
         </button>
+
         <button
           onClick={() => { soundFx.playPop(); setActiveSubMode('pola'); }}
           className={`px-2.5 py-2 rounded-xl font-bold text-xs shadow flex items-center justify-center gap-1 transition-transform active:scale-95 ${
@@ -742,7 +895,117 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
         </button>
       </div>
 
-      {/* GAME 1: SHAPE MATCHING */}
+      {/* GAME KOGNITIF KHUSUS TK A & TK B: SUDOKU MATRIKS 2x2 */}
+      {activeSubMode === 'sudoku_logika' && (
+        <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-inner text-center space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-black text-purple-900">🧱 Sudoku Matriks Logika 2x2 (Variasi #{sudokuVarIdx + 1})</h3>
+            <button onClick={resetSudokuGame} className="px-3 py-1.5 bg-purple-600 text-white text-xs font-bold rounded-xl shadow">
+              🔄 Soal Matriks Baru
+            </button>
+          </div>
+          <p className="text-purple-700 text-xs">Pilih gambar yang tepat untuk mengisi tanda ❓ agar baris dan kolom tidak kembar!</p>
+
+          <div className="max-w-xs mx-auto bg-purple-50 p-4 rounded-3xl border-4 border-purple-200 space-y-3">
+            {/* GRID MATRIKS 2x2 */}
+            <div className="grid grid-cols-2 gap-3 w-48 mx-auto">
+              <div className="h-20 bg-white rounded-2xl border-2 border-purple-300 flex items-center justify-center text-4xl shadow">{currentSudoku.row1[0]}</div>
+              <div className="h-20 bg-white rounded-2xl border-2 border-purple-300 flex items-center justify-center text-4xl shadow">{currentSudoku.row1[1]}</div>
+              <div className="h-20 bg-white rounded-2xl border-2 border-purple-300 flex items-center justify-center text-4xl shadow">{currentSudoku.row2[0]}</div>
+              <div className="h-20 bg-purple-200 rounded-2xl border-4 border-dashed border-purple-400 flex items-center justify-center text-4xl shadow animate-pulse">
+                {selectedSudokuAns || '❓'}
+              </div>
+            </div>
+
+            {/* PILIHAN JAWABAN */}
+            <p className="font-bold text-xs text-purple-950 pt-2">Pilih Gambar Pengisi:</p>
+            <div className="flex justify-center gap-3">
+              {currentSudoku.options.map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => handleChooseSudoku(opt)}
+                  className="w-14 h-14 bg-white hover:bg-purple-100 text-3xl rounded-2xl border-2 border-purple-300 shadow active:scale-95 flex items-center justify-center"
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {sudokuSuccess && (
+            <div className="p-4 bg-emerald-100 border-2 border-emerald-400 rounded-2xl animate-pulse">
+              <span className="text-3xl">🧩 LOGIKA SANGAT PINTAR! 🧩</span>
+              <p className="text-emerald-800 font-bold mt-1">Matriks 2x2 berhasil diselesaikan tanpa kembar!</p>
+              <button onClick={resetSudokuGame} className="mt-2 px-4 py-2 bg-emerald-600 text-white font-bold rounded-xl shadow">
+                Sudoku Berikutnya ➡️
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* GAME KOGNITIF KHUSUS TK A & TK B: URUTAN SEBAB AKIBAT 3-LANGKAH */}
+      {activeSubMode === 'sebab_akibat' && (
+        <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-inner text-center space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-black text-indigo-900">🔄 Logika Urutan & Sebab-Akibat (Variasi #{sebabVarIdx + 1})</h3>
+            <button onClick={resetSebabGame} className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-xl shadow">
+              🔄 Soal Urutan Baru
+            </button>
+          </div>
+          <p className="text-indigo-700 text-xs">Tekan urutan peristiwa dari yang **PERTAMA** terjadi sampai **AKHIR**!</p>
+
+          <div className="max-w-md mx-auto bg-indigo-50 p-5 rounded-3xl border-4 border-indigo-200 space-y-4">
+            <h4 className="font-black text-base text-indigo-950">{currentSebab.judul}</h4>
+
+            {/* BARIS SELEKSI USER */}
+            <div className="flex justify-center gap-2 min-h-[50px] items-center">
+              {[0, 1, 2].map((idx) => {
+                const itemId = userSequence[idx];
+                const item = currentSebab.items.find((i) => i.id === itemId);
+                return (
+                  <div key={idx} className="px-3 py-1.5 bg-white border-2 border-indigo-300 rounded-xl font-bold text-xs text-indigo-950 shadow min-w-[90px]">
+                    {item ? `${idx + 1}. ${item.text}` : `Posisi #${idx + 1}`}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* PILIHAN KARTU PERISTIWA */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+              {currentSebab.items.map((item) => {
+                const isSelected = userSequence.includes(item.id);
+                return (
+                  <button
+                    key={item.id}
+                    disabled={isSelected}
+                    onClick={() => handleChooseSebabItem(item.id)}
+                    className={`p-3 rounded-2xl font-black text-xs shadow transition-transform active:scale-95 border-2 ${
+                      isSelected
+                        ? 'bg-slate-200 border-slate-300 text-slate-400 grayscale opacity-50'
+                        : 'bg-white text-indigo-900 border-indigo-300 hover:bg-indigo-100'
+                    }`}
+                  >
+                    {item.text}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {sebabSuccess && (
+            <div className="p-4 bg-emerald-100 border-2 border-emerald-400 rounded-2xl animate-pulse">
+              <span className="text-3xl">🎉 URUTAN SANGAT TEPAT! 🎉</span>
+              <p className="text-emerald-800 font-bold mt-1">Berhasil menyusun logis sebab-akibat!</p>
+              <button onClick={resetSebabGame} className="mt-2 px-4 py-2 bg-emerald-600 text-white font-bold rounded-xl shadow">
+                Urutan Peristiwa Berikutnya ➡️
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* GAME 1: SHAPE MATCHING (KHUSUS PAUD 2-3 THN) */}
       {activeSubMode === 'bentuk' && (
         <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-inner text-center">
           <div className="flex justify-between items-center mb-2">
@@ -782,7 +1045,7 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
         </div>
       )}
 
-      {/* GAME 2: SIZE SORTING */}
+      {/* GAME 2: SIZE SORTING (KHUSUS PAUD 2-3 THN) */}
       {activeSubMode === 'ukuran' && (
         <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-inner text-center">
           <div className="flex justify-between items-center mb-2">
