@@ -237,9 +237,9 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
       gambarIcon: '🍎🍎🍎🍎',
       correctNumber: 4,
       options: [
-        { label: 'Angka 2', val: 2 },
-        { label: 'Angka 5', val: 5 },
-        { label: 'Angka 4', val: 4 }
+        { label: '2', val: 2 },
+        { label: '5', val: 5 },
+        { label: '4', val: 4 }
       ]
     },
     {
@@ -247,9 +247,9 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
       gambarIcon: '🍌🍌🍌🍌🍌🍌',
       correctNumber: 6,
       options: [
-        { label: 'Angka 6', val: 6 },
-        { label: 'Angka 3', val: 3 },
-        { label: 'Angka 8', val: 8 }
+        { label: '6', val: 6 },
+        { label: '3', val: 3 },
+        { label: '8', val: 8 }
       ]
     },
     {
@@ -257,9 +257,9 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
       gambarIcon: '🚗🚗🚗',
       correctNumber: 3,
       options: [
-        { label: 'Angka 7', val: 7 },
-        { label: 'Angka 3', val: 3 },
-        { label: 'Angka 4', val: 4 }
+        { label: '7', val: 7 },
+        { label: '3', val: 3 },
+        { label: '4', val: 4 }
       ]
     }
   ];
