@@ -13,6 +13,7 @@ import {
   hitungKelompokUsiaFromBirthdate
 } from '../../data/gerakSensorikData';
 import { soundFx } from '../../utils/soundEffects';
+import { dataService } from '../../services/dataService';
 
 interface ModulGerakSensorikProps {
   daftarMurid: MuridPaud[];
@@ -119,6 +120,14 @@ export const ModulGerakSensorik: React.FC<ModulGerakSensorikProps> = ({
 
     const updatedList = [newEval, ...evaluasiList.filter((e) => !(e.muridId === selectedMuridId && e.indikatorId === indikatorId))];
     setEvaluasiList(updatedList);
+
+    // Audit Logging (Prompt 13 Arsitektur)
+    dataService.catatAuditLog(activeTenantId, null, 'tambah', 'observasi', newEval.id, {
+      modul: 'gerak_sensorik',
+      muridId: selectedMuridId,
+      indikatorId,
+      status
+    });
 
     if (onSaveEvaluasi) onSaveEvaluasi(newEval);
   };
