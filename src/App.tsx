@@ -35,6 +35,7 @@ import { usePresensiPegawaiList } from './hooks/usePresensi';
 import { useRingkasanKeuangan } from './hooks/useRingkasanKeuangan';
 import { bulanEnamTerakhir, GrafikGaris, WARNA_STATUS } from './Grafik';
 import ModulPaudUtama from './ModulPaudUtama';
+import { ModulPendaftaranLembaga } from './components/paud/ModulPendaftaranLembaga';
 
 function Memuat() {
   return (
@@ -53,6 +54,16 @@ export default function App() {
   const { memuat, session, profil, yayasan, peran, keluar, modePemulihanPassword } =
     useAuth();
 
+  const [showPendaftaranLembagaPublik, setShowPendaftaranLembagaPublik] = useState(false);
+
+  if (showPendaftaranLembagaPublik) {
+    return (
+      <ModulPendaftaranLembaga
+        onBackToLogin={() => setShowPendaftaranLembagaPublik(false)}
+      />
+    );
+  }
+
   if (modePaudDirect) {
     return <ModulPaudUtama onKembaliKeUtama={() => setModePaudDirect(false)} />;
   }
@@ -62,6 +73,7 @@ export default function App() {
       <SplashWelcomeScreen
         onConfirm={() => setIsAllowed(true)}
         onBukaPaud={() => setModePaudDirect(true)}
+        onBukaPendaftaranLembaga={() => setShowPendaftaranLembagaPublik(true)}
       />
     );
   }

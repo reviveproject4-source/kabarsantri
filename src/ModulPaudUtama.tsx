@@ -323,14 +323,6 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
               <span>📺</span> Mode Kelas (Proyektor)
             </button>
             <button
-              onClick={() => { soundFx.playPop(); setActiveView('pendaftaran'); }}
-              className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
-                activeView === ('pendaftaran' as any) ? 'bg-amber-300 text-indigo-950 shadow' : 'bg-indigo-800 text-amber-300 hover:bg-indigo-700'
-              }`}
-            >
-              <span>📝</span> Form Pendaftaran Lembaga
-            </button>
-            <button
               onClick={() => { soundFx.playSuccess(); startPlayForChild(selectedChildForPlay); }}
               className="px-3 py-2 rounded-xl font-bold text-xs bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg transition-transform active:scale-95 flex items-center gap-1.5"
             >
