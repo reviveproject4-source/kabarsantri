@@ -237,9 +237,9 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
       gambarIcon: '🍎🍎🍎🍎',
       correctNumber: 4,
       options: [
-        { label: 'Angka 2', val: 2, row: 1 },
-        { label: 'Angka 5', val: 5, row: 2 },
-        { label: 'Angka 4 (Baris 3)', val: 4, row: 3 }
+        { label: 'Angka 2', val: 2 },
+        { label: 'Angka 5', val: 5 },
+        { label: 'Angka 4', val: 4 }
       ]
     },
     {
@@ -247,9 +247,9 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
       gambarIcon: '🍌🍌🍌🍌🍌🍌',
       correctNumber: 6,
       options: [
-        { label: 'Angka 6 (Baris 1)', val: 6, row: 1 },
-        { label: 'Angka 3', val: 3, row: 2 },
-        { label: 'Angka 8', val: 8, row: 3 }
+        { label: 'Angka 6', val: 6 },
+        { label: 'Angka 3', val: 3 },
+        { label: 'Angka 8', val: 8 }
       ]
     },
     {
@@ -257,9 +257,9 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
       gambarIcon: '🚗🚗🚗',
       correctNumber: 3,
       options: [
-        { label: 'Angka 7', val: 7, row: 1 },
-        { label: 'Angka 3 (Baris 2)', val: 3, row: 2 },
-        { label: 'Angka 4', val: 4, row: 3 }
+        { label: 'Angka 7', val: 7 },
+        { label: 'Angka 3', val: 3 },
+        { label: 'Angka 4', val: 4 }
       ]
     }
   ];
@@ -984,7 +984,7 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
                       : 'bg-white text-indigo-900 border-indigo-300 hover:bg-indigo-100'
                   }`}
                 >
-                  Kata: "{w}" (Huruf: {w[0]})
+                  {w}
                 </button>
               ))}
             </div>
