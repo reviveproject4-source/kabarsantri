@@ -259,7 +259,7 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
                     obsList,
                     adabList
                   );
-                  const completionBadge = getCompletionColorBadge(weeklyRep.hariTerisiCount);
+                  const completionBadge = getCompletionColorBadge(weeklyRep.hariTerisiCount || 0);
 
                   return (
                     <div key={k.id} className="bg-indigo-50/70 p-6 rounded-3xl border-2 border-indigo-100 space-y-4 shadow-sm">

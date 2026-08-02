@@ -8,25 +8,103 @@ interface ModulMotorikKasarProps {
 }
 
 export const KURIKULUM_BULANAN_LIST: { bulan: BulanCurriculum; semester: 1 | 2; judulTema: string; ikon: string; deskripsi: string }[] = [
-  // SEMESTER 1 (BULAN 1 - 6)
-  { bulan: 1, semester: 1, judulTema: 'Bulan 1: Aku & Anggota Tubuhku', ikon: '👶', deskripsi: 'Pengenalan gerak dasar tubuh, koordinasi tangan & kaki.' },
-  { bulan: 2, semester: 1, judulTema: 'Bulan 2: Lingkungan Rumahku', ikon: '🏠', deskripsi: 'Keseimbangan berjalan di garis lakban & merayap.' },
-  { bulan: 3, semester: 1, judulTema: 'Bulan 3: Dunia Binatang Ceria', ikon: '🦁', deskripsi: 'Menirukan lompatan katak, senam kepiting, & burung terbang.' },
-  { bulan: 4, semester: 1, judulTema: 'Bulan 4: Tanaman & Kebun Buah', ikon: '🍎', deskripsi: 'Berlari mengambil buah & gerakan pohon ditiup angin.' },
-  { bulan: 5, semester: 1, judulTema: 'Bulan 5: Transportasi & Kendaraan', ikon: '🚗', deskripsi: 'Keseimbangan berdiri 1 kaki (pesawat) & lari irama.' },
-  { bulan: 6, semester: 1, judulTema: 'Bulan 6: Halang Rintang Evaluasi Sem 1', ikon: '🏆', deskripsi: 'Kombinasi rintangan fisik, lompat, jinjit, & lempar.' },
-
-  // SEMESTER 2 (BULAN 7 - 12)
-  { bulan: 7, semester: 2, judulTema: 'Bulan 7: Alam Semesta & Cuaca', ikon: '☀️', deskripsi: 'Senam hujan & melompat genangan air, lari teduh.' },
-  { bulan: 8, semester: 2, judulTema: 'Bulan 8: Profesi & Cita-Citaku', ikon: '👮', deskripsi: 'Baris-berbaris polisi cilik & lari cepat pemadam kebakaran.' },
-  { bulan: 9, semester: 2, judulTema: 'Bulan 9: Makanan Sehat & Gizi', ikon: '🥦', deskripsi: 'Lari membawa nampan sehat & lompat tangkap buah.' },
-  { bulan: 10, semester: 2, judulTema: 'Bulan 10: Seni, Musik & Warna', ikon: '🎨', deskripsi: 'Senam irama musik ceria & menari melingkar.' },
-  { bulan: 11, semester: 2, judulTema: 'Bulan 11: Cinta Lingkungan', ikon: '🧹', deskripsi: 'Estafet membuang sampah pada tempatnya & jemur pakaian.' },
-  { bulan: 12, semester: 2, judulTema: 'Bulan 12: Wisuda PAUD & Pentas', ikon: '🎓', deskripsi: 'Pentas seni, rintangan wisuda juara & estafet toga.' }
+  { bulan: 1, semester: 1, judulTema: 'Bulan 1: Aku & Brain Gym Bilateral 👶', ikon: '🧠', deskripsi: 'Pengenalan gerak silang Cross Crawl & keseimbangan otak kanan-kiri.' },
+  { bulan: 2, semester: 1, judulTema: 'Bulan 2: Lingkungan Rumahku & Bola 🏀', ikon: '🏠', deskripsi: 'Drible bola kanan-kiri & Keseimbangan berjalan garis lakban.' },
+  { bulan: 3, semester: 1, judulTema: 'Bulan 3: Dunia Binatang & Lazy 8 ♾️', ikon: '🦁', deskripsi: 'Gerakan angka 8 tidur di udara & lompat katak/bangau.' },
+  { bulan: 4, semester: 1, judulTema: 'Bulan 4: Tanaman & Kebun Buah 🍎', ikon: '🍎', deskripsi: 'Berlari mengambil buah & senam pohon ditiup angin.' },
+  { bulan: 5, semester: 1, judulTema: 'Bulan 5: Transportasi & Kendaraan 🚗', ikon: '🚗', deskripsi: 'Keseimbangan berdiri 1 kaki (pesawat) & lari irama.' },
+  { bulan: 6, semester: 1, judulTema: 'Bulan 6: Halang Rintang Evaluasi Sem 1 🏆', ikon: '🏆', deskripsi: 'Kombinasi rintangan fisik, lompat, jinjit, & lempar.' },
+  { bulan: 7, semester: 2, judulTema: 'Bulan 7: Alam Semesta & Cuaca ☀️', ikon: '☀️', deskripsi: 'Senam hujan & melompat genangan air, lari teduh.' },
+  { bulan: 8, semester: 2, judulTema: 'Bulan 8: Profesi & Cita-Citaku 👮', ikon: '👮', deskripsi: 'Baris-berbaris polisi cilik & lari cepat pemadam kebakaran.' },
+  { bulan: 9, semester: 2, judulTema: 'Bulan 9: Makanan Sehat & Gizi 🥦', ikon: '🥦', deskripsi: 'Lari membawa nampan sehat & lompat tangkap buah.' },
+  { bulan: 10, semester: 2, judulTema: 'Bulan 10: Seni, Musik & Warna 🎨', ikon: '🎨', deskripsi: 'Senam irama musik ceria & menari melingkar.' },
+  { bulan: 11, semester: 2, judulTema: 'Bulan 11: Cinta Lingkungan 🧹', ikon: '🧹', deskripsi: 'Estafet membuang sampah pada tempatnya & jemur pakaian.' },
+  { bulan: 12, semester: 2, judulTema: 'Bulan 12: Wisuda PAUD & Pentas 🎓', ikon: '🎓', deskripsi: 'Pentas seni, rintangan wisuda juara & estafet toga.' }
 ];
 
 export const LIST_AKTIVITAS_KASAR: KartuAktivitasKasar[] = [
-  // SEMESTER 1 (BULAN 1-6)
+  // BRAIN GYM & BILATERAL INTEGRATION CARDS
+  {
+    id: 'b1-cross-crawl',
+    bulan: 1,
+    mingguKe: 1,
+    judul: 'Gerak Silang Brain Gym (Cross Crawl) 🧠',
+    kategoriUsia: '4_tahun',
+    kategoriMateri: 'brain_gym',
+    otakTarget: 'Bilateral (Kanan-Kiri)',
+    deskripsi: 'Sentuhkan Tangan/Siku Kanan ke Lutut Kiri, lalu Tangan Kiri ke Lutut Kanan.',
+    instruksiGuru: [
+      'Anak berdiri tegap di tempat.',
+      'Angkat lutut kiri, sentuhkan dengan tangan/siku kanan.',
+      'Ganti angkat lutut kanan, sentuhkan dengan tangan/siku kiri.',
+      'Ulangi 10 kali secara perlahan dan berirama.'
+    ],
+    manfaat: 'Menyeimbangkan fungsi korteks motorik otak kanan dan otak kiri (Corpus Callosum).',
+    durasiDetik: 45,
+    ikon: '🧠',
+    tingkatKesulitan: 'Sedang',
+    variasiGerak: ['Sambil menyanyi irama', 'Sentuh tumit silang di belakang']
+  },
+  {
+    id: 'b2-drible-silang',
+    bulan: 2,
+    mingguKe: 5,
+    judul: 'Oper Bola Tangan Kanan-Kiri 🏀',
+    kategoriUsia: '4_tahun',
+    kategoriMateri: 'brain_gym',
+    otakTarget: 'Bilateral (Kanan-Kiri)',
+    deskripsi: 'Memindahkan atau memantulkan bola kecil dari Tangan Kanan ke Tangan Kiri.',
+    instruksiGuru: [
+      'Berikan bola plastik/karet kecil kepada anak.',
+      'Minta anak memantulkan atau mengoper bola dari Tangan Kanan ke Tangan Kiri.',
+      'Lakukan 10 kali operan tanpa menjatuhkan bola.'
+    ],
+    manfaat: 'Melatih koordinasi bilateral mata-tangan dan kelincahan refleks.',
+    durasiDetik: 60,
+    ikon: '🏀',
+    tingkatKesulitan: 'Sedang',
+    variasiGerak: ['Sambil melangkah pelan', 'Oper bola pasangan']
+  },
+  {
+    id: 'b3-lazy-8',
+    bulan: 3,
+    mingguKe: 9,
+    judul: 'Angka 8 Tidur di Udara (Lazy 8) ♾️',
+    kategoriUsia: '3_tahun',
+    kategoriMateri: 'brain_gym',
+    otakTarget: 'Bilateral (Kanan-Kiri)',
+    deskripsi: 'Menggambar simbol 8 horizontal di udara dengan kedua tangan saling mengunci.',
+    instruksiGuru: [
+      'Genggam kedua tangan di depan dada dengan ibu jari menunjuk ke atas.',
+      'Buat gerakan meliuk membentuk angka 8 horizontal di udara.',
+      'Mata anak mengikuti gerak ibu jari dari kiri ke kanan.'
+    ],
+    manfaat: 'Melatih otot mata menyeberangi garis tengah tubuh (Midline Integration).',
+    durasiDetik: 45,
+    ikon: '♾️',
+    tingkatKesulitan: 'Mudah',
+    variasiGerak: ['Menggambar di papan tulis', 'Menggambar di udara dengan mata tertutup']
+  },
+  {
+    id: 'b5-bangau-tutup-mata',
+    bulan: 5,
+    mingguKe: 17,
+    judul: 'Keseimbangan Bangau Tutup Mata 🦩',
+    kategoriUsia: '5_tahun',
+    kategoriMateri: 'motorik_kasar',
+    otakTarget: 'Kanan',
+    deskripsi: 'Berdiri 1 kaki dengan kedua mata terpejam selama 5 detik.',
+    instruksiGuru: [
+      'Peragakan posisi berdiri 1 kaki.',
+      'Minta anak memejamkan mata rapat-rapat.',
+      'Hitung bersama 1.. 2.. 3.. 4.. 5!'
+    ],
+    manfaat: 'Melatih kesadaran proprioseptif dalam dan keseimbangan vestibular mendalam.',
+    durasiDetik: 30,
+    ikon: '🦩',
+    tingkatKesulitan: 'Tantangan',
+    variasiGerak: ['Berdiri 1 kaki tangan di dada', 'Berdiri jinjit']
+  },
   {
     id: 'b1-tepuk-irama',
     bulan: 1,
@@ -123,102 +201,6 @@ export const LIST_AKTIVITAS_KASAR: KartuAktivitasKasar[] = [
     variasiGerak: ['Lompat miring', 'Lompat tinggi']
   },
   {
-    id: 'b3-jalan-kepiting',
-    bulan: 3,
-    mingguKe: 11,
-    judul: 'Jalan Kepiting Pantai 🦀',
-    kategoriUsia: '4_tahun',
-    kategoriMateri: 'hewan',
-    deskripsi: 'Berjalan miring ke samping dengan lutut ditekuk.',
-    instruksiGuru: [
-      'Buka kedua kaki selebar bahu dan tekuk lutut 40 derajat.',
-      'Buka kedua tangan seperti capit kepiting.',
-      'Melangkah ke kanan 5 langkah, lalu ke kiri 5 langkah.'
-    ],
-    manfaat: 'Melatih koordinasi lateral panggul & ketahanan otot abduktor.',
-    durasiDetik: 60,
-    ikon: '🦀',
-    tingkatKesulitan: 'Sedang',
-    variasiGerak: ['Merayap telentang (Crab Walk)', 'Jalan kepiting cepat']
-  },
-  {
-    id: 'b4-pohon-angin',
-    bulan: 4,
-    mingguKe: 13,
-    judul: 'Senam Pohon Ditiup Angin 🌳',
-    kategoriUsia: '3_tahun',
-    kategoriMateri: 'sayur',
-    deskripsi: 'Menjulurkan kedua tangan ke atas dan meliukkan badan.',
-    instruksiGuru: [
-      'Anak berdiri tegak melambaikan tangan tinggi-tinggi.',
-      'Guru berakting sebagai angin sepoi-sepoi (liuk pelan) dan angin kencang (liuk cepat).',
-      'Sentuh ujung kaki kiri dan kanan secara bergantian.'
-    ],
-    manfaat: 'Melatih kelenturan tulang belakang dan fleksibilitas pinggang.',
-    durasiDetik: 45,
-    ikon: '🌳',
-    tingkatKesulitan: 'Mudah',
-    variasiGerak: ['Meliuk memutar', 'Berputar di tempat']
-  },
-  {
-    id: 'b4-petik-buah-lari',
-    bulan: 4,
-    mingguKe: 15,
-    judul: 'Berlari Ambil Apel 🍎',
-    kategoriUsia: '4_tahun',
-    kategoriMateri: 'buah',
-    deskripsi: 'Berlari zigzag memindahkan bola/buah dari titik A ke keranjang B.',
-    instruksiGuru: [
-      'Letakkan 5 bola plastik di ujung ruangan.',
-      'Anak berlari 5 meter, mengambil 1 bola, lalu membawa kembali ke keranjang.',
-      'Hitung total waktu tempuh bersama.'
-    ],
-    manfaat: 'Melatih kelincahan lari (agility), ketahanan jantung, dan koordinasi.',
-    durasiDetik: 60,
-    ikon: '🍎',
-    tingkatKesulitan: 'Tantangan',
-    variasiGerak: ['Lari sambil memegang mangkuk', 'Lari jinjit']
-  },
-  {
-    id: 'b5-burung-bangau',
-    bulan: 5,
-    mingguKe: 17,
-    judul: 'Keseimbangan Bangau & Pesawat 🦩',
-    kategoriUsia: '5_tahun',
-    kategoriMateri: 'kendaraan',
-    deskripsi: 'Berdiri angkat 1 kaki selama 5-8 detik.',
-    instruksiGuru: [
-      'Peragakan angkat kaki kanan setinggi lutut.',
-      'Rentangkan tangan ke samping untuk menjaga Keseimbangan.',
-      'Hitung bersama guru: 1.. 2.. 3.. 4.. 5.. 6.. 7.. 8!',
-      'Ganti dengan kaki kiri.'
-    ],
-    manfaat: 'Memperkuat engsel pergelangan kaki dan kontrol postur tubuh.',
-    durasiDetik: 45,
-    ikon: '🦩',
-    tingkatKesulitan: 'Sedang',
-    variasiGerak: ['Tutup mata 3 detik', 'Pukulkan tangan di atas kepala']
-  },
-  {
-    id: 'b5-setir-mobil',
-    bulan: 5,
-    mingguKe: 19,
-    judul: 'Menyetir Mobil Irama 🚗',
-    kategoriUsia: '4_tahun',
-    kategoriMateri: 'kendaraan',
-    deskripsi: 'Berlari kecil memegang piringan setir sambil merespon sinyal "Maju/Rem".',
-    instruksiGuru: [
-      'Berikan piring plastik/papan kecil sebagai setir.',
-      'Saat guru katakan "HIJAU", lari maju pelan. Saat "MERAH", berhenti mendadak.',
-      'Saat "KUNING", jalan jinjit.'
-    ],
-    manfaat: 'Melatih kontrol dorongan impuls (inhibitory control) dan refleks.',
-    durasiDetik: 60,
-    ikon: '🚗',
-    tingkatKesulitan: 'Tantangan',
-    variasiGerak: ['Belok kanan/kiri mendadak', 'Lari mundur pelan']
-  },
-  {
     id: 'b6-halang-rintang',
     bulan: 6,
     mingguKe: 21,
@@ -237,122 +219,6 @@ export const LIST_AKTIVITAS_KASAR: KartuAktivitasKasar[] = [
     ikon: '🏆',
     tingkatKesulitan: 'Tantangan',
     variasiGerak: ['Tim relay pasangan', 'Membawa tongkat estafet']
-  },
-
-  // SEMESTER 2 (BULAN 7-12)
-  {
-    id: 'b7-senam-hujan',
-    bulan: 7,
-    mingguKe: 25,
-    judul: 'Senam Hujan & Lompat Genangan 🌧️',
-    kategoriUsia: '2_tahun',
-    kategoriMateri: 'motorik_kasar',
-    deskripsi: 'Menepukkan tangan ke atas menirukan tetes hujan & melompati lingkaran genangan.',
-    instruksiGuru: [
-      'Gunakan lingkaran hulahoop atau cetakan lingkaran kertas di lantai sebagai genangan.',
-      'Anak melompat dari genangan ke genangan.',
-      'Tepukkan jemari tinggi-tinggi "Tik.. Tik.. Tik.."'
-    ],
-    manfaat: 'Melatih koordinasi motorik kasar melompat dengan estimasi sasaran.',
-    durasiDetik: 45,
-    ikon: '🌧️',
-    tingkatKesulitan: 'Mudah',
-    variasiGerak: ['Lompat 1 kaki ke genangan', 'Lari teduh di bawah payung']
-  },
-  {
-    id: 'b8-baris-polisi',
-    bulan: 8,
-    mingguKe: 29,
-    judul: 'Baris-Berbaris Polisi Cilik 👮',
-    kategoriUsia: '5_tahun',
-    kategoriMateri: 'motorik_kasar',
-    deskripsi: 'Berjalan tegap dengan irama "Kiri-Kanan" dan hormon siap grak.',
-    instruksiGuru: [
-      'Minta anak berbaris rapi di tempat.',
-      'Ucapkan aba-aba "SIAP GRAK!", "SIAP GRAK!", "JALAN DI TEMPAT GRAK!"',
-      'Ajak anak mengayunkan lengan setinggi dada.'
-    ],
-    manfaat: 'Melatih kedisiplinan postur tubuh dan koordinasi tangan-kaki serentak.',
-    durasiDetik: 60,
-    ikon: '👮',
-    tingkatKesulitan: 'Sedang',
-    variasiGerak: ['Hormat grak 3 detik', 'Lari siap siaga']
-  },
-  {
-    id: 'b9-nampan-sehat',
-    bulan: 9,
-    mingguKe: 33,
-    judul: 'Estafet Nampan Makanan Sehat 🥦',
-    kategoriUsia: '4_tahun',
-    kategoriMateri: 'sayur',
-    deskripsi: 'Berjalan membawa nampan berisi buah plastik tanpa terjatuh.',
-    instruksiGuru: [
-      'Berikan nampan plastik dengan 2 buah mainan di atasnya.',
-      'Minta anak berjalan 4 meter menuju meja penerima.',
-      'Jagalah agar nampan tetap sejajar dada.'
-    ],
-    manfaat: 'Melatih kestabilan siku, pundak, dan kontrol gerak halus-kasar gabungan.',
-    durasiDetik: 60,
-    ikon: '🥦',
-    tingkatKesulitan: 'Sedang',
-    variasiGerak: ['Berjalan cepat', 'Melangkah melewatu garis']
-  },
-  {
-    id: 'b10-senam-musik',
-    bulan: 10,
-    mingguKe: 37,
-    judul: 'Senam Irama Musik Ceria 🎵',
-    kategoriUsia: '3_tahun',
-    kategoriMateri: 'motorik_kasar',
-    deskripsi: 'Mengoyangkan pinggul dan mengangkat kedua tangan sesuai tempo drum.',
-    instruksiGuru: [
-      'Putar musik berirama riang.',
-      'Minta anak bergoyang ke kiri 2x dan ke kanan 2x.',
-      'Putar badan 360 derajat di akhir irama.'
-    ],
-    manfaat: 'Ekspresi kesenian diri dan fleksibilitas fisik anak.',
-    durasiDetik: 60,
-    ikon: '🎵',
-    tingkatKesulitan: 'Mudah',
-    variasiGerak: ['Tepuk tangan di belakang', 'Lompat mengikuti simbal']
-  },
-  {
-    id: 'b11-estafet-sampah',
-    bulan: 11,
-    mingguKe: 41,
-    judul: 'Estafet Kebersihan Lingkungan 🧹',
-    kategoriUsia: '5_tahun',
-    kategoriMateri: 'motorik_kasar',
-    deskripsi: 'Berlari mengambil bola kotor dan membuang ke tong sampah warna.',
-    instruksiGuru: [
-      'Sebarkan 6 bola plastik warna merah (organik) dan hijau (anorganik).',
-      'Bimbing anak berlari, memilah warna, lalu memasukannya ke keranjang yang sesuai.'
-    ],
-    manfaat: 'Melatih pemahaman kategori logika + kelincahan fisik anak.',
-    durasiDetik: 60,
-    ikon: '🧹',
-    tingkatKesulitan: 'Tantangan',
-    variasiGerak: ['Menjepit baju dengan jepitan jemuran', 'Menyapu bola']
-  },
-  {
-    id: 'b12-wisuda-juara',
-    bulan: 12,
-    mingguKe: 45,
-    judul: 'Rintangan Wisuda Juara 🎓',
-    kategoriUsia: '5_tahun',
-    kategoriMateri: 'motorik_kasar',
-    deskripsi: 'Pentas rintangan puncak tahunan: Melompat, Berlari, & Berdiri Keseimbangan Toga.',
-    instruksiGuru: [
-      'Susun karpet merah wisuda dengan 3 post tantangan.',
-      'Post 1: Melompat 3 lingkaran emas.',
-      'Post 2: Berdiri 1 kaki 5 detik.',
-      'Post 3: Menerima sertifikat dan membungkuk hormat.'
-    ],
-    manfaat: 'Evaluasi puncak seluruh perkembangan motorik kasar 1 tahun penuh.',
-    durasiDetik: 90,
-    ikon: '🎓',
-    tingkatKesulitan: 'Tantangan',
-    variasiGerak: ['Parade wisuda bersama', 'Foto pose kelulusan']
   }
 ];
 
@@ -438,9 +304,9 @@ export const ModulMotorikKasar: React.FC<ModulMotorikKasarProps> = ({ daftarMuri
       <div className="bg-white/90 backdrop-blur p-5 rounded-3xl shadow-md border border-sky-100 space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <span className="text-xs uppercase font-extrabold text-sky-600 tracking-wider">Kurikulum Motorik Kasar 1 Tahun Penuh (48 Minggu / Semester 1 & 2)</span>
+            <span className="text-xs uppercase font-extrabold text-sky-600 tracking-wider">Kurikulum Motorik Kasar & Brain Gym Bilateral (48 Minggu)</span>
             <h2 className="text-2xl font-black text-sky-900 flex items-center gap-2">
-              <span>🏃</span> Panduan & Jurnal Aktivitas Fisik Guru
+              <span>🧠🏃</span> Panduan & Jurnal Stimulasi Keseimbangan Otak Guru
             </h2>
           </div>
 
@@ -506,11 +372,18 @@ export const ModulMotorikKasar: React.FC<ModulMotorikKasarProps> = ({ daftarMuri
                   <div>
                     <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-white/20 rounded-full">Minggu #{akt.mingguKe}</span>
                     <h4 className="font-black text-sm mt-0.5">{akt.judul}</h4>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-                      selectedAktivitas.id === akt.id ? 'bg-sky-500 text-white' : 'bg-sky-100 text-sky-800'
-                    }`}>
-                      Usia: {akt.kategoriUsia.replace('_tahun', ' Tahun')}
-                    </span>
+                    <div className="flex gap-1.5 items-center mt-1">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                        selectedAktivitas.id === akt.id ? 'bg-sky-500 text-white' : 'bg-sky-100 text-sky-800'
+                      }`}>
+                        Usia: {akt.kategoriUsia.replace('_tahun', ' Thn')}
+                      </span>
+                      {akt.otakTarget && (
+                        <span className="text-[9px] font-black bg-purple-200 text-purple-900 px-2 py-0.5 rounded-full">
+                          Otak: {akt.otakTarget}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <span className="text-xs font-bold px-2 py-1 bg-white/20 rounded-lg">{akt.tingkatKesulitan}</span>
@@ -524,9 +397,16 @@ export const ModulMotorikKasar: React.FC<ModulMotorikKasarProps> = ({ daftarMuri
           <div className="bg-white rounded-3xl p-6 shadow-md border-2 border-sky-100">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <span className="text-xs font-extrabold text-sky-600 uppercase bg-sky-50 px-3 py-1 rounded-full border border-sky-100">
-                  Bulan #{selectedAktivitas.bulan} • Minggu Ke-{selectedAktivitas.mingguKe}
-                </span>
+                <div className="flex gap-2 items-center">
+                  <span className="text-xs font-extrabold text-sky-600 uppercase bg-sky-50 px-3 py-1 rounded-full border border-sky-100">
+                    Bulan #{selectedAktivitas.bulan} • Minggu Ke-{selectedAktivitas.mingguKe}
+                  </span>
+                  {selectedAktivitas.otakTarget && (
+                    <span className="text-xs font-black bg-purple-100 text-purple-900 px-3 py-1 rounded-full border border-purple-200">
+                      🧠 Otak: {selectedAktivitas.otakTarget}
+                    </span>
+                  )}
+                </div>
                 <h3 className="text-2xl font-black text-sky-900 mt-2">{selectedAktivitas.judul}</h3>
                 <p className="text-slate-600 text-sm mt-1">{selectedAktivitas.deskripsi}</p>
               </div>
@@ -558,7 +438,7 @@ export const ModulMotorikKasar: React.FC<ModulMotorikKasarProps> = ({ daftarMuri
             {/* INSTRUKSI GURU */}
             <div className="mb-4 bg-sky-50/70 p-4 rounded-2xl border border-sky-100">
               <h4 className="font-bold text-sky-900 text-sm mb-2 flex items-center gap-1">
-                <span>📋</span> Panduan Instruksi Langkah-demi-Langkah Guru:
+                <span>📋</span> Panduan Langkah Guru:
               </h4>
               <ul className="space-y-1.5 text-sm text-slate-700 list-disc list-inside">
                 {selectedAktivitas.instruksiGuru.map((ins, idx) => (
@@ -568,13 +448,13 @@ export const ModulMotorikKasar: React.FC<ModulMotorikKasarProps> = ({ daftarMuri
             </div>
 
             <div className="bg-amber-50 p-3.5 rounded-2xl text-xs text-amber-900 font-medium mb-6 border border-amber-200">
-              💡 <strong>Manfaat Stimulasi Motorik Kasar:</strong> {selectedAktivitas.manfaat}
+              💡 <strong>Manfaat Perkembangan Otak:</strong> {selectedAktivitas.manfaat}
             </div>
 
             {/* FORM EVALUASI SISWA */}
             <form onSubmit={handleSimpanEvaluasi} className="border-t pt-4 border-slate-200">
               <h4 className="font-bold text-sky-900 text-sm mb-3 flex items-center gap-1">
-                <span>✍️</span> Catat Evaluasi Anak pada Aktivitas Bulan #{selectedAktivitas.bulan} (Minggu #{selectedAktivitas.mingguKe}):
+                <span>✍️</span> Catat Evaluasi Anak pada Aktivitas Bulan #{selectedAktivitas.bulan}:
               </h4>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
@@ -587,7 +467,7 @@ export const ModulMotorikKasar: React.FC<ModulMotorikKasarProps> = ({ daftarMuri
                   >
                     {daftarMurid.map((m) => (
                       <option key={m.id} value={m.id}>
-                        {m.fotoEmoji} {m.nama} (Usia {m.kategoriUsia.replace('_tahun', ' Tahun')})
+                        {m.fotoEmoji} {m.nama} (Usia {m.kategoriUsia.replace('_tahun', ' Thn')})
                       </option>
                     ))}
                   </select>
@@ -612,7 +492,7 @@ export const ModulMotorikKasar: React.FC<ModulMotorikKasarProps> = ({ daftarMuri
                 <label className="block text-xs font-bold text-slate-700 mb-1">Catatan Observasi Guru:</label>
                 <input
                   type="text"
-                  placeholder="Contoh: Menyeimbangkan badan 5 detik dengan semangat..."
+                  placeholder="Contoh: Gerakan silang lancar dan seimbang..."
                   value={catatanGuru}
                   onChange={(e) => setCatatanGuru(e.target.value)}
                   className="w-full p-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-sky-400"
@@ -623,7 +503,7 @@ export const ModulMotorikKasar: React.FC<ModulMotorikKasarProps> = ({ daftarMuri
                 type="submit"
                 className="w-full py-3 bg-sky-600 text-white font-bold rounded-xl shadow-lg hover:bg-sky-700 transition-transform active:scale-98 flex items-center justify-center gap-2"
               >
-                <span>💾</span> Simpan Hasil Evaluasi Motorik Kasar (Bulan #{selectedAktivitas.bulan})
+                <span>💾</span> Simpan Hasil Evaluasi Motorik & Brain Gym (Bulan #{selectedAktivitas.bulan})
               </button>
             </form>
           </div>

@@ -2,23 +2,41 @@ export type KategoriUsiaSpesifik = '2_tahun' | '3_tahun' | '4_tahun' | '5_tahun'
 export type KategoriUsia = KategoriUsiaSpesifik | '2-3_tahun' | '4-5_tahun';
 
 export type BulanCurriculum = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+export type HariAktif = 'senin' | 'selasa' | 'rabu' | 'kamis' | 'jumat';
+export type StatusObservasiAdab = 'belum_terbiasa' | 'dengan_bimbingan' | 'terbiasa_mandiri' | 'muncul_sendiri' | 'mulai_muncul' | 'belum_terlihat' | string;
+export type DomainUtamaKurikulum = 'agama_moral' | 'motorik' | 'kognitif' | 'bahasa' | 'sosial_emosional' | 'seni' | 'logika' | 'motorik_halus' | 'motorik_kasar_olahraga' | 'sosial_bahasa' | 'agama_akhlak' | string;
+export type RentangWaktu = 'mingguan' | 'bulanan' | 'semester' | 'tahunan' | 'harian' | string;
 
-export type KategoriMateri = 'buah' | 'sayur' | 'kendaraan' | 'hewan' | 'bentuk_warna' | 'angka' | 'motorik_halus' | 'motorik_kasar';
+export type KategoriMateri =
+  | 'buah'
+  | 'sayur'
+  | 'kendaraan'
+  | 'hewan'
+  | 'bentuk_warna'
+  | 'angka'
+  | 'suku_kata'
+  | 'cocok_angka'
+  | 'cocok_huruf'
+  | 'matematika_belasan'
+  | 'tracing_huruf'
+  | 'brain_gym'
+  | 'motorik_halus'
+  | 'motorik_kasar';
 
-export type UserRole = 'guru' | 'kepala_sekolah' | 'yayasan';
+export type UserRole = 'guru' | 'kepala_sekolah' | 'yayasan' | 'wali_murid';
 
 export interface UserAccount {
   id: string;
   nama: string;
   email: string;
   role: UserRole;
-  tenantId: string; // Yayasan
-  schoolId?: string; // Unit Sekolah
-  classId?: string; // Kelas (Khusus Guru & Murid)
-  assignedMuridId?: string; // Khusus Wali Murid
-  inviteToken?: string; // Khusus Wali Murid & Guru
+  tenantId: string;
+  schoolId?: string;
+  classId?: string;
+  assignedMuridId?: string;
+  inviteToken?: string;
   avatarEmoji?: string;
-  lastInputDate?: string; // Tanggal terakhir input asesmen (untuk Guru)
+  lastInputDate?: string;
 }
 
 export interface TenantPaud {
@@ -59,25 +77,29 @@ export interface MuridPaud {
   fotoEmoji: string;
   catatanGuru?: string;
   tanggalLahir?: string;
+  inviteTokenWali?: string;
   namaAyah?: string;
   namaIbu?: string;
   kontakOrangTua?: string;
-  inviteTokenWali?: string; // Token undangan wali murid
 }
 
 export interface SkorLogika {
-  pencocokanBentuk: number; // 0-100
-  mengurutkanUkuran: number; // 0-100
-  menghitungBenda: number; // 0-100
-  polaWarna: number; // 0-100
-  klasifikasiKategori?: number; // 0-100
+  pencocokanBentuk: number;
+  mengurutkanUkuran: number;
+  menghitungBenda: number;
+  polaWarna: number;
+  cocokJumlahAngka?: number;
+  cocokGambarHuruf?: number;
+  bacaSukuKata?: number;
+  matematikaBelasan?: number;
 }
 
 export interface SkorMotorikHalus {
-  tracingGaris: number; // 0-100
-  puzzleBentuk: number; // 0-100
-  bubblePopSensory: number; // 0-100
-  presisiPetikBuah?: number; // 0-100
+  tracingGaris: number;
+  puzzleBentuk: number;
+  bubblePopSensory: number;
+  tracingHuruf?: number;
+  bilateralTracing2Jari?: number;
 }
 
 export type StatusCapaian = 'belum_berkembang' | 'mulai_berkembang' | 'berkembang_sesuai_harapan' | 'sangat_baik';
@@ -115,6 +137,7 @@ export interface KartuAktivitasKasar {
   ikon: string;
   tingkatKesulitan: 'Sangat Mudah' | 'Mudah' | 'Sedang' | 'Tantangan';
   variasiGerak: string[];
+  otakTarget?: 'Kanan' | 'Kiri' | 'Bilateral (Kanan-Kiri)';
 }
 
 export interface NotifikasiApp {
@@ -127,80 +150,63 @@ export interface NotifikasiApp {
   tipe: 'reminder' | 'info' | 'warning';
 }
 
-export type HariAktif = 'senin' | 'selasa' | 'rabu' | 'kamis' | 'jumat';
-export type DomainUtamaKurikulum = 'logika' | 'motorik_halus' | 'motorik_kasar_olahraga' | 'sosial_bahasa' | 'agama_akhlak';
-export type StatusObservasiAdab = 'belum_terlihat' | 'mulai_muncul' | 'muncul_sendiri';
-
-export interface CatatanObservasiHarian {
-  id: string;
-  tenantId: string;
-  sekolahId: string;
-  kelasId: string;
-  muridId: string;
-  guruId: string;
-  tanggal: string;
-  hari: HariAktif;
-  bulan: number;
-  mingguKe: number;
-  domainUtama: DomainUtamaKurikulum;
-  kegiatanId: string;
-  kegiatanJudul?: string;
-  status: StatusObservasiAdab;
-  catatanGuru?: string;
-  fotoUrl?: string;
-  jenisPenilaian: 'otomatis' | 'manual';
-}
-
-export interface CatatanAdabMingguan {
-  id: string;
-  tenantId: string;
-  muridId: string;
-  mingguKe: number;
-  status: StatusObservasiAdab;
-  catatanGuru?: string;
-}
-
 export interface KegiatanHarianKurikulum {
-  id: string;
-  bulan: number;
-  mingguKe: number;
-  hari: HariAktif;
-  domainUtama: DomainUtamaKurikulum;
-  isOutdoor: boolean;
-  pembuka: { durasi: string; aktivitas: string };
-  inti: {
-    durasi: string;
-    judul: string;
-    deskripsi: string;
-    alatAlat: string[];
-    instruksiGuru: string[];
-  };
-  penutup: { durasi: string; aktivitas: string };
-  alternatif: Array<{ judul: string; deskripsi: string; alasanDigunakan: string }>;
-  cadanganIndoor?: { judul: string; deskripsi: string; instruksiGuru: string[] };
-  variasiUsia: { usia2_3: string; usia4: string; usia5: string };
-  gameIdRef?: string;
+  id?: string;
+  bulan?: BulanCurriculum;
+  mingguKe?: number;
+  hari?: HariAktif;
+  judul?: string;
+  deskripsi?: string;
+  domainUtama?: DomainUtamaKurikulum;
+  [key: string]: any;
 }
 
 export interface KebiasaanAdabMingguan {
-  mingguKe: number;
-  judulAdab: string;
-  deskripsi: string;
-  indikator: string[];
-  contohSituasi: string;
+  id?: string;
+  mingguKe?: number;
+  judulAdab?: string;
+  deskripsi?: string;
+  pilarCharacter?: string;
+  indikator?: string | string[];
+  [key: string]: any;
 }
 
-export type RentangWaktu = 'harian' | 'bulanan' | 'semester';
+export interface CatatanObservasiHarian {
+  id?: string;
+  tenantId?: string;
+  muridId?: string;
+  bulan?: BulanCurriculum;
+  mingguKe?: number;
+  hari?: HariAktif;
+  tanggal?: string;
+  domainUtama?: DomainUtamaKurikulum;
+  status?: StatusObservasiAdab | string;
+  catatan?: string;
+  catatanGuru?: string;
+  kegiatanJudul?: string;
+  fotoUrl?: string;
+  [key: string]: any;
+}
+
+export interface CatatanAdabMingguan {
+  id?: string;
+  tenantId?: string;
+  muridId?: string;
+  mingguKe?: number;
+  status?: StatusObservasiAdab | string;
+  [key: string]: any;
+}
 
 export interface LaporanMingguanOtomatis {
-  tenantId: string;
-  kelasId: string;
-  mingguKe: number;
-  bulan: number;
-  hariTerisiCount: number; // 0 - 5 hari
-  totalMuridCount: number;
-  muridTerobservasiCount: number;
-  distribusiDomain: Record<DomainUtamaKurikulum, { belum: number; mulai: number; mandiri: number }>;
-  adabStats: Record<string, StatusObservasiAdab>;
-  muridBelumDiobservasiList: string[];
+  id?: string;
+  tenantId?: string;
+  kelasId?: string;
+  muridId?: string;
+  mingguKe?: number;
+  muridTerobservasiCount?: number;
+  totalMuridCount?: number;
+  hariTerisiCount?: number;
+  ringkasan?: string;
+  statusDominanAdab?: string;
+  [key: string]: any;
 }

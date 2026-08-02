@@ -88,8 +88,8 @@ export const GaleriPerkembanganAnak: React.FC<GaleriPerkembanganAnakProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredObsList.map((obs) => {
-              const badge = getStatusBadge(obs.status);
-              const domainInfo = getDomainLabel(obs.domainUtama);
+              const badge = getStatusBadge(obs.status || '');
+              const domainInfo = getDomainLabel(obs.domainUtama || '');
               return (
                 <div key={obs.id} className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-start">

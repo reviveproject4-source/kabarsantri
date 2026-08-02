@@ -522,7 +522,7 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-black uppercase bg-indigo-100 text-indigo-900 px-3 py-1 rounded-full border border-indigo-200">
-                    Hari {activeHari.toUpperCase()} • Domain {kegiatanHariIni.domainUtama.replace('_', ' ').toUpperCase()}
+                    Hari {activeHari.toUpperCase()} • Domain {(kegiatanHariIni.domainUtama || '').replace('_', ' ').toUpperCase()}
                   </span>
                   {kegiatanHariIni.isOutdoor && (
                     <span className="text-xs font-black uppercase bg-emerald-100 text-emerald-900 px-3 py-1 rounded-full border border-emerald-300">
@@ -576,7 +576,7 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
                 <div className="pt-2">
                   <h5 className="text-xs font-bold text-sky-900 uppercase">Instruksi Guru Saat Hujan:</h5>
                   <ul className="text-xs text-slate-700 list-disc list-inside space-y-1 mt-1">
-                    {kegiatanHariIni.cadanganIndoor.instruksiGuru.map((ins, i) => (
+                    {kegiatanHariIni.cadanganIndoor.instruksiGuru.map((ins: string, i: number) => (
                       <li key={i}>{ins}</li>
                     ))}
                   </ul>
@@ -591,7 +591,7 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
                   <span>🔄</span> 2 Kegiatan Alternatif (Jika Alat/Cuaca/Kondisi Berbeda):
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {kegiatanHariIni.alternatif.map((alt, idx) => (
+                  {kegiatanHariIni.alternatif.map((alt: { judul: string; deskripsi: string; alasanDigunakan: string }, idx: number) => (
                     <div key={idx} className="bg-white p-4 rounded-xl border border-purple-200 space-y-1 text-xs">
                       <span className="font-bold text-purple-900">Alternatif #{idx + 1}: {alt.judul}</span>
                       <p className="text-slate-600">{alt.deskripsi}</p>
@@ -631,7 +631,7 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
                 <div className="bg-white p-3 rounded-xl border border-indigo-100 space-y-1 text-xs">
                   <span className="font-bold text-indigo-900 uppercase text-[11px]">Alat & Bahan Yang Dibutuhkan:</span>
                   <div className="flex flex-wrap gap-1.5 pt-1">
-                    {kegiatanHariIni.inti.alatAlat.map((a, i) => (
+                    {kegiatanHariIni.inti.alatAlat.map((a: string, i: number) => (
                       <span key={i} className="bg-indigo-50 text-indigo-800 px-2 py-0.5 rounded-lg border border-indigo-200 text-[11px] font-semibold">
                         🛠️ {a}
                       </span>
@@ -642,7 +642,7 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
                 <div className="space-y-1 text-xs">
                   <span className="font-bold text-indigo-950 uppercase text-[11px]">Langkah & Instruksi Guru:</span>
                   <ul className="list-disc list-inside space-y-1 text-slate-700 pl-1">
-                    {kegiatanHariIni.inti.instruksiGuru.map((ins, i) => (
+                    {kegiatanHariIni.inti.instruksiGuru.map((ins: string, i: number) => (
                       <li key={i}>{ins}</li>
                     ))}
                   </ul>
@@ -675,7 +675,7 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
             <div className="bg-white rounded-2xl border-2 border-indigo-200 p-5 space-y-4">
               <div className="flex justify-between items-center border-b pb-2">
                 <h4 className="font-black text-slate-900 text-sm">
-                  Lembar Pencatatan Observasi Guru Harian ({kegiatanHariIni.domainUtama.toUpperCase()})
+                  Lembar Pencatatan Observasi Guru Harian ({(kegiatanHariIni.domainUtama || '').toUpperCase()})
                 </h4>
                 <span className="text-xs text-indigo-600 font-bold">Terisolasi per Tenant ({activeTenantId})</span>
               </div>
@@ -864,7 +864,7 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
                       <div key={ad.id} className="p-2.5 bg-amber-50 rounded-xl border border-amber-200 flex justify-between items-center">
                         <span className="font-bold text-amber-950">Minggu #{ad.mingguKe}</span>
                         <span className="px-2 py-0.5 rounded-md font-bold text-[11px] bg-amber-200 text-amber-900 capitalize">
-                          {ad.status.replace('_', ' ')}
+                          {(ad.status || '').replace('_', ' ')}
                         </span>
                       </div>
                     ))}

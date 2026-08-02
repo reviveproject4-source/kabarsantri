@@ -43,17 +43,20 @@ export const calculateWeeklyReport = (
   };
 
   filteredObs.forEach((obs) => {
-    if (distribusiDomain[obs.domainUtama]) {
-      if (obs.status === 'belum_terlihat') distribusiDomain[obs.domainUtama].belum += 1;
-      else if (obs.status === 'mulai_muncul') distribusiDomain[obs.domainUtama].mulai += 1;
-      else if (obs.status === 'muncul_sendiri') distribusiDomain[obs.domainUtama].mandiri += 1;
+    const domainKey = obs.domainUtama as DomainUtamaKurikulum;
+    if (domainKey && distribusiDomain[domainKey]) {
+      if (obs.status === 'belum_terlihat') distribusiDomain[domainKey].belum += 1;
+      else if (obs.status === 'mulai_muncul') distribusiDomain[domainKey].mulai += 1;
+      else if (obs.status === 'muncul_sendiri') distribusiDomain[domainKey].mandiri += 1;
     }
   });
 
   // 5. Adab Stats per student
-  const adabStats: Record<string, 'belum_terlihat' | 'mulai_muncul' | 'muncul_sendiri'> = {};
+  const adabStats: Record<string, any> = {};
   filteredAdab.forEach((adab) => {
-    adabStats[adab.muridId] = adab.status;
+    if (adab.muridId) {
+      adabStats[adab.muridId] = adab.status;
+    }
   });
 
   return {

@@ -15,7 +15,7 @@ export const GameMotorikHalus: React.FC<GameMotorikHalusProps> = ({
   materiKhusus = 'buah',
   bulan = 1
 }) => {
-  const [activeSubMode, setActiveSubMode] = useState<'tracing' | 'puzzle' | 'bubble'>('tracing');
+  const [activeSubMode, setActiveSubMode] = useState<'tracing' | 'puzzle' | 'bubble' | 'tracing_huruf' | 'bilateral_2jari'>('tracing');
   const [selectedTopic, setSelectedTopic] = useState<KategoriMateri>(materiKhusus);
 
   // TRACING CANVAS STATE
@@ -24,59 +24,30 @@ export const GameMotorikHalus: React.FC<GameMotorikHalusProps> = ({
   const [tracingType, setTracingType] = useState<'lurus' | 'lengkung' | 'zigzag' | 'lingkaran'>('lurus');
   const [tracingProgress, setTracingProgress] = useState(0);
 
-  // PUZZLE STATE (Tematik & Tingkat Kesulitan Berdasarkan Usia)
-  const getPuzzlePiecesByTopic = (topic: KategoriMateri, age: KategoriUsiaSpesifik) => {
-    if (topic === 'sayur') {
-      return [
-        { id: 'p1', name: 'Daun Brokoli 🥦', position: 'A' },
-        { id: 'p2', name: 'Batang Brokoli 🥦', position: 'B' },
-        { id: 'p3', name: 'Wortel Oranye 🥕', position: 'C' },
-        { id: 'p4', name: 'Daun Wortel 🍃', position: 'D' }
-      ];
-    }
-    if (topic === 'kendaraan') {
-      return [
-        { id: 'top-left', name: 'Atas Kiri 🚗', position: 'A' },
-        { id: 'top-right', name: 'Atas Kanan 🛞', position: 'B' },
-        { id: 'bottom-left', name: 'Bawah Kiri 🛣️', position: 'C' },
-        { id: 'bottom-right', name: 'Bawah Kanan 🏁', position: 'D' }
-      ];
-    }
-    if (topic === 'hewan') {
-      return [
-        { id: 'p1', name: 'Kepala Singa 🦁', position: 'A' },
-        { id: 'p2', name: 'Badan Singa 🐾', position: 'B' },
-        { id: 'p3', name: 'Telinga Kelinci 🐰', position: 'C' },
-        { id: 'p4', name: 'Wajah Kelinci 🐰', position: 'D' }
-      ];
-    }
-    return [
-      { id: 'p1', name: 'Daun Apel 🍃', position: 'A' },
-      { id: 'p2', name: 'Buah Apel 🍎', position: 'B' },
-      { id: 'p3', name: 'Pisang Manis 🍌', position: 'C' },
-      { id: 'p4', name: 'Jeruk Segar 🍊', position: 'D' }
-    ];
-  };
+  // TRACING HURUF & ANGKA PUTUS-PUTUS STATE (Persiapan Menulis Usia 4-5th)
+  const [selectedHuruf, setSelectedHuruf] = useState<string>('A');
+  const [selectedAngka, setSelectedAngka] = useState<string>('1');
 
-  const puzzlePieces = getPuzzlePiecesByTopic(selectedTopic, usiaSpesifik);
-  const [placedPieces, setPlacedPieces] = useState<string[]>([]);
-  const [selectedPiece, setSelectedPiece] = useState<string | null>(null);
-
-  // BUBBLE POP SENSORY STATE
-  const [bubbles, setBubbles] = useState<Array<{ id: number; x: number; y: number; color: string; size: number }>>([]);
-  const [poppedCount, setPoppedCount] = useState(0);
+  // BILATERAL TRACING 2 JARI SERENTAK STATE (Brain Balance)
+  const [leftTouchPos, setLeftTouchPos] = useState({ x: 20, y: 50 });
+  const [rightTouchPos, setRightTouchPos] = useState({ x: 80, y: 50 });
+  const [bilateralCompleted, setBilateralCompleted] = useState(false);
 
   // Setup Canvas Drawing
   useEffect(() => {
-    if (activeSubMode === 'tracing' && canvasRef.current) {
+    if ((activeSubMode === 'tracing' || activeSubMode === 'tracing_huruf') && canvasRef.current) {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawGuidePath(ctx, canvas.width, canvas.height, tracingType);
+        if (activeSubMode === 'tracing_huruf') {
+          drawDashedGlyph(ctx, canvas.width, canvas.height, selectedHuruf);
+        } else {
+          drawGuidePath(ctx, canvas.width, canvas.height, tracingType);
+        }
       }
     }
-  }, [activeSubMode, tracingType]);
+  }, [activeSubMode, tracingType, selectedHuruf]);
 
   const drawGuidePath = (ctx: CanvasRenderingContext2D, w: number, h: number, type: string) => {
     ctx.lineWidth = 12;
@@ -101,6 +72,17 @@ export const GameMotorikHalus: React.FC<GameMotorikHalusProps> = ({
       ctx.arc(w / 2, h / 2, Math.min(w, h) / 3, 0, 2 * Math.PI);
     }
     ctx.stroke();
+    ctx.setLineDash([]);
+  };
+
+  const drawDashedGlyph = (ctx: CanvasRenderingContext2D, w: number, h: number, glyph: string) => {
+    ctx.font = '900 130px Quicksand, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#94a3b8';
+    ctx.setLineDash([8, 8]);
+    ctx.strokeText(glyph, w / 2, h / 2 + 10);
     ctx.setLineDash([]);
   };
 
@@ -162,12 +144,25 @@ export const GameMotorikHalus: React.FC<GameMotorikHalusProps> = ({
       const ctx = canvasRef.current.getContext('2d');
       if (ctx) {
         ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-        drawGuidePath(ctx, canvasRef.current.width, canvasRef.current.height, tracingType);
+        if (activeSubMode === 'tracing_huruf') {
+          drawDashedGlyph(ctx, canvasRef.current.width, canvasRef.current.height, selectedHuruf);
+        } else {
+          drawGuidePath(ctx, canvasRef.current.width, canvasRef.current.height, tracingType);
+        }
       }
     }
   };
 
-  // PUZZLE LOGIC
+  // PUZZLE STATE
+  const puzzlePieces = [
+    { id: 'p1', name: 'Daun Apel 🍃', position: 'A' },
+    { id: 'p2', name: 'Buah Apel 🍎', position: 'B' },
+    { id: 'p3', name: 'Pisang Manis 🍌', position: 'C' },
+    { id: 'p4', name: 'Jeruk Segar 🍊', position: 'D' }
+  ];
+  const [placedPieces, setPlacedPieces] = useState<string[]>([]);
+  const [selectedPiece, setSelectedPiece] = useState<string | null>(null);
+
   const handleSelectPiece = (id: string) => {
     soundFx.playPop();
     setSelectedPiece(id);
@@ -190,10 +185,13 @@ export const GameMotorikHalus: React.FC<GameMotorikHalusProps> = ({
     }
   };
 
-  // BUBBLE POP LOGIC
+  // BUBBLE POP SENSORY
+  const [bubbles, setBubbles] = useState<Array<{ id: number; x: number; y: number; color: string; size: number }>>([]);
+  const [poppedCount, setPoppedCount] = useState(0);
+
   const generateBubbles = () => {
     const colors = ['bg-pink-400', 'bg-blue-400', 'bg-emerald-400', 'bg-amber-400', 'bg-purple-400'];
-    const count = usiaSpesifik === '2_tahun' ? 5 : usiaSpesifik === '3_tahun' ? 8 : 10;
+    const count = 8;
     const newBubbles = Array.from({ length: count }).map((_, i) => ({
       id: i,
       x: Math.floor(Math.random() * 70) + 15,
@@ -209,7 +207,7 @@ export const GameMotorikHalus: React.FC<GameMotorikHalusProps> = ({
     if (activeSubMode === 'bubble') {
       generateBubbles();
     }
-  }, [activeSubMode, usiaSpesifik]);
+  }, [activeSubMode]);
 
   const popBubble = (id: number) => {
     soundFx.playPop();
@@ -224,77 +222,88 @@ export const GameMotorikHalus: React.FC<GameMotorikHalusProps> = ({
     });
   };
 
+  // HANDLER BILATERAL TRACING 2 JARI SERENTAK
+  const handleMoveBilateral = (side: 'left' | 'right', deltaY: number) => {
+    soundFx.playPop();
+    if (side === 'left') {
+      setLeftTouchPos((prev) => ({ ...prev, y: Math.min(Math.max(prev.y + deltaY, 20), 80) }));
+    } else {
+      setRightTouchPos((prev) => ({ ...prev, y: Math.min(Math.max(prev.y + deltaY, 20), 80) }));
+    }
+    if (leftTouchPos.y >= 70 && rightTouchPos.y >= 70) {
+      soundFx.playFanfare();
+      setBilateralCompleted(true);
+    }
+  };
+
+  const resetBilateral = () => {
+    soundFx.playPop();
+    setLeftTouchPos({ x: 20, y: 20 });
+    setRightTouchPos({ x: 80, y: 20 });
+    setBilateralCompleted(false);
+  };
+
   return (
     <div className="bg-gradient-to-b from-pink-50 to-rose-100 min-h-full p-4 rounded-3xl shadow-lg border-4 border-pink-200 space-y-4">
-      {/* SELEKTOR MATERI KHUSUS (Buah, Sayur, Kendaraan, Hewan) */}
-      <div className="flex flex-wrap items-center justify-between gap-2 bg-white/80 p-3 rounded-2xl border border-pink-200">
-        <div className="flex items-center gap-1.5 overflow-x-auto">
-          <span className="text-xs font-black text-pink-900 px-2">Topik Motorik:</span>
-          {[
-            { id: 'buah', label: '🍎 Buah' },
-            { id: 'sayur', label: '🥦 Sayur' },
-            { id: 'kendaraan', label: '🚗 Kendaraan' },
-            { id: 'hewan', label: '🦁 Hewan' }
-          ].map((t) => (
-            <button
-              key={t.id}
-              onClick={() => { soundFx.playPop(); setSelectedTopic(t.id as KategoriMateri); setPlacedPieces([]); }}
-              className={`px-3 py-1.5 rounded-xl font-black text-xs transition-transform active:scale-95 ${
-                selectedTopic === t.id ? 'bg-pink-500 text-white shadow' : 'bg-pink-100 text-pink-900 hover:bg-pink-200'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        <span className="text-xs font-black bg-pink-200 text-pink-950 px-3 py-1 rounded-full">
-          Presisi Jemari Usia {usiaSpesifik.replace('_tahun', ' Tahun')} • Bulan #{bulan}
-        </span>
-      </div>
-
-      {/* Submode Switcher */}
+      {/* SELEKTOR SUBMODE MOTORIK HALUS */}
       <div className="flex flex-wrap gap-2 justify-center mb-4">
         <button
           onClick={() => { soundFx.playPop(); setActiveSubMode('tracing'); }}
-          className={`px-4 py-2.5 rounded-2xl font-bold text-base shadow-md transition-transform active:scale-95 flex items-center gap-2 ${
-            activeSubMode === 'tracing' ? 'bg-pink-500 text-white ring-4 ring-pink-300' : 'bg-white text-pink-600 hover:bg-pink-50'
+          className={`px-3 py-2 rounded-2xl font-bold text-xs shadow flex items-center gap-1 ${
+            activeSubMode === 'tracing' ? 'bg-pink-500 text-white ring-4 ring-pink-300' : 'bg-white text-pink-600'
           }`}
         >
           <span>✍️</span> Tracing Garis
         </button>
+
+        <button
+          onClick={() => { soundFx.playPop(); setActiveSubMode('tracing_huruf'); }}
+          className={`px-3 py-2 rounded-2xl font-bold text-xs shadow flex items-center gap-1 ${
+            activeSubMode === 'tracing_huruf' ? 'bg-purple-600 text-white ring-4 ring-purple-300' : 'bg-white text-purple-700'
+          }`}
+        >
+          <span>🔤</span> Tracing Huruf & Angka (A-Z, 0-9)
+        </button>
+
+        <button
+          onClick={() => { soundFx.playPop(); setActiveSubMode('bilateral_2jari'); }}
+          className={`px-3 py-2 rounded-2xl font-bold text-xs shadow flex items-center gap-1 ${
+            activeSubMode === 'bilateral_2jari' ? 'bg-indigo-600 text-white ring-4 ring-indigo-300' : 'bg-white text-indigo-700'
+          }`}
+        >
+          <span>🖐️🖐️</span> Tracing 2 Jari (Otak Kanan-Kiri)
+        </button>
+
         <button
           onClick={() => { soundFx.playPop(); setActiveSubMode('puzzle'); }}
-          className={`px-4 py-2.5 rounded-2xl font-bold text-base shadow-md transition-transform active:scale-95 flex items-center gap-2 ${
-            activeSubMode === 'puzzle' ? 'bg-indigo-500 text-white ring-4 ring-indigo-300' : 'bg-white text-indigo-600 hover:bg-indigo-50'
+          className={`px-3 py-2 rounded-2xl font-bold text-xs shadow flex items-center gap-1 ${
+            activeSubMode === 'puzzle' ? 'bg-emerald-500 text-white ring-4 ring-emerald-300' : 'bg-white text-emerald-600'
           }`}
         >
-          <span>🧩</span> Puzzle {selectedTopic.toUpperCase()}
+          <span>🧩</span> Puzzle
         </button>
+
         <button
           onClick={() => { soundFx.playPop(); setActiveSubMode('bubble'); }}
-          className={`px-4 py-2.5 rounded-2xl font-bold text-base shadow-md transition-transform active:scale-95 flex items-center gap-2 ${
-            activeSubMode === 'bubble' ? 'bg-emerald-500 text-white ring-4 ring-emerald-300' : 'bg-white text-emerald-600 hover:bg-emerald-50'
+          className={`px-3 py-2 rounded-2xl font-bold text-xs shadow flex items-center gap-1 ${
+            activeSubMode === 'bubble' ? 'bg-amber-500 text-white ring-4 ring-amber-300' : 'bg-white text-amber-600'
           }`}
         >
-          <span>🫧</span> Pop Tap Presisi
+          <span>🫧</span> Pop Bubble
         </button>
       </div>
 
-      {/* MODE 1: TRACING */}
+      {/* MODE 1: TRACING GARIS */}
       {activeSubMode === 'tracing' && (
         <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-inner text-center">
-          <h3 className="text-2xl font-black text-rose-900 mb-1">Tebalkan Garis Presisi!</h3>
-          <p className="text-rose-700 text-sm mb-4">Latihan koordinasi tangan Usia {usiaSpesifik.replace('_tahun', ' Tahun')}.</p>
-
-          {/* Type Selector */}
+          <h3 className="text-2xl font-black text-rose-900 mb-1">Tebalkan Garis Dasar!</h3>
           <div className="flex justify-center gap-2 mb-4">
             {(['lurus', 'lengkung', 'zigzag', 'lingkaran'] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => { soundFx.playPop(); setTracingType(t); setTracingProgress(0); }}
-                className={`px-3 py-1.5 rounded-xl font-bold text-sm capitalize ${
-                  tracingType === t ? 'bg-pink-600 text-white shadow' : 'bg-pink-100 text-pink-700 hover:bg-pink-200'
+                className={`px-3 py-1 rounded-xl font-bold text-xs capitalize ${
+                  tracingType === t ? 'bg-pink-600 text-white shadow' : 'bg-pink-100 text-pink-700'
                 }`}
               >
                 {t}
@@ -318,33 +327,114 @@ export const GameMotorikHalus: React.FC<GameMotorikHalusProps> = ({
           </div>
 
           <div className="mt-4 flex justify-center gap-4 items-center">
-            <button
-              onClick={clearCanvas}
-              className="px-4 py-2 bg-slate-200 hover:bg-slate-300 font-bold text-slate-700 rounded-xl shadow"
-            >
+            <button onClick={clearCanvas} className="px-4 py-2 bg-slate-200 font-bold text-slate-700 text-xs rounded-xl shadow">
               Hapus Kanvas 🔄
             </button>
-            <div className="text-sm font-bold text-pink-700">Kemajuan: {tracingProgress}%</div>
+            <div className="text-xs font-bold text-pink-700">Kemajuan: {tracingProgress}%</div>
           </div>
         </div>
       )}
 
-      {/* MODE 2: PUZZLE */}
+      {/* MODE BARU: TRACING HURUF (A-Z) & ANGKA (0-9) PUTUS-PUTUS (PERSIS USA 4-5th) */}
+      {activeSubMode === 'tracing_huruf' && (
+        <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-inner text-center space-y-4">
+          <h3 className="text-2xl font-black text-purple-900">🔤 Menebalkan Huruf Putus-Putus (A-Z & 0-9)</h3>
+          <p className="text-purple-700 text-xs">Pilih huruf atau angka di bawah, lalu tebalkan dengan jarimu!</p>
+
+          <div className="flex flex-wrap justify-center gap-1.5 max-w-md mx-auto">
+            {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', '1', '2', '3', '4', '5'].map((h) => (
+              <button
+                key={h}
+                onClick={() => { soundFx.playPop(); setSelectedHuruf(h); setTracingProgress(0); }}
+                className={`w-9 h-9 rounded-xl font-black text-sm transition-transform active:scale-90 ${
+                  selectedHuruf === h ? 'bg-purple-600 text-white scale-110 shadow-md ring-2 ring-purple-300' : 'bg-purple-100 text-purple-900 hover:bg-purple-200'
+                }`}
+              >
+                {h}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative inline-block border-4 border-dashed border-purple-300 rounded-3xl overflow-hidden bg-white shadow-lg">
+            <canvas
+              ref={canvasRef}
+              width={340}
+              height={220}
+              onMouseDown={startDrawing}
+              onMouseUp={stopDrawing}
+              onMouseMove={draw}
+              onTouchStart={startDrawing}
+              onTouchEnd={stopDrawing}
+              onTouchMove={draw}
+              className="cursor-crosshair touch-none"
+            />
+          </div>
+
+          <div className="flex justify-center gap-4 items-center">
+            <button onClick={clearCanvas} className="px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-900 font-bold text-xs rounded-xl shadow">
+              Hapus Huruf "{selectedHuruf}" 🔄
+            </button>
+            <div className="text-xs font-bold text-purple-700">Tebal: {tracingProgress}%</div>
+          </div>
+        </div>
+      )}
+
+      {/* MODE BARU: BILATERAL TRACING 2 JARI SERENTAK (BRAIN BALANCE) */}
+      {activeSubMode === 'bilateral_2jari' && (
+        <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-inner text-center space-y-4">
+          <h3 className="text-2xl font-black text-indigo-900">🖐️🖐️ Tracing 2 Jari Serentak (Keseimbangan Otak Kanan & Kiri)</h3>
+          <p className="text-indigo-700 text-xs">Geser tombol **Telunjuk Kiri 🔴** dan **Telunjuk Kanan 🔵** ke bawah secara **SERENTAK**!</p>
+
+          <div className="relative w-full h-64 bg-indigo-50 rounded-3xl border-4 border-indigo-200 overflow-hidden flex justify-around items-center p-4">
+            {/* Jalur Kanan & Kiri */}
+            <div className="w-16 h-full bg-indigo-100 rounded-2xl border-2 border-dashed border-indigo-300 relative flex flex-col justify-between items-center py-4">
+              <span className="text-xs font-bold text-indigo-700">Tangan Kiri 👈</span>
+              <button
+                onClick={() => handleMoveBilateral('left', 15)}
+                style={{ top: `${leftTouchPos.y}%` }}
+                className="absolute w-12 h-12 bg-rose-500 text-white font-black rounded-full shadow-lg border-2 border-white animate-bounce flex items-center justify-center text-xs"
+              >
+                🔴 Kiri
+              </button>
+            </div>
+
+            <div className="w-16 h-full bg-indigo-100 rounded-2xl border-2 border-dashed border-indigo-300 relative flex flex-col justify-between items-center py-4">
+              <span className="text-xs font-bold text-indigo-700">Tangan Kanan 👉</span>
+              <button
+                onClick={() => handleMoveBilateral('right', 15)}
+                style={{ top: `${rightTouchPos.y}%` }}
+                className="absolute w-12 h-12 bg-blue-500 text-white font-black rounded-full shadow-lg border-2 border-white animate-bounce flex items-center justify-center text-xs"
+              >
+                🔵 Kanan
+              </button>
+            </div>
+          </div>
+
+          {bilateralCompleted && (
+            <div className="p-4 bg-emerald-100 border-2 border-emerald-400 rounded-2xl animate-pulse">
+              <span className="text-3xl">🎉 KEDUA OTAK SEIMBANG! 🎉</span>
+              <p className="text-emerald-800 font-bold mt-1">Berhasil menelusuri dengan 2 tangan bersamaan!</p>
+              <button onClick={resetBilateral} className="mt-2 px-4 py-2 bg-emerald-600 text-white font-bold rounded-xl shadow">
+                Ulangi Tracing 2 Jari 🔄
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* PUZZLE */}
       {activeSubMode === 'puzzle' && (
         <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-inner text-center">
-          <h3 className="text-2xl font-black text-rose-900 mb-2">Pasang Puzzle {selectedTopic.toUpperCase()}!</h3>
-          <p className="text-rose-700 text-sm mb-6">Pilih kepingan di bawah, lalu pasang di kotak puzzle.</p>
-
-          {/* Target Grid */}
-          <div className="grid grid-cols-2 gap-3 w-64 h-64 mx-auto mb-6 bg-slate-100 p-3 rounded-2xl border-4 border-indigo-200 shadow-md">
+          <h3 className="text-2xl font-black text-rose-900 mb-2">Puzzle Benda</h3>
+          <div className="grid grid-cols-2 gap-3 w-64 h-64 mx-auto mb-6 bg-slate-100 p-3 rounded-2xl border-4 border-indigo-200 shadow">
             {puzzlePieces.map((piece) => {
               const isPlaced = placedPieces.includes(piece.position);
               return (
                 <div
                   key={piece.position}
                   onClick={() => handlePlaceTarget(piece.position)}
-                  className={`rounded-xl border-2 border-dashed flex items-center justify-center text-xl font-bold cursor-pointer transition-all ${
-                    isPlaced ? 'bg-indigo-100 border-indigo-400 text-indigo-900 scale-100 shadow' : 'bg-white border-slate-300 text-slate-300 hover:bg-indigo-50'
+                  className={`rounded-xl border-2 border-dashed flex items-center justify-center text-xl font-bold ${
+                    isPlaced ? 'bg-indigo-100 border-indigo-400 text-indigo-900' : 'bg-white border-slate-300 text-slate-300'
                   }`}
                 >
                   {isPlaced ? piece.name : '❓'}
@@ -352,8 +442,6 @@ export const GameMotorikHalus: React.FC<GameMotorikHalusProps> = ({
               );
             })}
           </div>
-
-          {/* Sources */}
           <div className="flex justify-center gap-2 flex-wrap">
             {puzzlePieces.map((piece) => {
               const isPlaced = placedPieces.includes(piece.position);
@@ -363,8 +451,8 @@ export const GameMotorikHalus: React.FC<GameMotorikHalusProps> = ({
                 <button
                   key={piece.id}
                   onClick={() => handleSelectPiece(piece.id)}
-                  className={`px-4 py-3 rounded-xl font-bold text-sm shadow transition-transform active:scale-95 ${
-                    isSelected ? 'bg-indigo-600 text-white ring-4 ring-indigo-300 scale-105' : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+                  className={`px-4 py-3 rounded-xl font-bold text-xs shadow ${
+                    isSelected ? 'bg-indigo-600 text-white ring-4 ring-indigo-300' : 'bg-indigo-100 text-indigo-700'
                   }`}
                 >
                   {piece.name}
@@ -372,58 +460,24 @@ export const GameMotorikHalus: React.FC<GameMotorikHalusProps> = ({
               );
             })}
           </div>
-
-          {placedPieces.length === puzzlePieces.length && (
-            <div className="mt-6 p-4 bg-emerald-100 border-2 border-emerald-400 rounded-2xl">
-              <span className="text-3xl">🧩 HEBAT! 🧩</span>
-              <p className="text-emerald-800 font-bold">Puzzle {selectedTopic} berhasil terpasang sempurna!</p>
-              <button
-                onClick={() => { setPlacedPieces([]); setSelectedPiece(null); }}
-                className="mt-3 px-4 py-2 bg-emerald-600 text-white font-bold rounded-xl shadow hover:bg-emerald-700"
-              >
-                Main Puzzle Lagi 🔄
-              </button>
-            </div>
-          )}
         </div>
       )}
 
-      {/* MODE 3: BUBBLE POP */}
+      {/* BUBBLE POP */}
       {activeSubMode === 'bubble' && (
-        <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-inner text-center relative overflow-hidden min-h-[320px]">
-          <h3 className="text-2xl font-black text-rose-900 mb-1">Pop Tap Presisi Jemari!</h3>
-          <p className="text-rose-700 text-sm mb-4">Sentuh gelembung {selectedTopic} untuk memecahkannya.</p>
-
-          <div className="text-emerald-700 font-bold mb-4">Gelembung Pecah: {poppedCount} / {bubbles.length}</div>
-
-          <div className="relative w-full h-60 bg-gradient-to-b from-sky-100 to-indigo-100 rounded-2xl border-4 border-sky-200 overflow-hidden shadow-inner">
+        <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-inner text-center">
+          <h3 className="text-2xl font-black text-rose-900 mb-1">Pop Tap Presisi</h3>
+          <div className="relative w-full h-60 bg-sky-100 rounded-2xl border-4 border-sky-200 overflow-hidden shadow-inner">
             {bubbles.map((b) => (
               <button
                 key={b.id}
                 onClick={() => popBubble(b.id)}
-                style={{
-                  top: `${b.y}%`,
-                  left: `${b.x}%`,
-                  width: `${b.size}px`,
-                  height: `${b.size}px`
-                }}
-                className={`absolute rounded-full shadow-lg border-2 border-white/80 animate-bounce transition-transform active:scale-125 flex items-center justify-center text-2xl ${b.color}`}
+                style={{ top: `${b.y}%`, left: `${b.x}%`, width: `${b.size}px`, height: `${b.size}px` }}
+                className={`absolute rounded-full shadow border-2 border-white animate-bounce flex items-center justify-center text-2xl ${b.color}`}
               >
-                {selectedTopic === 'buah' ? '🍎' : selectedTopic === 'sayur' ? '🥦' : selectedTopic === 'kendaraan' ? '🚗' : '✨'}
+                ✨
               </button>
             ))}
-
-            {bubbles.length === 0 && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
-                <span className="text-4xl mb-2">🎉 SEMUA TERPETIK! 🎉</span>
-                <button
-                  onClick={generateBubbles}
-                  className="px-6 py-3 bg-emerald-600 text-white font-bold rounded-2xl shadow-lg hover:bg-emerald-700"
-                >
-                  Munculkan Lagi 🫧
-                </button>
-              </div>
-            )}
           </div>
         </div>
       )}
