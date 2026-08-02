@@ -56,6 +56,7 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
   const [panggilan, setPanggilan] = useState('');
   const [kategoriUsia, setKategoriUsia] = useState<KategoriUsiaSpesifik>('3_tahun');
   const [fotoEmoji, setFotoEmoji] = useState('👶');
+  const [tanggalLahir, setTanggalLahir] = useState('');
   const [namaAyah, setNamaAyah] = useState('');
   const [namaIbu, setNamaIbu] = useState('');
   const [kontakOrangTua, setKontakOrangTua] = useState('');
@@ -116,10 +117,12 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
     soundFx.playSuccess();
     const newChild: MuridPaud = {
       id: `m-${Date.now()}`,
+      tenantId: activeTenantId,
       nama: namaMurid,
       panggilan: panggilan || namaMurid,
       kategoriUsia,
       fotoEmoji,
+      tanggalLahir: tanggalLahir.trim() || undefined,
       namaAyah: namaAyah.trim() || undefined,
       namaIbu: namaIbu.trim() || undefined,
       kontakOrangTua: kontakOrangTua.trim() || undefined
@@ -127,6 +130,7 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
     if (onAddMurid) onAddMurid(newChild);
     setNamaMurid('');
     setPanggilan('');
+    setTanggalLahir('');
     setNamaAyah('');
     setNamaIbu('');
     setKontakOrangTua('');
@@ -314,6 +318,17 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
                 <option value="5_tahun">Usia 5 Tahun</option>
               </select>
             </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1">Tanggal Lahir (Wajib untuk Hitung Usia):</label>
+              <input
+                type="date"
+                value={tanggalLahir}
+                onChange={(e) => setTanggalLahir(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 text-sm font-bold focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
+
             <div>
               <label className="block text-xs font-bold text-slate-600 mb-1">Pilih Avatar Emoji:</label>
               <div className="flex gap-2">

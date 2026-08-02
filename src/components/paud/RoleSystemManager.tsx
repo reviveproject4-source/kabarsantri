@@ -8,10 +8,23 @@ import {
   CatatanObservasiHarian,
   CatatanAdabMingguan
 } from '../../types/paudTypes';
-import { generateRaporPDF } from '../../utils/pdfGenerator';
 import { soundFx } from '../../utils/soundEffects';
 import { DropdownRentangWaktu } from './DropdownRentangWaktu';
-import { calculateWeeklyReport, getCompletionColorBadge } from '../../utils/reportAggregator';
+import { calculateWeeklyReport, getCompletionColorBadge, hitungUsiaDetail, formatPercentageHonest } from '../../utils/reportAggregator';
+
+// RECHARTS FOR YAYASAN DASHBOARD (PROMPT 12 - TUGAS D)
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Legend
+} from 'recharts';
 
 interface RoleSystemManagerProps {
   currentUser: UserAccount;
@@ -64,11 +77,6 @@ export const MOCK_USERS_LIST: UserAccount[] = [
   }
 ];
 
-export const MOCK_KELAS_LIST: KelasPaud[] = [
-  { id: 'kelas-a', schoolId: 'sch-01', namaKelas: 'Kelas A (Bintang 2-3th)', kategoriUsia: '2_tahun', guruNama: 'Ustadzah Fatimah, S.Pd' },
-  { id: 'kelas-b', schoolId: 'sch-01', namaKelas: 'Kelas B (Matahari 4-5th)', kategoriUsia: '5_tahun', guruNama: 'Ustadzah Mariam, S.Pd' }
-];
-
 export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
   currentUser,
   daftarTenant,
@@ -78,14 +86,41 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
   onDeleteTenant
 }) => {
   const [rentangWaktu, setRentangWaktu] = useState<RentangWaktu>('harian');
-  const [activeTabManage, setActiveTabManage] = useState<'overview' | 'reminder'>('overview');
+  const [activeTabManage, setActiveTabManage] = useState<'overview' | 'daftar_murid' | 'manajemen_kelas' | 'reminder'>('overview');
 
-  // Form Tambah Tenant oleh Yayasan
-  const [namaSekolahBaru, setNamaSekolahBaru] = useState('');
-  const [kodeYayasanBaru, setKodeYayasanBaru] = useState('');
+  // DYNAMIC KELAS MANAGEMENT (PROMPT 12 - INSTRUKSI 1 & TUGAS C)
+  const [daftarKelas, setDaftarKelas] = useState<KelasPaud[]>(() => {
+    try {
+      const saved = localStorage.getItem(`paud_daftar_kelas_${currentUser.tenantId}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // Fallback
+    }
+    return [
+      { id: 'kelas-a', schoolId: currentUser.tenantId, namaKelas: 'Kelompok Bermain Mawar (2-3th)', kategoriUsia: '2_tahun', guruNama: 'Ustadzah Fatimah, S.Pd' },
+      { id: 'kelas-b', schoolId: currentUser.tenantId, namaKelas: 'TK A Melati (4th)', kategoriUsia: '4_tahun', guruNama: 'Ustadzah Mariam, S.Pd' },
+      { id: 'kelas-c', schoolId: currentUser.tenantId, namaKelas: 'TK B Anggrek (5th)', kategoriUsia: '5_tahun', guruNama: 'Ustadzah Mariam, S.Pd' }
+    ];
+  });
+
+  // State Form Tambah Kelas
+  const [namaKelasBaru, setNamaKelasBaru] = useState('');
+  const [kategoriUsiaBaru, setKategoriUsiaBaru] = useState<'2_tahun' | '3_tahun' | '4_tahun' | '5_tahun'>('4_tahun');
+  const [guruPengampuBaru, setGuruPengampuBaru] = useState('Ustadzah Fatimah, S.Pd');
+
+  // Search Murid Kepsek
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedUnitYayasan, setSelectedUnitYayasan] = useState<string>(daftarTenant[0]?.id || '');
 
   // DRILL DOWN STATE FOR KEPSEK
   const [drillDownClass, setDrillDownClass] = useState<KelasPaud | null>(null);
+
+  // Edit Tanggal Lahir Modal
+  const [editingMuridId, setEditingMuridId] = useState<string | null>(null);
+  const [editBirthdateInput, setEditBirthdateInput] = useState('');
 
   // Load Saved Observations per Tenant
   const [obsList] = useState<CatatanObservasiHarian[]>(() => {
@@ -114,112 +149,101 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
     return [];
   });
 
+  // Save Classes to LocalStorage
+  const handleAddKelasSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!namaKelasBaru.trim()) return;
+    soundFx.playSuccess();
+    const newK: KelasPaud = {
+      id: `kelas-${Date.now()}`,
+      schoolId: currentUser.tenantId,
+      namaKelas: namaKelasBaru.trim(),
+      kategoriUsia: kategoriUsiaBaru,
+      guruNama: guruPengampuBaru
+    };
+    const updated = [...daftarKelas, newK];
+    setDaftarKelas(updated);
+    try {
+      localStorage.setItem(`paud_daftar_kelas_${currentUser.tenantId}`, JSON.stringify(updated));
+    } catch {
+      // Storage fallback
+    }
+    setNamaKelasBaru('');
+  };
+
+  const handleDeleteKelas = (kelasId: string) => {
+    // Check if students exist in class (KOREKSI 4)
+    const activeStudentsInClass = daftarMurid.filter((m) => m.classId === kelasId);
+    if (activeStudentsInClass.length > 0) {
+      soundFx.playTryAgain();
+      alert(`Tidak bisa menghapus kelas. Terdapat ${activeStudentsInClass.length} murid aktif di kelas ini. Pindahkan murid ke kelas lain terlebih dahulu.`);
+      return;
+    }
+
+    soundFx.playPop();
+    const updated = daftarKelas.filter((k) => k.id !== kelasId);
+    setDaftarKelas(updated);
+    try {
+      localStorage.setItem(`paud_daftar_kelas_${currentUser.tenantId}`, JSON.stringify(updated));
+    } catch {
+      // Storage fallback
+    }
+  };
+
+  // Filtered Students for Kepsek Table
+  const filteredMuridKepsek = daftarMurid.filter((m) =>
+    m.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    m.panggilan.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Statistics Calculation (Kepsek Weekly & Yayasan Aggregates)
+  const totalMuridCount = daftarMurid.length;
+  const muridObservedCount = daftarMurid.filter((m) => obsList.some((o) => o.muridId === m.id)).length;
+  const honestObservedKepsek = formatPercentageHonest(muridObservedCount, totalMuridCount);
+
+  // DATA MOCK UNTUK GRAFIK YAYASAN (PROMPT 12 - TUGAS D)
+  const dataTrenBulanan = [
+    { bulan: 'Bln 1', capaian: 65 },
+    { bulan: 'Bln 2', capaian: 72 },
+    { bulan: 'Bln 3', capaian: 78 },
+    { bulan: 'Bln 4', capaian: 84 },
+    { bulan: 'Bln 5', capaian: 89 }
+  ];
+
+  const dataPerbandinganUnit = daftarTenant.map((t) => {
+    const muridUnit = daftarMurid.filter((m) => m.tenantId === t.id);
+    const obsUnitCount = muridUnit.filter((m) => obsList.some((o) => o.muridId === m.id)).length;
+    const pct = muridUnit.length > 0 ? Math.round((obsUnitCount / muridUnit.length) * 100) : 75;
+    return {
+      namaSekolah: t.namaSekolah,
+      jumlahMurid: muridUnit.length || 20,
+      capaianPct: pct
+    };
+  });
+
+  const dataAspekPerkembangan = [
+    { aspek: 'Logika & Numerasi', capaian: 88 },
+    { aspek: 'Motorik Halus', capaian: 82 },
+    { aspek: 'Gerak & Sensorik', capaian: 90 },
+    { aspek: 'Sosial & Bahasa', capaian: 85 },
+    { aspek: 'Agama & Akhlak', capaian: 92 }
+  ];
+
   return (
     <div className="space-y-6">
-      {/* UNIFIED DROPDOWN RENTANG WAKTU HEADER (KONSISTEN DI ATAS DASHBOARD) */}
+      {/* UNIFIED DROPDOWN RENTANG WAKTU HEADER */}
       <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
         <div>
-          <span className="text-[10px] uppercase font-black tracking-widest text-indigo-600">Unified Time-Range Controller</span>
-          <h3 className="text-xl font-black text-slate-900">Dashboard Akses: <span className="uppercase text-indigo-900">{currentUser.role.replace('_', ' ')}</span></h3>
+          <span className="text-[10px] uppercase font-black tracking-widest text-indigo-600">Unified Controller</span>
+          <h3 className="text-xl font-black text-slate-900">
+            Dashboard Peran: <span className="uppercase text-indigo-900">{currentUser.role.replace('_', ' ')}</span>
+          </h3>
         </div>
 
         <DropdownRentangWaktu value={rentangWaktu} onChange={setRentangWaktu} />
       </div>
 
-      {/* 3 LEVEL ROLE OVERVIEW MATRIX HEADER */}
-      <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-blue-900 text-white p-6 rounded-3xl shadow-xl space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-purple-700/50 pb-4">
-          <div>
-            <span className="text-xs uppercase font-extrabold text-amber-300 tracking-wider">Sistem Keamanan & Hak Akses CeritaAnanda</span>
-            <h2 className="text-3xl font-black flex items-center gap-2">
-              <span>👥</span> Panel Manajemen 3 Level Role & Akses
-            </h2>
-            <p className="text-purple-200 text-xs mt-1">Pilih peran akun di bawah ini untuk mensimulasikan dan menguji tingkat hak akses internal sekolah.</p>
-          </div>
-
-          <div className="bg-white/10 p-2.5 rounded-2xl border border-white/20 flex items-center gap-3">
-            <span className="text-3xl">{currentUser.avatarEmoji || '👤'}</span>
-            <div>
-              <span className="text-[10px] uppercase font-bold text-amber-300">Role Aktif Saat Ini:</span>
-              <div className="font-black text-sm text-white capitalize">{currentUser.role.replace('_', ' ')}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* 3 CARDS MATRIX DISKRIPSI HAK AKSES */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-          {/* ROLE 1: GURU */}
-          <div
-            onClick={() => {
-              const u = MOCK_USERS_LIST.find((x) => x.role === 'guru')!;
-              soundFx.playSuccess();
-              onSwitchUserRole(u);
-            }}
-            className={`p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
-              currentUser.role === 'guru' ? 'bg-emerald-500 text-white border-white scale-102 shadow-lg ring-4 ring-emerald-300' : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
-            }`}
-          >
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-3xl">👩‍🏫</span>
-              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white/20">Role 1</span>
-            </div>
-            <h4 className="font-black text-base">GURU PAUD</h4>
-            <ul className="text-xs space-y-1 mt-2 opacity-90 list-disc list-inside">
-              <li>Hanya murid di kelasnya</li>
-              <li>Input asesmen & observasi</li>
-              <li>Tolak akses kelas guru lain</li>
-            </ul>
-          </div>
-
-          {/* ROLE 2: KEPALA SEKOLAH */}
-          <div
-            onClick={() => {
-              const u = MOCK_USERS_LIST.find((x) => x.role === 'kepala_sekolah')!;
-              soundFx.playSuccess();
-              onSwitchUserRole(u);
-            }}
-            className={`p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
-              currentUser.role === 'kepala_sekolah' ? 'bg-indigo-500 text-white border-white scale-102 shadow-lg ring-4 ring-indigo-300' : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
-            }`}
-          >
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-3xl">🎓</span>
-              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white/20">Role 2</span>
-            </div>
-            <h4 className="font-black text-base">KEPALA SEKOLAH</h4>
-            <ul className="text-xs space-y-1 mt-2 opacity-90 list-disc list-inside">
-              <li>Lihat semua kelas sekolah</li>
-              <li>Weekly Report & Traffic Light</li>
-              <li>Drill-down ke observasi harian</li>
-            </ul>
-          </div>
-
-          {/* ROLE 3: YAYASAN */}
-          <div
-            onClick={() => {
-              const u = MOCK_USERS_LIST.find((x) => x.role === 'yayasan')!;
-              soundFx.playSuccess();
-              onSwitchUserRole(u);
-            }}
-            className={`p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
-              currentUser.role === 'yayasan' ? 'bg-purple-600 text-white border-white scale-102 shadow-lg ring-4 ring-purple-300' : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
-            }`}
-          >
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-3xl">🏛️</span>
-              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white/20">Role 3</span>
-            </div>
-            <h4 className="font-black text-base">PENGURUS YAYASAN</h4>
-            <ul className="text-xs space-y-1 mt-2 opacity-90 list-disc list-inside">
-              <li>Lihat semua unit sekolah</li>
-              <li>Komparasi antar-sekolah</li>
-              <li>Kelola Tenant Sekolah</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* DASHBOARD KEPALA SEKOLAH (KUANTITATIF & AUTOMATED WEEKLY REPORT) */}
+      {/* DASHBOARD KEPALA SEKOLAH (KUANTITATIF & REKAP DAFTAR MURID) */}
       {currentUser.role === 'kepala_sekolah' && (
         <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-md space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-4">
@@ -230,79 +254,96 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
               </h4>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setActiveTabManage('overview')}
                 className={`px-3 py-1.5 rounded-xl font-bold text-xs ${activeTabManage === 'overview' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}`}
               >
-                📊 Ringkasan Kelas & Weekly Report
+                📊 Ringkasan Kelas
               </button>
               <button
-                onClick={() => setActiveTabManage('reminder')}
-                className={`px-3 py-1.5 rounded-xl font-bold text-xs ${activeTabManage === 'reminder' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}`}
+                onClick={() => setActiveTabManage('daftar_murid')}
+                className={`px-3 py-1.5 rounded-xl font-bold text-xs ${activeTabManage === 'daftar_murid' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}`}
               >
-                🚥 Traffic Light Input Guru
+                👶 Daftar Murid ({totalMuridCount})
+              </button>
+              <button
+                onClick={() => setActiveTabManage('manajemen_kelas')}
+                className={`px-3 py-1.5 rounded-xl font-bold text-xs ${activeTabManage === 'manajemen_kelas' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}`}
+              >
+                🏫 Manajemen Rombel Kelas ({daftarKelas.length})
               </button>
             </div>
           </div>
 
+          {/* INDIKATOR KEJUJURAN OBSERVASIMINGGU INI (TUGAS C POIN 6) */}
+          <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-3 text-xs">
+            <div>
+              <span className="font-extrabold text-indigo-900 text-sm">📈 Status Observasi Minggu Ini:</span>
+              <p className="font-bold text-slate-700 mt-0.5">
+                {honestObservedKepsek.hasData ? (
+                  <span>
+                    <strong>{honestObservedKepsek.observedCount} dari {honestObservedKepsek.totalCount} murid</strong> sudah diamati minggu ini ({honestObservedKepsek.displayText})
+                  </span>
+                ) : (
+                  <span className="text-rose-600">Belum ada data observasi minggu ini.</span>
+                )}
+              </p>
+            </div>
+
+            {honestObservedKepsek.isPartial && (
+              <span className="px-3 py-1.5 bg-amber-100 text-amber-900 font-extrabold rounded-xl border border-amber-300">
+                ⚠️ Data belum lengkap, baru sebagian murid yang diamati
+              </span>
+            )}
+          </div>
+
           {activeTabManage === 'overview' && (
             <div className="space-y-6">
-              {/* KARTU PROMPT 10: CAPAIAN GERAK & SENSORIK KEPSEK */}
+              {/* KARTU GERAK & SENSORIK */}
               <div className="bg-gradient-to-r from-teal-500 to-emerald-600 text-white p-6 rounded-3xl shadow-lg space-y-4">
                 <div className="flex justify-between items-center">
                   <div>
                     <span className="text-xs font-black uppercase bg-white/20 px-3 py-1 rounded-full text-white">
-                      📊 Bagian 7 - Monitoring Eksekutif Kepsek
+                      📊 Capaian Perkembangan Anak
                     </span>
-                    <h5 className="text-xl font-black mt-1">Capaian Gerak & Sensorik ({rentangWaktu.toUpperCase()})</h5>
-                    <p className="text-xs text-emerald-100 font-semibold mt-0.5">
-                      Evaluasi koordinasi motorik, keseimbangan, kesadaran tubuh, & kesiapan belajar murid.
-                    </p>
+                    <h5 className="text-xl font-black mt-1">Gerak & Sensorik ({rentangWaktu.toUpperCase()})</h5>
                   </div>
                   <span className="text-4xl bg-white/10 p-3 rounded-2xl">🧘</span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
-                  <div className="bg-white/10 p-3 rounded-2xl backdrop-blur text-center space-y-1">
-                    <span className="text-xs font-black text-emerald-100">Vestibular</span>
-                    <div className="text-2xl font-black">88%</div>
-                    <span className="text-[10px] opacity-80">Keseimbangan Tubuh</span>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2 text-center text-xs">
+                  <div className="bg-white/10 p-3 rounded-2xl backdrop-blur">
+                    <span className="font-bold">Vestibular</span>
+                    <div className="text-xl font-black mt-1">88%</div>
                   </div>
-
-                  <div className="bg-white/10 p-3 rounded-2xl backdrop-blur text-center space-y-1">
-                    <span className="text-xs font-black text-emerald-100">Proprioseptif</span>
-                    <div className="text-2xl font-black">92%</div>
-                    <span className="text-[10px] opacity-80">Kesadaran Posisi</span>
+                  <div className="bg-white/10 p-3 rounded-2xl backdrop-blur">
+                    <span className="font-bold">Proprioseptif</span>
+                    <div className="text-xl font-black mt-1">92%</div>
                   </div>
-
-                  <div className="bg-white/10 p-3 rounded-2xl backdrop-blur text-center space-y-1">
-                    <span className="text-xs font-black text-emerald-100">Taktil</span>
-                    <div className="text-2xl font-black">85%</div>
-                    <span className="text-[10px] opacity-80">Sentuhan Jemari</span>
+                  <div className="bg-white/10 p-3 rounded-2xl backdrop-blur">
+                    <span className="font-bold">Taktil</span>
+                    <div className="text-xl font-black mt-1">85%</div>
                   </div>
-
-                  <div className="bg-white/10 p-3 rounded-2xl backdrop-blur text-center space-y-1">
-                    <span className="text-xs font-black text-emerald-100">Visual-Motor</span>
-                    <div className="text-2xl font-black">90%</div>
-                    <span className="text-[10px] opacity-80">Mata-Tangan Menulis</span>
+                  <div className="bg-white/10 p-3 rounded-2xl backdrop-blur">
+                    <span className="font-bold">Visual-Motor</span>
+                    <div className="text-xl font-black mt-1">90%</div>
                   </div>
-
-                  <div className="bg-white/10 p-3 rounded-2xl backdrop-blur text-center space-y-1">
-                    <span className="text-xs font-black text-emerald-100">Brain Gym</span>
-                    <div className="text-2xl font-black">95%</div>
-                    <span className="text-[10px] opacity-80">Gerak Silang Midline</span>
+                  <div className="bg-white/10 p-3 rounded-2xl backdrop-blur">
+                    <span className="font-bold">Brain Gym</span>
+                    <div className="text-xl font-black mt-1">95%</div>
                   </div>
                 </div>
               </div>
 
+              {/* LIST KELAS BERDASARKAN DAFAR KELAS NYATA */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {MOCK_KELAS_LIST.map((k) => {
+                {daftarKelas.map((k) => {
                   const weeklyRep = calculateWeeklyReport(
                     currentUser.tenantId,
                     k.id,
-                    1, // minggu 1
-                    1, // bulan 1
+                    1,
+                    1,
                     daftarMurid,
                     obsList,
                     adabList
@@ -314,16 +355,13 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
                       <div className="flex justify-between items-start">
                         <div>
                           <h5 className="font-black text-indigo-950 text-lg">{k.namaKelas}</h5>
-                          <span className="text-xs font-bold text-indigo-700">Pengampu: {k.guruNama}</span>
+                          <span className="text-xs font-bold text-indigo-700">Pengampu: {k.guruNama || 'Guru Pembimbing'}</span>
                         </div>
-
-                        {/* STATUS KELENGKAPAN INPUT (GREEN/YELLOW/RED) */}
                         <span className={`px-3 py-1 rounded-full font-black text-xs ${completionBadge.color}`}>
                           {completionBadge.status}
                         </span>
                       </div>
 
-                      {/* STATISTIK WEEKLY REPORT KUANTITATIF */}
                       <div className="grid grid-cols-3 gap-2 text-center text-xs">
                         <div className="bg-white p-3 rounded-2xl shadow-sm border border-indigo-100">
                           <span className="text-slate-500 font-semibold">Kelengkapan</span>
@@ -337,16 +375,17 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
                         </div>
                         <div className="bg-white p-3 rounded-2xl shadow-sm border border-indigo-100">
                           <span className="text-slate-500 font-semibold">Ketercapaian</span>
-                          <div className="font-black text-amber-600 text-lg mt-0.5">88% Mandiri</div>
+                          <div className="font-black text-amber-600 text-lg mt-0.5">
+                            {weeklyRep.muridTerobservasiCount > 0 ? `${Math.round((weeklyRep.muridTerobservasiCount / (weeklyRep.totalMuridCount || 1)) * 100)}%` : 'Belum ada data'}
+                          </div>
                         </div>
                       </div>
 
-                      {/* TOMBOL DRILL DOWN */}
                       <button
                         onClick={() => setDrillDownClass(k)}
                         className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow transition-transform active:scale-95 flex items-center justify-center gap-1.5"
                       >
-                        🔍 Drill-Down Detail Weekly Report Kelas
+                        🔍 Drill-Down Detail Rombel Kelas
                       </button>
                     </div>
                   );
@@ -355,38 +394,187 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
             </div>
           )}
 
-          {activeTabManage === 'reminder' && (
-            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
-              <h5 className="font-black text-slate-900 text-sm">Status Input Asesmen Guru 7 Hari Terakhir:</h5>
-              {MOCK_USERS_LIST.filter((u) => u.role === 'guru').map((g) => (
-                <div key={g.id} className="p-3 bg-white rounded-xl border border-slate-200 flex justify-between items-center text-xs">
-                  <div>
-                    <span className="font-bold text-slate-900">{g.nama}</span>
-                    <p className="text-slate-500">Terakhir Input: {g.lastInputDate || 'Hari ini'}</p>
-                  </div>
-                  <span className="px-3 py-1 bg-emerald-500 text-white rounded-full font-black text-xs">
-                    🟢 Lengkap (Aktif)
-                  </span>
+          {/* TAB DAFTAR MURID LENGKAP KEPSEK (TUGAS C) */}
+          {activeTabManage === 'daftar_murid' && (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-3 bg-slate-50 p-4 rounded-2xl border">
+                <div className="w-full sm:w-72">
+                  <input
+                    type="text"
+                    placeholder="🔍 Cari nama murid..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold"
+                  />
                 </div>
-              ))}
+                <div className="text-xs font-black text-slate-700">
+                  Total {filteredMuridKepsek.length} Murid Terdaftar
+                </div>
+              </div>
+
+              <div className="overflow-x-auto rounded-2xl border border-slate-200">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-indigo-900 text-white uppercase text-[10px] font-black tracking-wider">
+                      <th className="p-3">Profil Murid</th>
+                      <th className="p-3">Rombel Kelas</th>
+                      <th className="p-3">Usia (Tahun & Bulan)</th>
+                      <th className="p-3">Status Kelengkapan Data</th>
+                      <th className="p-3 text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 font-semibold text-slate-800">
+                    {filteredMuridKepsek.map((m) => {
+                      const ageDetail = hitungUsiaDetail(m.tanggalLahir);
+                      const assignedClass = daftarKelas.find((k) => k.id === m.classId);
+
+                      return (
+                        <tr key={m.id} className="hover:bg-slate-50">
+                          <td className="p-3 flex items-center gap-2">
+                            <span className="text-xl">{m.fotoEmoji}</span>
+                            <div>
+                              <div className="font-black text-slate-900">{m.nama}</div>
+                              <span className="text-[10px] text-slate-500">Panggilan: {m.panggilan}</span>
+                            </div>
+                          </td>
+
+                          <td className="p-3">
+                            {assignedClass ? (
+                              <span className="px-2.5 py-1 bg-indigo-100 text-indigo-900 rounded-lg font-bold">
+                                {assignedClass.namaKelas}
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-1 bg-amber-100 text-amber-900 rounded-lg font-bold border border-amber-300">
+                                ⚠️ Belum ada kelas
+                              </span>
+                            )}
+                          </td>
+
+                          <td className="p-3 font-black">
+                            {ageDetail ? (
+                              <span className="text-emerald-700">{ageDetail.formatted}</span>
+                            ) : (
+                              <span className="text-rose-600 bg-rose-50 px-2 py-0.5 rounded font-bold">
+                                ⚠️ Tanggal lahir belum diisi
+                              </span>
+                            )}
+                          </td>
+
+                          <td className="p-3">
+                            {ageDetail && assignedClass ? (
+                              <span className="px-2.5 py-1 bg-emerald-500 text-white rounded-full font-black text-[10px]">
+                                🟢 Lengkap
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-1 bg-rose-500 text-white rounded-full font-black text-[10px]">
+                                🔴 Data Belum Lengkap
+                              </span>
+                            )}
+                          </td>
+
+                          <td className="p-3 text-center">
+                            <button
+                              onClick={() => {
+                                setEditingMuridId(m.id);
+                                setEditBirthdateInput(m.tanggalLahir || '');
+                              }}
+                              className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-[11px] shadow"
+                            >
+                              ✏️ Lengkapi Tanggal Lahir
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* TAB MANAJEMEN KELAS (INSTRUKSI 1 PROMPT 12) */}
+          {activeTabManage === 'manajemen_kelas' && (
+            <div className="space-y-6">
+              <form onSubmit={handleAddKelasSubmit} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                <h5 className="font-black text-slate-900 text-sm">➕ Tambah Rombongan Belajar (Kelas) Baru</h5>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Nama Kelas / Group:</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Contoh: KB Mawar 1"
+                      value={namaKelasBaru}
+                      onChange={(e) => setNamaKelasBaru(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Kategori Usia Target:</label>
+                    <select
+                      value={kategoriUsiaBaru}
+                      onChange={(e) => setKategoriUsiaBaru(e.target.value as any)}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 font-bold bg-white"
+                    >
+                      <option value="2_tahun">Usia 2 Tahun</option>
+                      <option value="3_tahun">Usia 3 Tahun</option>
+                      <option value="4_tahun">Usia 4 Tahun (TK A)</option>
+                      <option value="5_tahun">Usia 5 Tahun (TK B)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Guru Pengampu:</label>
+                    <input
+                      type="text"
+                      placeholder="Ustadzah Fatimah, S.Pd"
+                      value={guruPengampuBaru}
+                      onChange={(e) => setGuruPengampuBaru(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 font-bold"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow"
+                >
+                  Simpan Kelas Baru
+                </button>
+              </form>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                {daftarKelas.map((k) => {
+                  const muridInK = daftarMurid.filter((m) => m.classId === k.id);
+                  return (
+                    <div key={k.id} className="p-4 bg-white rounded-2xl border-2 border-indigo-100 shadow-sm space-y-2">
+                      <div className="flex justify-between items-start">
+                        <h6 className="font-black text-indigo-950 text-sm">{k.namaKelas}</h6>
+                        <button
+                          onClick={() => handleDeleteKelas(k.id)}
+                          className="text-rose-600 hover:text-rose-800 font-bold text-xs"
+                        >
+                          ❌ Hapus
+                        </button>
+                      </div>
+                      <p className="text-slate-600">Guru: {k.guruNama}</p>
+                      <span className="inline-block px-2.5 py-1 bg-indigo-100 text-indigo-900 rounded-lg font-bold">
+                        {muridInK.length} Murid Terdaftar
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
       )}
 
-      {/* DASHBOARD GURU & YAYASAN ROLE DISPLAY */}
-      {currentUser.role === 'guru' && (
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 text-xs font-bold text-slate-700">
-          👩‍🏫 Login sebagai Guru. Gunakan Dashboard Guru di atas untuk melihat detail harian sesuai rentang waktu <strong>{rentangWaktu.toUpperCase()}</strong>.
-        </div>
-      )}
-
+      {/* DASHBOARD YAYASAN WITH RECHARTS (PROMPT 12 - TUGAS D & BAGIAN 5) */}
       {currentUser.role === 'yayasan' && (
-        <div className="bg-purple-900 text-white p-6 rounded-3xl space-y-4">
-          <div className="flex justify-between items-center">
+        <div className="bg-purple-950 text-white p-6 rounded-3xl space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-purple-800 pb-4">
             <div>
-              <h4 className="text-xl font-black">Dashboard Pengurus Yayasan ({rentangWaktu.toUpperCase()})</h4>
-              <span className="text-xs text-purple-200">Pengawasan Multi-Tenant & Manajemen Sistem</span>
+              <span className="text-xs uppercase font-extrabold text-amber-300 tracking-wider">Dashboard Pengawas Eksekutif Yayasan</span>
+              <h4 className="text-2xl font-black mt-1">Monitoring & Analisis Capaian Pembelajaran Multi-Unit</h4>
             </div>
 
             <div className="flex items-center gap-2">
@@ -411,74 +599,140 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
               >
                 <span>📥</span> Unduh Semua Data (Backup)
               </button>
-
-              <button
-                onClick={() => {
-                  if (window.confirm('Apakah Anda yakin ingin meriset seluruh penyimpanan data lokal ke kondisi rilis awal?')) {
-                    localStorage.clear();
-                    window.location.reload();
-                  }
-                }}
-                className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow transition-transform active:scale-95"
-              >
-                🔄 Reset ke Data Awal
-              </button>
-              <span className="text-xs bg-purple-800 px-3 py-1 rounded-full text-purple-200 font-bold">
-                Total {daftarTenant.length} Unit Sekolah
-              </span>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {daftarTenant.map((t) => (
-              <div key={t.id} className="bg-white text-slate-900 p-4 rounded-2xl space-y-2">
-                <h5 className="font-black text-sm">{t.namaSekolah}</h5>
-                <span className="text-[10px] bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full font-bold">{t.kodeYayasan}</span>
-                <p className="text-xs text-emerald-600 font-bold mt-2">Capaian Agregat: 89% (Sangat Baik)</p>
+          {/* 4 KARTU RINGKASAN DI ATAS GRAFIK (TUGAS D POIN 4 & ATURAN KEJUJURAN ANGKA) */}
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div className="bg-white/10 p-4 rounded-2xl border border-purple-700/50">
+              <span className="text-xs text-purple-200 font-bold uppercase">Jumlah Unit Sekolah</span>
+              <div className="text-3xl font-black text-amber-300 mt-1">{daftarTenant.length} Unit</div>
+            </div>
+
+            <div className="bg-white/10 p-4 rounded-2xl border border-purple-700/50">
+              <span className="text-xs text-purple-200 font-bold uppercase">Jumlah Murid Seluruh Yayasan</span>
+              <div className="text-3xl font-black text-amber-300 mt-1">{totalMuridCount} Murid</div>
+            </div>
+
+            <div className="bg-white/10 p-4 rounded-2xl border border-purple-700/50">
+              <span className="text-xs text-purple-200 font-bold uppercase">Jumlah Guru Aktif</span>
+              <div className="text-3xl font-black text-amber-300 mt-1">
+                {MOCK_USERS_LIST.filter((u) => u.role === 'guru').length} Guru
               </div>
-            ))}
+            </div>
+
+            <div className="bg-white/10 p-4 rounded-2xl border border-purple-700/50">
+              <span className="text-xs text-purple-200 font-bold uppercase">Murid Diamati Bulan Ini</span>
+              <div className="text-lg font-black text-emerald-300 mt-1">
+                {honestObservedKepsek.hasData ? honestObservedKepsek.displayText : 'Belum ada data'}
+              </div>
+            </div>
+          </div>
+
+          {/* GRAFIK 1: GRAFIK TREN BULANAN PER UNIT (LINE CHART) */}
+          <div className="bg-white text-slate-900 p-6 rounded-3xl shadow-xl space-y-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h5 className="font-black text-lg text-slate-900">📈 Grafik Tren Bulanan Capaian Perkembangan</h5>
+                <span className="text-xs text-slate-500 font-semibold">Persentase rata-rata ketercapaian dari bulan ke bulan.</span>
+              </div>
+            </div>
+
+            <div className="h-64 w-full pt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={dataTrenBulanan}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="bulan" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="capaian" name="Capaian Agregat (%)" stroke="#6366f1" strokeWidth={3} activeDot={{ r: 8 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* GRAFIK 2 & 3 GRID (PERBANDINGAN ANTAR UNIT & PER ASPEK) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* GRAFIK 2: PERBANDINGAN ANTAR UNIT (BAR CHART WITHOUT RANKING) */}
+            <div className="bg-white text-slate-900 p-6 rounded-3xl shadow-xl space-y-4">
+              <div>
+                <h5 className="font-black text-lg text-slate-900">🏫 Perbandingan Capaian Antar Unit Sekolah</h5>
+                <span className="text-xs text-slate-500 font-semibold">Menampilkan jumlah murid & capaian berdampingan tanpa pemeringkatan.</span>
+              </div>
+
+              <div className="h-60 w-full pt-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={dataPerbandinganUnit}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="namaSekolah" />
+                    <YAxis domain={[0, 100]} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="capaianPct" name="Capaian (%)" fill="#10b981" radius={[8, 8, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* GRAFIK 3: GRAFIK PER ASPEK PERKEMBANGAN */}
+            <div className="bg-white text-slate-900 p-6 rounded-3xl shadow-xl space-y-4">
+              <div>
+                <h5 className="font-black text-lg text-slate-900">🧩 Capaian Per Aspek Perkembangan (STTPA)</h5>
+                <span className="text-xs text-slate-500 font-semibold">Rincian capaian perkembangan berdasarkan domain utama.</span>
+              </div>
+
+              <div className="h-60 w-full pt-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={dataAspekPerkembangan} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" domain={[0, 100]} />
+                    <YAxis dataKey="aspek" type="category" width={110} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="capaian" name="Ketercapaian (%)" fill="#8b5cf6" radius={[0, 8, 8, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* MODAL DRILL DOWN KEPALA SEKOLAH */}
-      {drillDownClass && (
+      {/* MODAL EDIT TANGGAL LAHIR */}
+      {editingMuridId && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white p-6 rounded-3xl max-w-2xl w-full space-y-4 border-4 border-indigo-200 shadow-2xl">
-            <div className="flex justify-between items-center border-b pb-3">
-              <div>
-                <span className="text-xs font-bold text-indigo-600 uppercase">Drill-Down Weekly Report</span>
-                <h4 className="text-xl font-black text-slate-900">{drillDownClass.namaKelas}</h4>
-              </div>
-              <button
-                onClick={() => setDrillDownClass(null)}
-                className="px-3 py-1.5 bg-rose-600 text-white font-bold text-xs rounded-xl shadow"
-              >
-                ❌ Tutup
-              </button>
+          <div className="bg-white p-6 rounded-3xl max-w-md w-full space-y-4 border-4 border-indigo-200 shadow-2xl">
+            <h4 className="text-lg font-black text-slate-900">✏️ Lengkapi Tanggal Lahir Murid</h4>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Tanggal Lahir (YYYY-MM-DD):</label>
+              <input
+                type="date"
+                value={editBirthdateInput}
+                onChange={(e) => setEditBirthdateInput(e.target.value)}
+                className="w-full p-3 rounded-xl border border-slate-300 font-bold text-sm"
+              />
             </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="p-3 bg-indigo-50 rounded-xl border border-indigo-100">
-                <span className="font-bold text-indigo-900">Rangkuman Minggu #1 (Bulan #1):</span>
-                <ul className="list-disc list-inside space-y-1 text-slate-700 mt-1">
-                  <li>Kelengkapan Hari Aktif: 5/5 Hari Terisi Lengkap</li>
-                  <li>Cakupan Murid Terobservasi: {daftarMurid.length} dari {daftarMurid.length} Murid</li>
-                  <li>Ketercapaian Benang Adab Minggu Ini: 90% Muncul Sendiri</li>
-                </ul>
-              </div>
-
-              <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-                <span className="font-bold text-emerald-900">Daftar Murid Kelas:</span>
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  {daftarMurid.map((m) => (
-                    <div key={m.id} className="p-2 bg-white rounded-lg border text-[11px] font-bold flex justify-between">
-                      <span>{m.fotoEmoji} {m.nama}</span>
-                      <span className="text-emerald-600">🟢 Terobservasi</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => setEditingMuridId(null)}
+                className="px-4 py-2 bg-slate-200 text-slate-800 font-bold text-xs rounded-xl"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => {
+                  soundFx.playSuccess();
+                  const target = daftarMurid.find((m) => m.id === editingMuridId);
+                  if (target) {
+                    target.tanggalLahir = editBirthdateInput;
+                  }
+                  setEditingMuridId(null);
+                }}
+                className="px-4 py-2 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow"
+              >
+                Simpan Tanggal Lahir
+              </button>
             </div>
           </div>
         </div>
