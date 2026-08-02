@@ -281,6 +281,84 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* 3 LEVEL ROLE OVERVIEW MATRIX & ROLE SWITCHER BAR */}
+      <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-blue-900 text-white p-6 rounded-3xl shadow-xl space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-purple-700/50 pb-4">
+          <div>
+            <span className="text-xs uppercase font-extrabold text-amber-300 tracking-wider">Sistem Hak Akses CeritaAnanda</span>
+            <h2 className="text-2xl sm:text-3xl font-black flex items-center gap-2 mt-1">
+              <span>👥</span> Panel Simulasi & Pindah 3 Level Role Access
+            </h2>
+            <p className="text-purple-200 text-xs mt-1">Pilih peran akun di bawah ini untuk mensimulasikan hak akses Guru, Kepala Sekolah, dan Yayasan.</p>
+          </div>
+
+          <div className="bg-white/10 p-3 rounded-2xl border border-white/20 flex items-center gap-3">
+            <span className="text-3xl">{currentUser.avatarEmoji || '👤'}</span>
+            <div>
+              <span className="text-[10px] uppercase font-bold text-amber-300">Akun / Role Aktif:</span>
+              <div className="font-black text-sm text-white capitalize">{currentUser.nama} ({currentUser.role.replace('_', ' ')})</div>
+            </div>
+          </div>
+        </div>
+
+        {/* 3 BUTTONS MATRIX SIMULASI ROLE */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+          <button
+            onClick={() => {
+              soundFx.playSuccess();
+              onSwitchUserRole(MOCK_USERS_LIST[0]);
+            }}
+            className={`p-4 rounded-2xl border-2 text-left transition-all active:scale-95 flex items-center gap-3 ${
+              currentUser.role === 'guru'
+                ? 'bg-amber-400 text-indigo-950 border-amber-300 shadow-xl ring-4 ring-amber-300/30'
+                : 'bg-white/10 hover:bg-white/20 text-white border-white/20'
+            }`}
+          >
+            <span className="text-3xl">👩‍🏫</span>
+            <div>
+              <span className="text-[10px] uppercase font-black tracking-wider opacity-80">Role 1</span>
+              <h4 className="font-black text-sm leading-tight">Guru Kelas</h4>
+            </div>
+          </button>
+
+          <button
+            onClick={() => {
+              soundFx.playSuccess();
+              onSwitchUserRole(MOCK_USERS_LIST[2]);
+            }}
+            className={`p-4 rounded-2xl border-2 text-left transition-all active:scale-95 flex items-center gap-3 ${
+              currentUser.role === 'kepala_sekolah'
+                ? 'bg-amber-400 text-indigo-950 border-amber-300 shadow-xl ring-4 ring-amber-300/30'
+                : 'bg-white/10 hover:bg-white/20 text-white border-white/20'
+            }`}
+          >
+            <span className="text-3xl">🎓</span>
+            <div>
+              <span className="text-[10px] uppercase font-black tracking-wider opacity-80">Role 2</span>
+              <h4 className="font-black text-sm leading-tight">Kepala Sekolah</h4>
+            </div>
+          </button>
+
+          <button
+            onClick={() => {
+              soundFx.playSuccess();
+              onSwitchUserRole(MOCK_USERS_LIST[3]);
+            }}
+            className={`p-4 rounded-2xl border-2 text-left transition-all active:scale-95 flex items-center gap-3 ${
+              currentUser.role === 'yayasan'
+                ? 'bg-amber-400 text-indigo-950 border-amber-300 shadow-xl ring-4 ring-amber-300/30'
+                : 'bg-white/10 hover:bg-white/20 text-white border-white/20'
+            }`}
+          >
+            <span className="text-3xl">🏛️</span>
+            <div>
+              <span className="text-[10px] uppercase font-black tracking-wider opacity-80">Role 3</span>
+              <h4 className="font-black text-sm leading-tight">Pengurus Yayasan</h4>
+            </div>
+          </button>
+        </div>
+      </div>
+
       {/* UNIFIED CONTROLLER HEADER */}
       <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
         <div>

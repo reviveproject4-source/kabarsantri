@@ -13,7 +13,34 @@ export const DAFTAR_TENANT_DEFAULT: TenantPaud[] = [
   { id: 'tenant-paud-01', namaSekolah: 'PAUD CeritaAnanda (Sekolah Pertama)', kodeYayasan: 'YYS-PAUD-01', alamat: 'Jl. Utama Sekolah' }
 ];
 
-const INITIAL_MURID: RekapMuridPaud[] = [];
+const DEFAULT_INITIAL_MURID: RekapMuridPaud[] = [
+  {
+    id: 'm-01',
+    tenantId: 'tenant-paud-01',
+    classId: 'kelas-a',
+    nama: 'Muhammad Bintang',
+    panggilan: 'Bintang',
+    kategoriUsia: '3_tahun',
+    tanggalLahir: '2023-03-15',
+    fotoEmoji: '👦',
+    skorLogika: { pencocokanBentuk: 100, mengurutkanUkuran: 80, menghitungBenda: 90, polaWarna: 85 },
+    skorMotorikHalus: { tracingGaris: 90, puzzleBentuk: 85, bubblePopSensory: 95 },
+    evaluasiMotorikKasar: []
+  },
+  {
+    id: 'm-02',
+    tenantId: 'tenant-paud-01',
+    classId: 'kelas-b',
+    nama: 'Aisyah Putri',
+    panggilan: 'Aisyah',
+    kategoriUsia: '4_tahun',
+    tanggalLahir: '2022-06-20',
+    fotoEmoji: '👧',
+    skorLogika: { pencocokanBentuk: 95, mengurutkanUkuran: 90, menghitungBenda: 100, polaWarna: 90 },
+    skorMotorikHalus: { tracingGaris: 95, puzzleBentuk: 90, bubblePopSensory: 100 },
+    evaluasiMotorikKasar: []
+  }
+];
 
 interface ModulPaudUtamaProps {
   onKembaliKeUtama?: () => void;
@@ -42,12 +69,12 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
     } catch {
       // Fallback
     }
-    return INITIAL_MURID;
+    return DEFAULT_INITIAL_MURID;
   });
 
   const [activeView, setActiveView] = useState<'dashboard' | 'kasar' | 'sensorik' | 'anak' | 'roles' | 'proyektor' | 'pendaftaran'>('dashboard');
   const [dashboardTab, setDashboardTab] = useState<'rapor' | 'kurikulum'>('rapor');
-  const [selectedChildForPlay, setSelectedChildForPlay] = useState<RekapMuridPaud>(daftarMurid[0] || INITIAL_MURID[0]);
+  const [selectedChildForPlay, setSelectedChildForPlay] = useState<RekapMuridPaud>(daftarMurid[0] || DEFAULT_INITIAL_MURID[0]);
 
   // Simpan otomatis per tenantId
   React.useEffect(() => {
