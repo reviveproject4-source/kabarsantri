@@ -11,8 +11,9 @@ import {
 import { soundFx } from '../../utils/soundEffects';
 import { DropdownRentangWaktu } from './DropdownRentangWaktu';
 import { calculateWeeklyReport, getCompletionColorBadge, hitungUsiaDetail, formatPercentageHonest } from '../../utils/reportAggregator';
+import { dataService } from '../../services/dataService';
 
-// RECHARTS FOR YAYASAN DASHBOARD (PROMPT 12 - TUGAS D)
+// RECHARTS FOR YAYASAN DASHBOARD
 import {
   ResponsiveContainer,
   LineChart,
@@ -86,9 +87,32 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
   onDeleteTenant
 }) => {
   const [rentangWaktu, setRentangWaktu] = useState<RentangWaktu>('harian');
-  const [activeTabManage, setActiveTabManage] = useState<'overview' | 'daftar_murid' | 'manajemen_kelas' | 'reminder'>('overview');
+  const [activeTabManage, setActiveTabManage] = useState<'overview' | 'daftar_murid' | 'manajemen_kelas' | 'pegawai' | 'reminder'>('overview');
 
-  // DYNAMIC KELAS MANAGEMENT (PROMPT 12 - INSTRUKSI 1 & TUGAS C)
+  // MODE PERANGKAP: KETUA YAYASAN MERANGKAP KEPALA SEKOLAH
+  const [isMerangkapKepsek, setIsMerangkapKepsek] = useState<boolean>(true);
+
+  // MANAJEMEN PEGAWAI & GURU OLEH YAYASAN
+  const [daftarPegawai, setDaftarPegawai] = useState<UserAccount[]>(() => {
+    try {
+      const saved = localStorage.getItem(`paud_daftar_pegawai_${currentUser.tenantId}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // Fallback
+    }
+    return MOCK_USERS_LIST.filter((u) => u.tenantId === currentUser.tenantId);
+  });
+
+  // State Form Tambah Pegawai oleh Yayasan
+  const [namaPegawaiBaru, setNamaPegawaiBaru] = useState('');
+  const [emailPegawaiBaru, setEmailPegawaiBaru] = useState('');
+  const [rolePegawaiBaru, setRolePegawaiBaru] = useState<'guru' | 'kepala_sekolah'>('guru');
+  const [classIdPegawaiBaru, setClassIdPegawaiBaru] = useState('kelas-a');
+
+  // MANAJEMEN KELAS
   const [daftarKelas, setDaftarKelas] = useState<KelasPaud[]>(() => {
     try {
       const saved = localStorage.getItem(`paud_daftar_kelas_${currentUser.tenantId}`);
@@ -106,19 +130,14 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
     ];
   });
 
-  // State Form Tambah Kelas
+  // Form Tambah Kelas
   const [namaKelasBaru, setNamaKelasBaru] = useState('');
   const [kategoriUsiaBaru, setKategoriUsiaBaru] = useState<'2_tahun' | '3_tahun' | '4_tahun' | '5_tahun'>('4_tahun');
   const [guruPengampuBaru, setGuruPengampuBaru] = useState('Ustadzah Fatimah, S.Pd');
 
-  // Search Murid Kepsek
+  // Search & Edit States
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedUnitYayasan, setSelectedUnitYayasan] = useState<string>(daftarTenant[0]?.id || '');
-
-  // DRILL DOWN STATE FOR KEPSEK
   const [drillDownClass, setDrillDownClass] = useState<KelasPaud | null>(null);
-
-  // Edit Tanggal Lahir Modal
   const [editingMuridId, setEditingMuridId] = useState<string | null>(null);
   const [editBirthdateInput, setEditBirthdateInput] = useState('');
 
@@ -149,7 +168,39 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
     return [];
   });
 
-  // Save Classes to LocalStorage
+  // Handler Tambah Pegawai oleh Yayasan
+  const handleAddPegawaiSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!namaPegawaiBaru.trim() || !emailPegawaiBaru.trim()) return;
+    soundFx.playSuccess();
+    const newPegawai: UserAccount = {
+      id: `u-peg-${Date.now()}`,
+      nama: namaPegawaiBaru.trim(),
+      email: emailPegawaiBaru.trim(),
+      role: rolePegawaiBaru,
+      tenantId: currentUser.tenantId,
+      classId: classIdPegawaiBaru,
+      avatarEmoji: rolePegawaiBaru === 'kepala_sekolah' ? '🎓' : '👩‍🏫',
+      lastInputDate: new Date().toISOString().split('T')[0]
+    };
+    const updated = [...daftarPegawai, newPegawai];
+    setDaftarPegawai(updated);
+    try {
+      localStorage.setItem(`paud_daftar_pegawai_${currentUser.tenantId}`, JSON.stringify(updated));
+    } catch {
+      // Storage fallback
+    }
+
+    dataService.catatAuditLog(currentUser.tenantId, currentUser.id, 'tambah', 'pengguna', newPegawai.id, {
+      nama: newPegawai.nama,
+      role: newPegawai.role
+    });
+
+    setNamaPegawaiBaru('');
+    setEmailPegawaiBaru('');
+  };
+
+  // Handler Tambah Kelas
   const handleAddKelasSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!namaKelasBaru.trim()) return;
@@ -172,7 +223,6 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
   };
 
   const handleDeleteKelas = (kelasId: string) => {
-    // Check if students exist in class (KOREKSI 4)
     const activeStudentsInClass = daftarMurid.filter((m) => m.classId === kelasId);
     if (activeStudentsInClass.length > 0) {
       soundFx.playTryAgain();
@@ -190,18 +240,16 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
     }
   };
 
-  // Filtered Students for Kepsek Table
   const filteredMuridKepsek = daftarMurid.filter((m) =>
     m.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
     m.panggilan.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Statistics Calculation (Kepsek Weekly & Yayasan Aggregates)
   const totalMuridCount = daftarMurid.length;
   const muridObservedCount = daftarMurid.filter((m) => obsList.some((o) => o.muridId === m.id)).length;
   const honestObservedKepsek = formatPercentageHonest(muridObservedCount, totalMuridCount);
 
-  // DATA MOCK UNTUK GRAFIK YAYASAN (PROMPT 12 - TUGAS D)
+  // DATA MOCK RECHARTS
   const dataTrenBulanan = [
     { bulan: 'Bln 1', capaian: 65 },
     { bulan: 'Bln 2', capaian: 72 },
@@ -229,22 +277,269 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
     { aspek: 'Agama & Akhlak', capaian: 92 }
   ];
 
+  const isKepsekOrMerangkap = currentUser.role === 'kepala_sekolah' || (currentUser.role === 'yayasan' && isMerangkapKepsek);
+
   return (
     <div className="space-y-6">
-      {/* UNIFIED DROPDOWN RENTANG WAKTU HEADER */}
+      {/* UNIFIED CONTROLLER HEADER */}
       <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
         <div>
           <span className="text-[10px] uppercase font-black tracking-widest text-indigo-600">Unified Controller</span>
-          <h3 className="text-xl font-black text-slate-900">
-            Dashboard Peran: <span className="uppercase text-indigo-900">{currentUser.role.replace('_', ' ')}</span>
+          <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
+            <span>Peran Aktif:</span>
+            <span className="uppercase text-indigo-900 bg-indigo-100 px-3 py-1 rounded-xl">
+              {currentUser.role.replace('_', ' ')}
+            </span>
           </h3>
         </div>
 
         <DropdownRentangWaktu value={rentangWaktu} onChange={setRentangWaktu} />
       </div>
 
-      {/* DASHBOARD KEPALA SEKOLAH (KUANTITATIF & REKAP DAFTAR MURID) */}
-      {currentUser.role === 'kepala_sekolah' && (
+      {/* DASHBOARD YAYASAN WITH RECHARTS & MANAJEMEN PEGAWAI */}
+      {currentUser.role === 'yayasan' && (
+        <div className="bg-purple-950 text-white p-6 rounded-3xl space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-purple-800 pb-4">
+            <div>
+              <span className="text-xs uppercase font-extrabold text-amber-300 tracking-wider">Dashboard Pengawas Eksekutif Yayasan</span>
+              <h4 className="text-2xl font-black mt-1">Monitoring & Manajemen Pegawai Lembaga</h4>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {/* TOGGLE MODE PERANGKAP YAYASAN KEPSEK */}
+              <button
+                onClick={() => {
+                  soundFx.playPop();
+                  setIsMerangkapKepsek(!isMerangkapKepsek);
+                }}
+                className={`px-3.5 py-2 rounded-xl font-black text-xs shadow border transition-all flex items-center gap-1.5 ${
+                  isMerangkapKepsek ? 'bg-amber-400 text-purple-950 border-amber-300' : 'bg-purple-900 text-purple-200 border-purple-700'
+                }`}
+              >
+                <span>⚡</span> {isMerangkapKepsek ? 'Mode Perangkap Kepsek: AKTIF' : 'Mode Perangkap Kepsek: NONAKTIF'}
+              </button>
+
+              <button
+                onClick={() => {
+                  soundFx.playSuccess();
+                  const dataToExport = {
+                    sekolah: currentUser.tenantId,
+                    tanggalEkspor: new Date().toISOString(),
+                    totalMurid: daftarMurid.length,
+                    daftarMurid: daftarMurid
+                  };
+                  const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `Backup_Data_Sekolah_${currentUser.tenantId}_${new Date().toISOString().split('T')[0]}.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition-transform active:scale-95 flex items-center gap-1"
+              >
+                <span>📥</span> Unduh Data (Backup)
+              </button>
+            </div>
+          </div>
+
+          {/* TAB NAVIGASI YAYASAN */}
+          <div className="flex gap-2 border-b border-purple-800 pb-3">
+            <button
+              onClick={() => setActiveTabManage('overview')}
+              className={`px-4 py-2 rounded-xl font-extrabold text-xs ${activeTabManage === 'overview' ? 'bg-amber-400 text-purple-950' : 'bg-purple-900 text-purple-200'}`}
+            >
+              📊 Grafik Analisis Yayasan
+            </button>
+            <button
+              onClick={() => setActiveTabManage('pegawai')}
+              className={`px-4 py-2 rounded-xl font-extrabold text-xs ${activeTabManage === 'pegawai' ? 'bg-amber-400 text-purple-950' : 'bg-purple-900 text-purple-200'}`}
+            >
+              👩‍🏫 Input & Manajemen Pegawai ({daftarPegawai.length})
+            </button>
+          </div>
+
+          {activeTabManage === 'pegawai' && (
+            <div className="bg-white text-slate-900 p-6 rounded-3xl space-y-6">
+              <form onSubmit={handleAddPegawaiSubmit} className="p-4 bg-purple-50 border-2 border-purple-200 rounded-2xl space-y-3">
+                <h5 className="font-black text-purple-950 text-sm">👩‍🏫 Tambah Data Pegawai / Guru Baru (Input oleh Yayasan)</h5>
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Nama Lengkap Pegawai:</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ustadzah Salma, S.Pd"
+                      value={namaPegawaiBaru}
+                      onChange={(e) => setNamaPegawaiBaru(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Email Pegawai:</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="salma@paud.sch.id"
+                      value={emailPegawaiBaru}
+                      onChange={(e) => setEmailPegawaiBaru(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Jabatan / Peran:</label>
+                    <select
+                      value={rolePegawaiBaru}
+                      onChange={(e) => setRolePegawaiBaru(e.target.value as any)}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 font-bold bg-white"
+                    >
+                      <option value="guru">Guru Kelas</option>
+                      <option value="kepala_sekolah">Kepala Sekolah</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Pilih Rombel/Kelas:</label>
+                    <select
+                      value={classIdPegawaiBaru}
+                      onChange={(e) => setClassIdPegawaiBaru(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 font-bold bg-white"
+                    >
+                      {daftarKelas.map((k) => (
+                        <option key={k.id} value={k.id}>{k.namaKelas}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-black text-xs rounded-xl shadow"
+                >
+                  ➕ Simpan Pegawai Baru
+                </button>
+              </form>
+
+              <div className="overflow-x-auto rounded-2xl border border-slate-200">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-purple-900 text-white uppercase text-[10px] font-black tracking-wider">
+                      <th className="p-3">Nama Pegawai</th>
+                      <th className="p-3">Email</th>
+                      <th className="p-3">Jabatan</th>
+                      <th className="p-3">Rombel Kelas</th>
+                      <th className="p-3">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 font-semibold text-slate-800">
+                    {daftarPegawai.map((p) => {
+                      const k = daftarKelas.find((kls) => kls.id === p.classId);
+                      return (
+                        <tr key={p.id} className="hover:bg-slate-50">
+                          <td className="p-3 flex items-center gap-2 font-black">
+                            <span className="text-xl">{p.avatarEmoji || '👩‍🏫'}</span>
+                            <span>{p.nama}</span>
+                          </td>
+                          <td className="p-3 text-slate-600">{p.email}</td>
+                          <td className="p-3 capitalize font-bold text-purple-900">{p.role.replace('_', ' ')}</td>
+                          <td className="p-3 font-bold">{k?.namaKelas || '-'}</td>
+                          <td className="p-3">
+                            <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full font-black text-[10px]">
+                              🟢 Aktif
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTabManage === 'overview' && (
+            <div className="space-y-6">
+              {/* 4 KARTU RINGKASAN DI ATAS GRAFIK */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div className="bg-white/10 p-4 rounded-2xl border border-purple-700/50">
+                  <span className="text-xs text-purple-200 font-bold uppercase">Jumlah Unit Sekolah</span>
+                  <div className="text-3xl font-black text-amber-300 mt-1">{daftarTenant.length} Unit</div>
+                </div>
+
+                <div className="bg-white/10 p-4 rounded-2xl border border-purple-700/50">
+                  <span className="text-xs text-purple-200 font-bold uppercase">Jumlah Murid Seluruh Yayasan</span>
+                  <div className="text-3xl font-black text-amber-300 mt-1">{totalMuridCount} Murid</div>
+                </div>
+
+                <div className="bg-white/10 p-4 rounded-2xl border border-purple-700/50">
+                  <span className="text-xs text-purple-200 font-bold uppercase">Jumlah Guru & Pegawai</span>
+                  <div className="text-3xl font-black text-amber-300 mt-1">{daftarPegawai.length} Orang</div>
+                </div>
+
+                <div className="bg-white/10 p-4 rounded-2xl border border-purple-700/50">
+                  <span className="text-xs text-purple-200 font-bold uppercase">Murid Diamati Bulan Ini</span>
+                  <div className="text-lg font-black text-emerald-300 mt-1">
+                    {honestObservedKepsek.hasData ? honestObservedKepsek.displayText : 'Belum ada data'}
+                  </div>
+                </div>
+              </div>
+
+              {/* GRAFIK 1: GRAFIK TREN BULANAN */}
+              <div className="bg-white text-slate-900 p-6 rounded-3xl shadow-xl space-y-4">
+                <h5 className="font-black text-lg text-slate-900">📈 Grafik Tren Bulanan Capaian Perkembangan</h5>
+                <div className="h-64 w-full pt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={dataTrenBulanan}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="bulan" />
+                      <YAxis domain={[0, 100]} />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="capaian" name="Capaian Agregat (%)" stroke="#6366f1" strokeWidth={3} activeDot={{ r: 8 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* GRAFIK 2 & 3 GRID */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white text-slate-900 p-6 rounded-3xl shadow-xl space-y-4">
+                  <h5 className="font-black text-lg text-slate-900">🏫 Perbandingan Capaian Antar Unit Sekolah</h5>
+                  <div className="h-60 w-full pt-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={dataPerbandinganUnit}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="namaSekolah" />
+                        <YAxis domain={[0, 100]} />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="capaianPct" name="Capaian (%)" fill="#10b981" radius={[8, 8, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                <div className="bg-white text-slate-900 p-6 rounded-3xl shadow-xl space-y-4">
+                  <h5 className="font-black text-lg text-slate-900">🧩 Capaian Per Aspek Perkembangan (STTPA)</h5>
+                  <div className="h-60 w-full pt-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={dataAspekPerkembangan} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" domain={[0, 100]} />
+                        <YAxis dataKey="aspek" type="category" width={110} />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="capaian" name="Ketercapaian (%)" fill="#8b5cf6" radius={[0, 8, 8, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* DASHBOARD KEPALA SEKOLAH & MODE PERANGKAP YAYASAN */}
+      {isKepsekOrMerangkap && (
         <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-md space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-4">
             <div>
@@ -276,7 +571,6 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
             </div>
           </div>
 
-          {/* INDIKATOR KEJUJURAN OBSERVASIMINGGU INI (TUGAS C POIN 6) */}
           <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-3 text-xs">
             <div>
               <span className="font-extrabold text-indigo-900 text-sm">📈 Status Observasi Minggu Ini:</span>
@@ -300,7 +594,6 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
 
           {activeTabManage === 'overview' && (
             <div className="space-y-6">
-              {/* KARTU GERAK & SENSORIK */}
               <div className="bg-gradient-to-r from-teal-500 to-emerald-600 text-white p-6 rounded-3xl shadow-lg space-y-4">
                 <div className="flex justify-between items-center">
                   <div>
@@ -336,7 +629,6 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
                 </div>
               </div>
 
-              {/* LIST KELAS BERDASARKAN DAFAR KELAS NYATA */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {daftarKelas.map((k) => {
                   const weeklyRep = calculateWeeklyReport(
@@ -394,7 +686,7 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
             </div>
           )}
 
-          {/* TAB DAFTAR MURID LENGKAP KEPSEK (TUGAS C) */}
+          {/* TAB DAFTAR MURID LENGKAP KEPSEK (PENAMBAHAN BOLEH, HAPUS DILARANG) */}
           {activeTabManage === 'daftar_murid' && (
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row justify-between items-center gap-3 bg-slate-50 p-4 rounded-2xl border">
@@ -408,7 +700,7 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
                   />
                 </div>
                 <div className="text-xs font-black text-slate-700">
-                  Total {filteredMuridKepsek.length} Murid Terdaftar
+                  Total {filteredMuridKepsek.length} Murid Terdaftar (Hak Tambah Murid Aktif)
                 </div>
               </div>
 
@@ -482,6 +774,7 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
                             >
                               ✏️ Lengkapi Tanggal Lahir
                             </button>
+                            {/* KEPALA SEKOLAH BISA MENAMBAH TAPI TIDAK BISA MENGHAPUS (NO DELETE BUTTON) */}
                           </td>
                         </tr>
                       );
@@ -492,7 +785,6 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
             </div>
           )}
 
-          {/* TAB MANAJEMEN KELAS (INSTRUKSI 1 PROMPT 12) */}
           {activeTabManage === 'manajemen_kelas' && (
             <div className="space-y-6">
               <form onSubmit={handleAddKelasSubmit} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
@@ -565,137 +857,6 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {/* DASHBOARD YAYASAN WITH RECHARTS (PROMPT 12 - TUGAS D & BAGIAN 5) */}
-      {currentUser.role === 'yayasan' && (
-        <div className="bg-purple-950 text-white p-6 rounded-3xl space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-purple-800 pb-4">
-            <div>
-              <span className="text-xs uppercase font-extrabold text-amber-300 tracking-wider">Dashboard Pengawas Eksekutif Yayasan</span>
-              <h4 className="text-2xl font-black mt-1">Monitoring & Analisis Capaian Pembelajaran Multi-Unit</h4>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  soundFx.playSuccess();
-                  const dataToExport = {
-                    sekolah: currentUser.tenantId,
-                    tanggalEkspor: new Date().toISOString(),
-                    totalMurid: daftarMurid.length,
-                    daftarMurid: daftarMurid
-                  };
-                  const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `Backup_Data_Sekolah_${currentUser.tenantId}_${new Date().toISOString().split('T')[0]}.json`;
-                  a.click();
-                  URL.revokeObjectURL(url);
-                }}
-                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition-transform active:scale-95 flex items-center gap-1"
-              >
-                <span>📥</span> Unduh Semua Data (Backup)
-              </button>
-            </div>
-          </div>
-
-          {/* 4 KARTU RINGKASAN DI ATAS GRAFIK (TUGAS D POIN 4 & ATURAN KEJUJURAN ANGKA) */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div className="bg-white/10 p-4 rounded-2xl border border-purple-700/50">
-              <span className="text-xs text-purple-200 font-bold uppercase">Jumlah Unit Sekolah</span>
-              <div className="text-3xl font-black text-amber-300 mt-1">{daftarTenant.length} Unit</div>
-            </div>
-
-            <div className="bg-white/10 p-4 rounded-2xl border border-purple-700/50">
-              <span className="text-xs text-purple-200 font-bold uppercase">Jumlah Murid Seluruh Yayasan</span>
-              <div className="text-3xl font-black text-amber-300 mt-1">{totalMuridCount} Murid</div>
-            </div>
-
-            <div className="bg-white/10 p-4 rounded-2xl border border-purple-700/50">
-              <span className="text-xs text-purple-200 font-bold uppercase">Jumlah Guru Aktif</span>
-              <div className="text-3xl font-black text-amber-300 mt-1">
-                {MOCK_USERS_LIST.filter((u) => u.role === 'guru').length} Guru
-              </div>
-            </div>
-
-            <div className="bg-white/10 p-4 rounded-2xl border border-purple-700/50">
-              <span className="text-xs text-purple-200 font-bold uppercase">Murid Diamati Bulan Ini</span>
-              <div className="text-lg font-black text-emerald-300 mt-1">
-                {honestObservedKepsek.hasData ? honestObservedKepsek.displayText : 'Belum ada data'}
-              </div>
-            </div>
-          </div>
-
-          {/* GRAFIK 1: GRAFIK TREN BULANAN PER UNIT (LINE CHART) */}
-          <div className="bg-white text-slate-900 p-6 rounded-3xl shadow-xl space-y-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <h5 className="font-black text-lg text-slate-900">📈 Grafik Tren Bulanan Capaian Perkembangan</h5>
-                <span className="text-xs text-slate-500 font-semibold">Persentase rata-rata ketercapaian dari bulan ke bulan.</span>
-              </div>
-            </div>
-
-            <div className="h-64 w-full pt-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={dataTrenBulanan}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="bulan" />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="capaian" name="Capaian Agregat (%)" stroke="#6366f1" strokeWidth={3} activeDot={{ r: 8 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* GRAFIK 2 & 3 GRID (PERBANDINGAN ANTAR UNIT & PER ASPEK) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* GRAFIK 2: PERBANDINGAN ANTAR UNIT (BAR CHART WITHOUT RANKING) */}
-            <div className="bg-white text-slate-900 p-6 rounded-3xl shadow-xl space-y-4">
-              <div>
-                <h5 className="font-black text-lg text-slate-900">🏫 Perbandingan Capaian Antar Unit Sekolah</h5>
-                <span className="text-xs text-slate-500 font-semibold">Menampilkan jumlah murid & capaian berdampingan tanpa pemeringkatan.</span>
-              </div>
-
-              <div className="h-60 w-full pt-2">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dataPerbandinganUnit}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="namaSekolah" />
-                    <YAxis domain={[0, 100]} />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="capaianPct" name="Capaian (%)" fill="#10b981" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* GRAFIK 3: GRAFIK PER ASPEK PERKEMBANGAN */}
-            <div className="bg-white text-slate-900 p-6 rounded-3xl shadow-xl space-y-4">
-              <div>
-                <h5 className="font-black text-lg text-slate-900">🧩 Capaian Per Aspek Perkembangan (STTPA)</h5>
-                <span className="text-xs text-slate-500 font-semibold">Rincian capaian perkembangan berdasarkan domain utama.</span>
-              </div>
-
-              <div className="h-60 w-full pt-2">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dataAspekPerkembangan} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" domain={[0, 100]} />
-                    <YAxis dataKey="aspek" type="category" width={110} />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="capaian" name="Ketercapaian (%)" fill="#8b5cf6" radius={[0, 8, 8, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
