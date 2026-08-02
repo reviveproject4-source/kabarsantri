@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BulanCurriculum, KategoriUsiaSpesifik, KategoriMateri } from '../../types/paudTypes';
 import { soundFx } from '../../utils/soundEffects';
+import { dataService } from '../../services/dataService';
 
 interface GameLogikaProps {
   onScoreUpdate?: (game: 'pencocokanBentuk' | 'mengurutkanUkuran' | 'menghitungBenda' | 'polaWarna', score: number) => void;
@@ -82,6 +83,12 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
       soundFx.playSuccess();
       setSudokuSuccess(true);
       if (onScoreUpdate) onScoreUpdate('pencocokanBentuk', 100);
+      dataService.catatAuditLog(null, null, 'tambah', 'observasi', `sudoku-${Date.now()}`, {
+        modul: 'kognitif_numerasi',
+        submode: 'sudoku_logika',
+        status: 'bisa',
+        usiaSpesifik
+      });
     } else {
       soundFx.playTryAgain();
     }
@@ -112,9 +119,9 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
     {
       judul: 'Urutan Hujan & Pelangi 🌧️',
       items: [
-        { id: '2', text: '☂️ Buka Payung' },
-        { id: '3', text: '🌈 Pelangi' },
-        { id: '1', text: '☁️ Awan Hujan' }
+        { id: '2', text: '🌧️ Hujan Deras' },
+        { id: '1', text: '☁️ Awan Mendung' },
+        { id: '3', text: '🌈 Pelangi Indah' }
       ],
       correctOrder: ['1', '2', '3']
     },
@@ -148,6 +155,12 @@ export const GameLogika: React.FC<GameLogikaProps> = ({
       soundFx.playSuccess();
       setSebabSuccess(true);
       if (onScoreUpdate) onScoreUpdate('mengurutkanUkuran', 100);
+      dataService.catatAuditLog(null, null, 'tambah', 'observasi', `sebab-${Date.now()}`, {
+        modul: 'kognitif_numerasi',
+        submode: 'sebab_akibat',
+        status: 'bisa',
+        usiaSpesifik
+      });
     }
   };
 
