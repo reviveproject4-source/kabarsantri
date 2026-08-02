@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MuridPaud, RekapMuridPaud, StatusCapaian, BulanCurriculum, TenantPaud, UserAccount } from './types/paudTypes';
 import { DashboardGuruPaud } from './components/paud/DashboardGuruPaud';
 import { ModulMotorikKasar } from './components/paud/ModulMotorikKasar';
+import { ModulGerakSensorik } from './components/paud/ModulGerakSensorik';
 import { ModeMainAnak } from './components/paud/ModeMainAnak';
 import { ModeKelasProyektor } from './components/paud/ModeKelasProyektor';
 import { RoleSystemManager, MOCK_USERS_LIST } from './components/paud/RoleSystemManager';
@@ -43,7 +44,7 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
     return INITIAL_MURID;
   });
 
-  const [activeView, setActiveView] = useState<'dashboard' | 'kasar' | 'anak' | 'roles' | 'proyektor'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'kasar' | 'sensorik' | 'anak' | 'roles' | 'proyektor'>('dashboard');
   const [dashboardTab, setDashboardTab] = useState<'rapor' | 'kurikulum'>('rapor');
   const [selectedChildForPlay, setSelectedChildForPlay] = useState<RekapMuridPaud>(daftarMurid[0] || INITIAL_MURID[0]);
 
@@ -272,6 +273,14 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
               <span>👥</span> 3 Level Role & Akses
             </button>
             <button
+              onClick={() => { soundFx.playPop(); setActiveView('sensorik'); }}
+              className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
+                activeView === 'sensorik' ? 'bg-teal-400 text-teal-950 shadow' : 'bg-indigo-900 text-indigo-200 hover:bg-indigo-800'
+              }`}
+            >
+              <span>🧘</span> Gerak & Sensorik
+            </button>
+            <button
               onClick={() => { soundFx.playPop(); setActiveView('kasar'); }}
               className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
                 activeView === 'kasar' ? 'bg-sky-400 text-indigo-950 shadow' : 'bg-indigo-900 text-indigo-200 hover:bg-indigo-800'
@@ -321,6 +330,13 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
             onSwitchUserRole={(u) => setCurrentUser(u)}
             onAddTenant={handleAddTenant}
             onDeleteTenant={handleDeleteTenant}
+          />
+        )}
+
+        {activeView === 'sensorik' && (
+          <ModulGerakSensorik
+            daftarMurid={daftarMurid}
+            activeTenantId={activeTenantId}
           />
         )}
 

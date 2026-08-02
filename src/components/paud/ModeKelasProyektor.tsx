@@ -202,22 +202,33 @@ export const ModeKelasProyektor: React.FC<ModeKelasProyektorProps> = ({
           {/* ATURAN MUTLAK BARISAN TOMBOL KENDALI GURU (TEPI BAWAH LAYAR HP, KECIL & DISKRET) */}
           <div className="bg-indigo-950 p-4 rounded-3xl border-2 border-indigo-700 flex justify-between items-center gap-4">
             <span className="text-xs font-bold text-indigo-300 hidden sm:inline">
-              🕹️ Tombol Kendali Guru (Hanya 2 Tombol • Tidak Ada Tanda Salah):
+              🕹️ Tombol Kendali Guru (Hanya Umpan Balik Positif di Proyektor):
             </span>
 
-            <div className="flex gap-3 w-full sm:w-auto">
+            <div className="flex gap-2 w-full sm:w-auto">
+              <button
+                onClick={() => {
+                  soundFx.playPop();
+                  setCelebrationMsg(`Hebat Ananda ${activeMurid.panggilan}, yuk kita lanjut gerakan seru lainnya! 😊`);
+                  setTimeout(() => setCelebrationMsg(null), 1500);
+                }}
+                className="flex-1 sm:flex-initial px-3 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-black text-xs rounded-2xl shadow flex items-center justify-center gap-1"
+              >
+                <span>⏳</span> Belum Waktunya
+              </button>
+
               <button
                 onClick={handleTombolCobaLagi}
-                className="flex-1 sm:flex-initial px-5 py-3 bg-slate-700 hover:bg-slate-600 text-slate-200 font-black text-xs md:text-sm rounded-2xl shadow transition-transform active:scale-95 flex items-center justify-center gap-1.5"
+                className="flex-1 sm:flex-initial px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-black text-xs rounded-2xl shadow flex items-center justify-center gap-1"
               >
-                <span>🔄</span> Coba Lagi (Ganti Soal Halus)
+                <span>🔄</span> Coba Lagi
               </button>
 
               <button
                 onClick={handleTombolBisa}
-                className="flex-1 sm:flex-initial px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs md:text-sm rounded-2xl shadow-xl transition-transform active:scale-95 border-2 border-emerald-300 flex items-center justify-center gap-1.5"
+                className="flex-1 sm:flex-initial px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs rounded-2xl shadow-xl border-2 border-emerald-300 flex items-center justify-center gap-1"
               >
-                <span>👏</span> Bisa! (Bintang & Selebrasi)
+                <span>👏</span> Bisa! (Selebrasi ⭐)
               </button>
             </div>
           </div>

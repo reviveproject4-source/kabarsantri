@@ -516,6 +516,42 @@ export const DashboardGuruPaud: React.FC<DashboardGuruPaudProps> = ({
             </div>
           </div>
 
+          {/* BLOK PEMBUKA 3 MENIT (SENIN - JUMAT) - PROMPT 10 */}
+          <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 p-5 rounded-3xl border-2 border-teal-200 shadow-sm space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-black uppercase text-teal-900 bg-teal-200 px-3 py-1 rounded-full border border-teal-300">
+                🧘 BLOK PEMBUKA 3 MENIT (Mulai Setiap Hari Sesi Pembelajaran)
+              </span>
+              <span className="text-xs font-bold text-teal-800">4 Langkah Berurutan Penyiapan Siap Belajar</span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+              <div className="bg-white p-3 rounded-2xl border border-teal-200 text-center shadow-sm space-y-1">
+                <span className="text-2xl">1. 💧</span>
+                <h5 className="font-black text-xs text-teal-950">Minum Air (30s)</h5>
+                <p className="text-[10px] text-slate-600 font-semibold">Minum air secukupnya agar tubuh terhidrasi.</p>
+              </div>
+
+              <div className="bg-white p-3 rounded-2xl border border-teal-200 text-center shadow-sm space-y-1">
+                <span className="text-2xl">2. 🔘</span>
+                <h5 className="font-black text-xs text-teal-950">Sakelar Otak (30s)</h5>
+                <p className="text-[10px] text-slate-600 font-semibold">Pijat pelan selangka & pusar bernapas tenang.</p>
+              </div>
+
+              <div className="bg-white p-3 rounded-2xl border border-teal-200 text-center shadow-sm space-y-1">
+                <span className="text-2xl">3. 🚸</span>
+                <h5 className="font-black text-xs text-teal-950">Gerakan Silang (45s)</h5>
+                <p className="text-[10px] text-slate-600 font-semibold">Tepuk siku ke lutut silang berirama.</p>
+              </div>
+
+              <div className="bg-white p-3 rounded-2xl border border-teal-200 text-center shadow-sm space-y-1">
+                <span className="text-2xl">4. 🧘</span>
+                <h5 className="font-black text-xs text-teal-950">Kait Relaks (60s)</h5>
+                <p className="text-[10px] text-slate-600 font-semibold">Silangkan tangan & kaki, pejam mata tenang.</p>
+              </div>
+            </div>
+          </div>
+
           {/* DISPLAY CARD KEGIATAN HARIAN (PEMBUKA, INTI, PENUTUP) */}
           <div className="bg-white p-6 rounded-3xl border-2 border-indigo-100 shadow-md space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 gap-3">

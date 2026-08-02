@@ -248,6 +248,54 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
 
           {activeTabManage === 'overview' && (
             <div className="space-y-6">
+              {/* KARTU PROMPT 10: CAPAIAN GERAK & SENSORIK KEPSEK */}
+              <div className="bg-gradient-to-r from-teal-500 to-emerald-600 text-white p-6 rounded-3xl shadow-lg space-y-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="text-xs font-black uppercase bg-white/20 px-3 py-1 rounded-full text-white">
+                      📊 Bagian 7 - Monitoring Eksekutif Kepsek
+                    </span>
+                    <h5 className="text-xl font-black mt-1">Capaian Gerak & Sensorik ({rentangWaktu.toUpperCase()})</h5>
+                    <p className="text-xs text-emerald-100 font-semibold mt-0.5">
+                      Evaluasi koordinasi motorik, keseimbangan, kesadaran tubuh, & kesiapan belajar murid.
+                    </p>
+                  </div>
+                  <span className="text-4xl bg-white/10 p-3 rounded-2xl">🧘</span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
+                  <div className="bg-white/10 p-3 rounded-2xl backdrop-blur text-center space-y-1">
+                    <span className="text-xs font-black text-emerald-100">Vestibular</span>
+                    <div className="text-2xl font-black">88%</div>
+                    <span className="text-[10px] opacity-80">Keseimbangan Tubuh</span>
+                  </div>
+
+                  <div className="bg-white/10 p-3 rounded-2xl backdrop-blur text-center space-y-1">
+                    <span className="text-xs font-black text-emerald-100">Proprioseptif</span>
+                    <div className="text-2xl font-black">92%</div>
+                    <span className="text-[10px] opacity-80">Kesadaran Posisi</span>
+                  </div>
+
+                  <div className="bg-white/10 p-3 rounded-2xl backdrop-blur text-center space-y-1">
+                    <span className="text-xs font-black text-emerald-100">Taktil</span>
+                    <div className="text-2xl font-black">85%</div>
+                    <span className="text-[10px] opacity-80">Sentuhan Jemari</span>
+                  </div>
+
+                  <div className="bg-white/10 p-3 rounded-2xl backdrop-blur text-center space-y-1">
+                    <span className="text-xs font-black text-emerald-100">Visual-Motor</span>
+                    <div className="text-2xl font-black">90%</div>
+                    <span className="text-[10px] opacity-80">Mata-Tangan Menulis</span>
+                  </div>
+
+                  <div className="bg-white/10 p-3 rounded-2xl backdrop-blur text-center space-y-1">
+                    <span className="text-xs font-black text-emerald-100">Brain Gym</span>
+                    <div className="text-2xl font-black">95%</div>
+                    <span className="text-[10px] opacity-80">Gerak Silang Midline</span>
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {MOCK_KELAS_LIST.map((k) => {
                   const weeklyRep = calculateWeeklyReport(

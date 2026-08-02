@@ -192,6 +192,24 @@ export const generateRaporPDF = (murid: RekapMuridPaud, namaSekolah: string = 'C
           }
         </div>
 
+        <!-- DOMAIN 4: GERAK & SENSORIK (PROMPT 10) -->
+        <div class="card" style="background: #f0fdf4; border-color: #bbf7d0;">
+          <div class="title" style="color: #14532d;">🧘 Domain Gerak & Sensorik (Keseimbangan & Kesiapan Belajar)</div>
+          <div class="grid">
+            <div class="score-box" style="background: #ffffff;">
+              <div style="font-size: 11px; color: #15803d;">Koordinasi Mata & Tangan</div>
+              <div class="score-val" style="color: #15803d;">Tercapai (Bisa)</div>
+            </div>
+            <div class="score-box" style="background: #ffffff;">
+              <div style="font-size: 11px; color: #15803d;">Keseimbangan & Posisi Tubuh</div>
+              <div class="score-val" style="color: #15803d;">Tercapai (Bisa)</div>
+            </div>
+          </div>
+          <p style="font-size: 11px; color: #166534; margin-top: 8px; font-style: italic;">
+            *Catatan: Indikator berstatus "Belum Waktunya" secara otomatis dikeluarkan dan tidak ditampilkan dalam laporan ini.
+          </p>
+        </div>
+
         <!-- CATATAN KHUSUS GURU -->
         <div class="card" style="background: #fffbeb; border-color: #fde68a;">
           <div class="title" style="color: #78350f;">💖 Pesan & Catatan Perkembangan Guru</div>

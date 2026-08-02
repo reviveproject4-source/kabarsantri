@@ -356,7 +356,7 @@ export const KURIKULUM_BULAN_1_LIST: KegiatanHarianKurikulum[] = [
     },
     penutup: {
       durasi: '5 Menit',
-      aktivitas: 'Hitung bersama jumlah bola di mangkuk merah dan guru mencatat kecerdasan warna.'
+      aktivitas: 'Hitung bersama jumlah bola di mangkuk merah dan guru mencatat pengenalan warna.'
     },
     alternatif: [
       {

@@ -4,7 +4,7 @@ export type KategoriUsia = KategoriUsiaSpesifik | '2-3_tahun' | '4-5_tahun';
 export type BulanCurriculum = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 export type HariAktif = 'senin' | 'selasa' | 'rabu' | 'kamis' | 'jumat';
 export type StatusObservasiAdab = 'belum_terbiasa' | 'dengan_bimbingan' | 'terbiasa_mandiri' | 'muncul_sendiri' | 'mulai_muncul' | 'belum_terlihat' | string;
-export type DomainUtamaKurikulum = 'agama_moral' | 'motorik' | 'kognitif' | 'bahasa' | 'sosial_emosional' | 'seni' | 'logika' | 'motorik_halus' | 'motorik_kasar_olahraga' | 'sosial_bahasa' | 'agama_akhlak' | string;
+export type DomainUtamaKurikulum = 'agama_moral' | 'motorik' | 'kognitif' | 'bahasa' | 'sosial_emosional' | 'seni' | 'logika' | 'motorik_halus' | 'motorik_kasar_olahraga' | 'sosial_bahasa' | 'agama_akhlak' | 'gerak_sensorik' | string;
 export type RentangWaktu = 'mingguan' | 'bulanan' | 'semester' | 'tahunan' | 'harian' | string;
 
 export type KategoriMateri =
@@ -21,7 +21,8 @@ export type KategoriMateri =
   | 'tracing_huruf'
   | 'brain_gym'
   | 'motorik_halus'
-  | 'motorik_kasar';
+  | 'motorik_kasar'
+  | 'gerak_sensorik';
 
 export type UserRole = 'guru' | 'kepala_sekolah' | 'yayasan' | 'wali_murid';
 
@@ -76,7 +77,7 @@ export interface MuridPaud {
   kategoriUsia: KategoriUsiaSpesifik;
   fotoEmoji: string;
   catatanGuru?: string;
-  tanggalLahir?: string;
+  tanggalLahir?: string; // Format YYYY-MM-DD
   inviteTokenWali?: string;
   namaAyah?: string;
   namaIbu?: string;
@@ -138,6 +139,43 @@ export interface KartuAktivitasKasar {
   tingkatKesulitan: 'Sangat Mudah' | 'Mudah' | 'Sedang' | 'Tantangan';
   variasiGerak: string[];
   otakTarget?: 'Kanan' | 'Kiri' | 'Bilateral (Kanan-Kiri)';
+}
+
+// STRUKTUR DATA PROMPT 10: GERAK & SENSORIK
+export type KelompokUsiaSensorik = '2-3' | '3-4' | '4-5';
+export type KategoriSensorik = 'Vestibular' | 'Proprioseptif' | 'Taktil' | 'Visual-Motor' | 'Brain Gym';
+export type StatusPenilaianSensorik = 'bisa' | 'coba_lagi' | 'belum_waktunya';
+
+export interface AktivitasSensorik {
+  id: string;
+  nama: string;
+  kelompokUsia: KelompokUsiaSensorik;
+  kategori: KategoriSensorik;
+  caraMelakukan: string;
+  alatDibutuhkan: string[];
+  durasiDetik: number;
+  bisaIndoor: boolean;
+  bisaOutdoor: boolean;
+  catatanKeamanan: string | null;
+  ikon?: string;
+}
+
+export interface IndikatorObservasiSensorik {
+  id: string;
+  kelompokUsia: KelompokUsiaSensorik;
+  pernyataan: string;
+  aktivitasTerkait: string[];
+}
+
+export interface EvaluasiGerakSensorik {
+  id: string;
+  tenantId?: string;
+  muridId: string;
+  aktivitasId?: string;
+  indikatorId?: string;
+  status: StatusPenilaianSensorik;
+  tanggal: string;
+  catatanGuru?: string;
 }
 
 export interface NotifikasiApp {
