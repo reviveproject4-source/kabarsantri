@@ -64,6 +64,73 @@ export const ModeMainAnak: React.FC<ModeMainAnakProps> = ({
     }, 1000);
   };
 
+  // INFORMASI REKOMENDASI GAME & KESULITAN PER USIA
+  const getAgeDifficultyGuide = (age: KategoriUsiaSpesifik) => {
+    switch (age) {
+      case '2_tahun':
+        return {
+          badge: '🐣 LEVEL PEMULA (Usia 2 Tahun)',
+          color: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+          targetSkill: 'Sensori Dasar, Pengenalan Bentuk, Tracing Lurus, Hitung 1-3 & Bubble Pop',
+          rekomendasiGame: [
+            '🧩 Cocok Gambar 3 Benda',
+            '📏 Ukuran Sedikit vs Banyak',
+            '🔢 Hitung (1-3)',
+            '✍️ Tracing Garis Lurus',
+            '🫧 Pop Bubble Sensory'
+          ]
+        };
+      case '3_tahun':
+        return {
+          badge: '🧸 LEVEL EKSPLORASI (Usia 3 Tahun)',
+          color: 'bg-amber-100 text-amber-900 border-amber-300',
+          targetSkill: 'Midline Integration, Ukuran Kecil-Besar, Hitung 1-5, Gambar ➔ Angka Acak',
+          rekomendasiGame: [
+            '🔢 Hitung (1-5)',
+            '🔢 Gambar ➔ Angka Acak',
+            '🎨 Lengkapi Pola Urutan',
+            '✍️ Tracing Zigzag & Lingkaran',
+            '♾️ Brain Gym Lazy 8'
+          ]
+        };
+      case '4_tahun':
+        return {
+          badge: '🐥 LEVEL LITERASI (Usia 4 Tahun / TK A)',
+          color: 'bg-blue-100 text-blue-900 border-blue-300',
+          targetSkill: 'Membaca 2-3 Suku Kata, Tracing Huruf A-Z & Angka 0-9, Brain Gym Cross Crawl',
+          rekomendasiGame: [
+            '📖 Membaca 2-3 Suku Kata (bo-la)',
+            '🔤 Tracing Huruf (A-Z) & Angka (0-9)',
+            '🖐️🖐️ Tracing 2 Jari Serentak',
+            '🚸 Brain Gym Cross Crawl',
+            '🏀 Drible Bola Kanan-Kiri'
+          ]
+        };
+      case '5_tahun':
+        return {
+          badge: '🎓 LEVEL KETANGKASAN (Usia 5 Tahun / TK B)',
+          color: 'bg-purple-100 text-purple-900 border-purple-300',
+          targetSkill: 'Cocok Gambar ➔ Kata, Matematika Belasan (11-30), Kalimat Pendek & Keseimbangan',
+          rekomendasiGame: [
+            '🔤 Gambar ➔ Kata Utuh (Mobil)',
+            '➕ Matematika Belasan (11-30)',
+            '📖 Membaca Kata Imbuhan & Kalimat',
+            '📝 Tracing Kata & Angka Belasan',
+            '🦩 Bangau Tutup Mata 5 Detik'
+          ]
+        };
+      default:
+        return {
+          badge: '🧸 LEVEL EKSPLORASI (Usia 3 Tahun)',
+          color: 'bg-amber-100 text-amber-900 border-amber-300',
+          targetSkill: 'Pengenalan Logika & Motorik',
+          rekomendasiGame: ['🧩 Game Logika', '✍️ Game Jemari', '🏃 Game Gerak']
+        };
+    }
+  };
+
+  const ageGuide = getAgeDifficultyGuide(selectedAge);
+
   return (
     <div className="bg-gradient-to-b from-yellow-100 via-amber-50 to-orange-100 min-h-screen p-4 md:p-6 flex flex-col font-sans">
       {/* Top Kid Header Bar */}
@@ -79,12 +146,12 @@ export const ModeMainAnak: React.FC<ModeMainAnakProps> = ({
 
           {/* PILIHAN USIA 2, 3, 4, 5 TAHUN */}
           <div className="flex items-center gap-1.5 bg-amber-100 p-1.5 rounded-2xl border-2 border-amber-300">
-            <span className="text-xs font-black text-amber-900 px-2">Pilih Usia:</span>
+            <span className="text-xs font-black text-amber-900 px-2">Pilih Usia Anak:</span>
             {[
               { id: '2_tahun', label: '2 Thn' },
               { id: '3_tahun', label: '3 Thn' },
-              { id: '4_tahun', label: '4 Thn' },
-              { id: '5_tahun', label: '5 Thn' }
+              { id: '4_tahun', label: '4 Thn (TK A)' },
+              { id: '5_tahun', label: '5 Thn (TK B)' }
             ].map((u) => (
               <button
                 key={u.id}
@@ -120,13 +187,14 @@ export const ModeMainAnak: React.FC<ModeMainAnakProps> = ({
         {/* SELECTOR MATERI TOPIK & BULAN 1-12 */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-2 border-t border-amber-200 pt-2 text-xs">
           <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto">
-            <span className="font-black text-amber-900">Materi:</span>
+            <span className="font-black text-amber-900">Topik Materi:</span>
             {[
               { id: 'buah', label: '🍎 Buah' },
               { id: 'sayur', label: '🥦 Sayur' },
               { id: 'kendaraan', label: '🚗 Kendaraan' },
               { id: 'hewan', label: '🦁 Hewan' },
-              { id: 'bentuk_warna', label: '⭐ Bentuk' }
+              { id: 'suku_kata', label: '🔤 Calistung' },
+              { id: 'matematika_belasan', label: '➕ Matematika (11-30)' }
             ].map((t) => (
               <button
                 key={t.id}
@@ -158,15 +226,27 @@ export const ModeMainAnak: React.FC<ModeMainAnakProps> = ({
         </div>
       </div>
 
-      {/* TEMA BULAN INI BANNER */}
-      <div className="bg-amber-400 text-amber-950 font-black text-center py-2 px-4 rounded-2xl mb-6 shadow border-2 border-amber-300 flex justify-between items-center text-sm">
-        <span>{currentTheme.ikon} Usia {selectedAge.replace('_tahun', ' Tahun')} • {currentTheme.judulTema}</span>
-        <span className="text-xs font-bold bg-white/30 px-3 py-0.5 rounded-full">Topik: {selectedTopic.toUpperCase()} • Minggu #{(selectedBulan - 1) * 4 + 1} s/d #{selectedBulan * 4}</span>
+      {/* BANNER REKOMENDASI TINGKAT KESULITAN PER USIA */}
+      <div className={`p-4 rounded-3xl shadow border-2 mb-6 ${ageGuide.color} flex flex-col md:flex-row justify-between items-start md:items-center gap-3`}>
+        <div>
+          <span className="text-xs font-black uppercase px-3 py-1 bg-white/60 rounded-full border">
+            {ageGuide.badge}
+          </span>
+          <h4 className="font-black text-base mt-1">Target Capaian: {ageGuide.targetSkill}</h4>
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          {ageGuide.rekomendasiGame.map((g, idx) => (
+            <span key={idx} className="text-xs font-bold bg-white/80 px-2.5 py-1 rounded-xl shadow-sm border border-slate-200">
+              {g}
+            </span>
+          ))}
+        </div>
       </div>
 
       {/* AREA 1: HOME SELECTION */}
       {activeArea === 'home' && (
-        <div className="flex-1 flex flex-col justify-center items-center max-w-5xl mx-auto w-full py-4 space-y-6">
+        <div className="flex-1 flex flex-col justify-center items-center max-w-5xl mx-auto w-full py-2 space-y-6">
           <div className="text-center space-y-1">
             <h1 className="text-3xl md:text-4xl font-black text-amber-900 tracking-tight">
               Petualangan Usia {selectedAge.replace('_tahun', ' Tahun')} (Bulan #{selectedBulan})! 🌟
@@ -175,7 +255,7 @@ export const ModeMainAnak: React.FC<ModeMainAnakProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-            {/* DUNIA LOGIKA */}
+            {/* DUNIA LOGIKA & CALISTUNG */}
             <div
               onClick={() => { soundFx.playSuccess(); setActiveArea('logika'); }}
               className="bg-white p-6 rounded-3xl border-4 border-amber-300 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:bg-amber-50 flex flex-col items-center text-center group"
@@ -183,9 +263,9 @@ export const ModeMainAnak: React.FC<ModeMainAnakProps> = ({
               <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center text-5xl shadow-inner mb-3 group-hover:rotate-12 transition-transform">
                 🧠
               </div>
-              <h3 className="text-2xl font-black text-amber-900 mb-1">Dunia Logika</h3>
+              <h3 className="text-2xl font-black text-amber-900 mb-1">Dunia Logika & Baca</h3>
               <p className="text-amber-700 font-semibold text-xs">
-                Logika {selectedTopic.toUpperCase()}, Bentuk, Ukuran & Count.
+                Logika {selectedTopic.toUpperCase()}, Suku Kata, Gambar ➔ Kata & Matematika 11-30.
               </p>
               <span className="mt-6 px-5 py-2.5 bg-amber-500 text-white font-black rounded-2xl shadow-lg group-hover:bg-amber-600 text-sm">
                 Mulai Main 🚀
@@ -200,16 +280,16 @@ export const ModeMainAnak: React.FC<ModeMainAnakProps> = ({
               <div className="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center text-5xl shadow-inner mb-3 group-hover:-rotate-12 transition-transform">
                 ✍️
               </div>
-              <h3 className="text-2xl font-black text-pink-900 mb-1">Dunia Jemari</h3>
+              <h3 className="text-2xl font-black text-pink-900 mb-1">Dunia Jemari & Tracing</h3>
               <p className="text-pink-700 font-semibold text-xs">
-                Tracing Garis, Puzzle {selectedTopic.toUpperCase()} & Pop Presisi.
+                Tracing Huruf (A-Z), Angka (0-9), Tracing 2 Jari Serentak & Puzzle.
               </p>
               <span className="mt-6 px-5 py-2.5 bg-pink-500 text-white font-black rounded-2xl shadow-lg group-hover:bg-pink-600 text-sm">
                 Mulai Main 🚀
               </span>
             </div>
 
-            {/* DUNIA GERAK / MOTORIK KASAR */}
+            {/* DUNIA GERAK / BRAIN GYM */}
             <div
               onClick={() => { soundFx.playSuccess(); setActiveArea('kasar'); }}
               className="bg-white p-6 rounded-3xl border-4 border-sky-300 shadow-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:bg-sky-50 flex flex-col items-center text-center group"
@@ -217,9 +297,9 @@ export const ModeMainAnak: React.FC<ModeMainAnakProps> = ({
               <div className="w-20 h-20 bg-sky-100 rounded-full flex items-center justify-center text-5xl shadow-inner mb-3 group-hover:bounce transition-transform">
                 🏃
               </div>
-              <h3 className="text-2xl font-black text-sky-900 mb-1">Dunia Gerak</h3>
+              <h3 className="text-2xl font-black text-sky-900 mb-1">Dunia Gerak & Brain Gym</h3>
               <p className="text-sky-700 font-semibold text-xs">
-                Tantangan Gerak Fisik Usia {selectedAge.replace('_tahun', ' Tahun')}.
+                Brain Gym Cross Crawl, Oper Bola Kanan-Kiri 🏀 & Senam Usia {selectedAge.replace('_tahun', ' Thn')}.
               </p>
               <span className="mt-6 px-5 py-2.5 bg-sky-500 text-white font-black rounded-2xl shadow-lg group-hover:bg-sky-600 text-sm">
                 Ayo Bergerak 🎵
