@@ -126,13 +126,13 @@ export function ModulLaporan() {
   // Detail presensi pegawai hari ini (jam & lokasi)
   const tanggalHariIni = tanggalLokal();
   const presensiPegawaiHariIni = presensiPegawai
-    .filter((p) => p.tanggal === tanggalHariIni)
-    .map((p) => ({
+    .filter((p: any) => p.tanggal === tanggalHariIni)
+    .map((p: any) => ({
       ...p,
       namaPegawai:
-        pegawaiList.find((peg) => peg.id === p.pegawaiId)?.nama ?? '-',
+        pegawaiList.find((peg: any) => peg.id === p.pegawaiId)?.nama ?? '-',
     }))
-    .sort((a, b) => (b.dicatatPada ?? '').localeCompare(a.dicatatPada ?? ''));
+    .sort((a: any, b: any) => (b.dicatatPada ?? '').localeCompare(a.dicatatPada ?? ''));
 
   return (
     <div>
@@ -226,7 +226,7 @@ export function ModulLaporan() {
                 </td>
               </tr>
             ) : (
-              presensiPegawaiHariIni.map((p) => (
+              presensiPegawaiHariIni.map((p: any) => (
                 <tr key={p.id} className="border-t">
                   <td className="p-4">{p.namaPegawai}</td>
                   <td className="p-4">{p.status}</td>

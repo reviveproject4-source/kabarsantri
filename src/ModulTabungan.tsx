@@ -35,7 +35,7 @@ export function ModulTabungan({ bisaInput = true }: Props) {
 
   const saldoPerSantri = useMemo(
     () =>
-      santriList.map((santri) => ({
+      santriList.map((santri: any) => ({
         id: santri.id,
         nama: santri.nama,
         kelas: santri.kelas,
@@ -72,7 +72,7 @@ export function ModulTabungan({ bisaInput = true }: Props) {
     .sort((a, b) => b.id - a.id)
     .map((item) => ({
       ...item,
-      namaSantri: santriList.find((s) => s.id === item.santriId)?.nama ?? '-',
+      namaSantri: santriList.find((s: any) => s.id === item.santriId)?.nama ?? '-',
     }));
 
   return (
@@ -99,7 +99,7 @@ export function ModulTabungan({ bisaInput = true }: Props) {
                 </td>
               </tr>
             ) : (
-              saldoPerSantri.map((s) => (
+              saldoPerSantri.map((s: any) => (
                 <tr key={s.id} className="border-t">
                   <td className="p-4">{s.nama}</td>
                   <td className="p-4">{s.kelas}</td>
@@ -121,7 +121,7 @@ export function ModulTabungan({ bisaInput = true }: Props) {
             className="w-full border rounded-lg px-3 py-2 mb-3"
           >
             <option value="">Pilih Santri</option>
-            {santriList.map((santri) => (
+            {santriList.map((santri: any) => (
               <option key={santri.id} value={santri.id}>
                 {santri.nama} {santri.kelas ? `- ${santri.kelas}` : ''}
               </option>

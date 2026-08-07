@@ -34,10 +34,10 @@ export function ModulPresensi({
   const [kelasAktif, setKelasAktif] = useKelasAktif(kelasDiajar);
   const santriList = (
     isGuru && kelasDiajar.length > 0
-      ? santriListSemua.filter((s) => samaKelas(s.kelas, kelasAktif))
+      ? santriListSemua.filter((s: any) => samaKelas(s.kelas, kelasAktif))
       : santriListSemua
   ).filter(
-    (s) => !jenisKelaminDiampu || s.jenisKelamin === jenisKelaminDiampu
+    (s: any) => !jenisKelaminDiampu || s.jenisKelamin === jenisKelaminDiampu
   );
   const { data: presensiSantri = [] } = usePresensiSantriList();
   const { mutate: catatPresensiSantriMutasi } = useCatatPresensiSantri();
@@ -68,8 +68,8 @@ export function ModulPresensi({
   const statusSantriHariIni = useMemo(() => {
     const map = new Map<number, StatusPresensi>();
     presensiSantri
-      .filter((p) => p.tanggal === tanggal)
-      .forEach((p) => map.set(p.santriId, p.status));
+      .filter((p: any) => p.tanggal === tanggal)
+      .forEach((p: any) => map.set(p.santriId, p.status));
     return map;
   }, [presensiSantri, tanggal]);
 
@@ -119,7 +119,7 @@ export function ModulPresensi({
                   </td>
                 </tr>
               ) : (
-                santriList.map((santri) => (
+                santriList.map((santri: any) => (
                   <tr key={santri.id} className="border-t">
                     <td className="p-4">{santri.nama}</td>
                     <td className="p-4">{santri.kelas}</td>

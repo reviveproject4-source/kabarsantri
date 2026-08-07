@@ -299,6 +299,10 @@ export function ModulSantri() {
   const [form, setForm] = useState<SantriInput>(FORM_KOSONG);
   const [pinWali, setPinWali] = useState('');
 
+  const [cariNama, setCariNama] = useState('');
+  const [filterKelas, setFilterKelas] = useState('');
+  const [filterAsrama, setFilterAsrama] = useState('');
+
   const [santriDiedit, setSantriDiedit] = useState<number | null>(null);
   const [formEdit, setFormEdit] = useState<SantriInput>(FORM_KOSONG);
   const [menyimpanEdit, setMenyimpanEdit] = useState(false);
@@ -310,23 +314,44 @@ export function ModulSantri() {
   const [pinAkunWali, setPinAkunWali] = useState('');
   const [menyimpanAkunWali, setMenyimpanAkunWali] = useState(false);
 
+  const santriFiltered = useMemo(() => {
+    return santriList.filter((s: any) => {
+      const matchCari =
+        !cariNama ||
+        s.nama.toLowerCase().includes(cariNama.toLowerCase()) ||
+        s.nis.toLowerCase().includes(cariNama.toLowerCase());
+      const matchKelas = !filterKelas || s.kelas === filterKelas;
+      const matchAsrama = !filterAsrama || s.asrama === filterAsrama;
+      return matchCari && matchKelas && matchAsrama;
+    });
+  }, [santriList, cariNama, filterKelas, filterAsrama]);
+
+  const jumlahIkhwan = useMemo(
+    () => santriList.filter((s: any) => s.jenisKelamin === 'Ikhwan').length,
+    [santriList]
+  );
+  const jumlahAkhwat = useMemo(
+    () => santriList.filter((s: any) => s.jenisKelamin === 'Akhwat').length,
+    [santriList]
+  );
+
   const kelasOptions = useMemo(
-    () => Array.from(new Set(santriList.map((s) => s.kelas).filter(Boolean))),
+    () => Array.from(new Set(santriList.map((s: any) => s.kelas).filter(Boolean))) as string[],
     [santriList]
   );
 
   const asramaOptions = useMemo(
-    () => Array.from(new Set(santriList.map((s) => s.asrama).filter(Boolean))),
+    () => Array.from(new Set(santriList.map((s: any) => s.asrama).filter(Boolean))) as string[],
     [santriList]
   );
 
   const rekapKelas = useMemo(
-    () => hitungRekap(santriList.map((s) => s.kelas)),
+    () => hitungRekap(santriList.map((s: any) => s.kelas)),
     [santriList]
   );
 
   const rekapAsrama = useMemo(
-    () => hitungRekap(santriList.map((s) => s.asrama)),
+    () => hitungRekap(santriList.map((s: any) => s.asrama)),
     [santriList]
   );
 
@@ -394,7 +419,7 @@ export function ModulSantri() {
   };
 
   const bukaEdit = (santriId: number) => {
-    const santri = santriList.find((s) => s.id === santriId);
+    const santri = santriList.find((s: any) => s.id === santriId);
     if (!santri) return;
 
     const { id, riwayatTahfidz, ...input } = santri;
@@ -430,7 +455,7 @@ export function ModulSantri() {
   };
 
   const bukaAkunWali = (santriId: number) => {
-    const santri = santriList.find((s) => s.id === santriId);
+    const santri = santriList.find((s: any) => s.id === santriId);
     if (!santri) return;
 
     setSantriAkunWali({ id: santriId, nama: santri.nama });
@@ -467,94 +492,195 @@ export function ModulSantri() {
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Header Banner */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm">
         <div>
-          <h1 className="text-3xl font-bold">Data Master Santri</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Data Master Santri</h1>
+            <span className="bg-emerald-100 text-emerald-800 font-bold text-xs px-3 py-1 rounded-full border border-emerald-200">
+              {santriList.length} Santri
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            Kelola data biodata, rombel kelas, kamar asrama, dan akun login wali santri.
+          </p>
 
-          <div className="mt-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-2">
-            <p className="text-sm">
-              Kuota Paket Gratis:
-              <strong> {santriList.length} / {MAX_SANTRI} Santri</strong>
-            </p>
+          <div className="mt-3 flex items-center gap-3">
+            <div className="bg-slate-100 px-3 py-1.5 rounded-xl text-xs text-slate-700 font-medium flex items-center gap-2">
+              <span>📊 Kuota Paket:</span>
+              <span className="font-bold text-emerald-700">{santriList.length} / {MAX_SANTRI}</span>
+            </div>
+            <div className="text-xs text-slate-500 flex items-center gap-2">
+              <span className="bg-cyan-50 text-cyan-700 px-2 py-0.5 rounded-lg border border-cyan-200/60 font-semibold">♂ {jumlahIkhwan} Ikhwan</span>
+              <span className="bg-rose-50 text-rose-700 px-2 py-0.5 rounded-lg border border-rose-200/60 font-semibold">♀ {jumlahAkhwat} Akhwat</span>
+            </div>
           </div>
         </div>
 
         <button
           onClick={() => setShowForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-xl"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-3 rounded-2xl shadow-lg shadow-emerald-600/20 transition-transform active:scale-95 flex items-center gap-2 shrink-0 self-start md:self-auto"
         >
-          + Tambah Santri
+          <span className="text-lg">➕</span> Tambah Santri Baru
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl border overflow-hidden overflow-x-auto mb-6">
-        <table className="w-full">
-          <thead className="bg-slate-100">
-            <tr>
-              <th className="text-left p-4">Nama</th>
-              <th className="text-left p-4">NIS</th>
-              <th className="text-left p-4">Kelas</th>
-              <th className="text-left p-4">Asrama</th>
-              <th className="text-left p-4">Ayah</th>
-              <th className="text-left p-4">Ibu</th>
-              <th className="text-left p-4">Status</th>
-              <th className="text-left p-4"></th>
-            </tr>
-          </thead>
+      {/* Search & Filter Bar */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div>
+          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Cari Santri / NIS</label>
+          <input
+            type="text"
+            placeholder="🔍 Cari nama atau NIS..."
+            value={cariNama}
+            onChange={(e) => setCariNama(e.target.value)}
+            className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+          />
+        </div>
 
-          <tbody>
-            {santriList.length === 0 ? (
+        <div>
+          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Filter Kelas</label>
+          <select
+            value={filterKelas}
+            onChange={(e) => setFilterKelas(e.target.value)}
+            className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white"
+          >
+            <option value="">Semua Kelas</option>
+            {kelasOptions.map((k) => (
+              <option key={k} value={k}>{k}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Filter Asrama</label>
+          <select
+            value={filterAsrama}
+            onChange={(e) => setFilterAsrama(e.target.value)}
+            className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white"
+          >
+            <option value="">Semua Asrama</option>
+            {asramaOptions.map((a) => (
+              <option key={a} value={a}>{a}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Table Container */}
+      <div className="bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-slate-100/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200/60">
               <tr>
-                <td colSpan={8} className="text-center p-8 text-gray-500">
-                  Belum ada data santri
-                </td>
+                <th className="p-4 px-6">Identitas Santri</th>
+                <th className="p-4 px-6">NIS / NISN</th>
+                <th className="p-4 px-6">Kelas & Asrama</th>
+                <th className="p-4 px-6">Orang Tua / Wali</th>
+                <th className="p-4 px-6">Status</th>
+                <th className="p-4 px-6 text-right">Aksi</th>
               </tr>
-            ) : (
-              santriList.map((santri) => (
-                <tr key={santri.id} className="border-t">
-                  <td className="p-4">{santri.nama}</td>
-                  <td className="p-4">{santri.nis}</td>
-                  <td className="p-4">{santri.kelas}</td>
-                  <td className="p-4">{santri.asrama}</td>
-                  <td className="p-4">
-                    <div>{santri.namaAyah || '-'}</div>
-                    {santri.noHpAyah && (
-                      <div className="text-xs text-gray-500">
-                        {santri.noHpAyah}
-                      </div>
-                    )}
-                  </td>
-                  <td className="p-4">
-                    <div>{santri.namaIbu || '-'}</div>
-                    {santri.noHpIbu && (
-                      <div className="text-xs text-gray-500">
-                        {santri.noHpIbu}
-                      </div>
-                    )}
-                  </td>
-                  <td className="p-4">{santri.status}</td>
-                  <td className="p-4">
-                    <div className="flex flex-col items-start gap-1">
-                      <button
-                        onClick={() => bukaEdit(santri.id)}
-                        className="text-sm text-blue-600 underline"
-                      >
-                        Ubah
-                      </button>
-                      <button
-                        onClick={() => bukaAkunWali(santri.id)}
-                        className="text-sm text-blue-600 underline"
-                      >
-                        Buat/Reset Akun Wali
-                      </button>
-                    </div>
+            </thead>
+
+            <tbody className="divide-y divide-slate-100 text-sm">
+              {santriFiltered.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center p-12 text-slate-400">
+                    Tidak ada santri yang sesuai dengan filter pencarian.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                santriFiltered.map((santri: any) => {
+                  const isIkhwan = santri.jenisKelamin === 'Ikhwan';
+                  return (
+                    <tr key={santri.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="p-4 px-6">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-2xl font-bold flex items-center justify-center text-sm ${
+                            isIkhwan ? 'bg-cyan-100 text-cyan-700' : 'bg-rose-100 text-rose-700'
+                          }`}>
+                            {santri.nama[0]}
+                          </div>
+                          <div>
+                            <div className="font-bold text-slate-800">{santri.nama}</div>
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${
+                              isIkhwan ? 'bg-cyan-50 text-cyan-700 border border-cyan-200/50' : 'bg-rose-50 text-rose-700 border border-rose-200/50'
+                            }`}>
+                              {santri.jenisKelamin || 'Belum diisi'}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="p-4 px-6 font-mono text-xs">
+                        <div className="font-bold text-slate-700">{santri.nis || '-'}</div>
+                        <div className="text-[11px] text-slate-400">{santri.nisn || 'No NISN'}</div>
+                      </td>
+
+                      <td className="p-4 px-6">
+                        <div className="flex flex-col gap-1 items-start">
+                          <span className="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-0.5 rounded-lg border border-slate-200/60">
+                            🏫 {santri.kelas || 'Belum ada kelas'}
+                          </span>
+                          {santri.asrama && (
+                            <span className="bg-amber-50 text-amber-800 text-[11px] font-medium px-2.5 py-0.5 rounded-lg border border-amber-200/60">
+                              🛖 {santri.asrama}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      <td className="p-4 px-6 text-xs">
+                        {santri.namaAyah ? (
+                          <div className="font-medium text-slate-800">
+                            Ayah: <span className="font-semibold">{santri.namaAyah}</span> {santri.noHpAyah && <span className="text-emerald-600 font-mono">({santri.noHpAyah})</span>}
+                          </div>
+                        ) : null}
+                        {santri.namaIbu ? (
+                          <div className="text-slate-600">
+                            Ibu: <span className="font-semibold">{santri.namaIbu}</span> {santri.noHpIbu && <span className="text-emerald-600 font-mono">({santri.noHpIbu})</span>}
+                          </div>
+                        ) : null}
+                        {!santri.namaAyah && !santri.namaIbu && <span className="text-slate-400 italic">Belum diisi</span>}
+                      </td>
+
+                      <td className="p-4 px-6">
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                          santri.status === 'Aktif'
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                            : 'bg-slate-100 text-slate-600 border border-slate-200'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${
+                            santri.status === 'Aktif' ? 'bg-emerald-500' : 'bg-slate-400'
+                          }`} />
+                          {santri.status}
+                        </span>
+                      </td>
+
+                      <td className="p-4 px-6 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => bukaEdit(santri.id)}
+                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs transition"
+                          >
+                            ✏️ Edit
+                          </button>
+                          <button
+                            onClick={() => bukaAkunWali(santri.id)}
+                            className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-semibold px-3 py-1.5 rounded-xl text-xs transition"
+                          >
+                            🔑 Akun Wali
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">

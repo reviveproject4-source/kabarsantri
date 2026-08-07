@@ -57,7 +57,7 @@ export function ModulUangPendaftaran({ bisaInput = true }: Props) {
     .sort((a, b) => b.id - a.id)
     .map((item) => ({
       ...item,
-      namaSantri: santriList.find((s) => s.id === item.santriId)?.nama ?? '-',
+      namaSantri: santriList.find((s: any) => s.id === item.santriId)?.nama ?? '-',
     }));
 
   return (
@@ -72,7 +72,7 @@ export function ModulUangPendaftaran({ bisaInput = true }: Props) {
             className="w-full border rounded-lg px-3 py-2 mb-3"
           >
             <option value="">Pilih Santri</option>
-            {santriList.map((santri) => (
+            {santriList.map((santri: any) => (
               <option key={santri.id} value={santri.id}>
                 {santri.nama} {santri.kelas ? `- ${santri.kelas}` : ''}
               </option>

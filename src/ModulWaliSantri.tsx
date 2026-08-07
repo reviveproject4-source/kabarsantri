@@ -37,7 +37,7 @@ export function ModulWaliSantri() {
                 </td>
               </tr>
             ) : (
-              santriList.map((santri) => (
+              santriList.map((santri: any) => (
                 <tr key={santri.id} className="border-t">
                   <td className="p-4">{santri.nama}</td>
                   <td className="p-4">{santri.namaAyah || '-'}</td>

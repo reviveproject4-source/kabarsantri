@@ -43,10 +43,10 @@ export function ModulRewardPelanggaran({
   const [kelasAktif, setKelasAktif] = useKelasAktif(kelasDiajar);
   const santriList = (
     kelasDiajar.length > 0
-      ? santriListSemua.filter((s) => samaKelas(s.kelas, kelasAktif))
+      ? santriListSemua.filter((s: any) => samaKelas(s.kelas, kelasAktif))
       : santriListSemua
   ).filter(
-    (s) => !jenisKelaminDiampu || s.jenisKelamin === jenisKelaminDiampu
+    (s: any) => !jenisKelaminDiampu || s.jenisKelamin === jenisKelaminDiampu
   );
   const { data: pelanggaranList = [] } = usePelanggaranList();
   const { mutateAsync: tambahPelanggaran } = useTambahPelanggaran();
@@ -127,7 +127,7 @@ export function ModulRewardPelanggaran({
     perbaruiStatusPelanggaran(
       { id, status },
       {
-        onError: (err) => {
+        onError: (err: any) => {
           const pesan =
             err instanceof Error
               ? err.message
@@ -142,11 +142,11 @@ export function ModulRewardPelanggaran({
 
   const daftar = (tab === 'pelanggaran' ? pelanggaranList : rewardList)
     .slice()
-    .filter((item) => santriList.some((s) => s.id === item.santriId))
-    .sort((a, b) => b.id - a.id)
-    .map((item) => ({
+    .filter((item: any) => santriList.some((s: any) => s.id === item.santriId))
+    .sort((a: any, b: any) => b.id - a.id)
+    .map((item: any) => ({
       ...item,
-      namaSantri: santriList.find((s) => s.id === item.santriId)?.nama ?? '-',
+      namaSantri: santriList.find((s: any) => s.id === item.santriId)?.nama ?? '-',
     }));
 
   return (
@@ -279,7 +279,7 @@ export function ModulRewardPelanggaran({
                 </td>
               </tr>
             ) : (
-              daftar.map((item) => {
+              daftar.map((item: any) => {
                 const statusItem =
                   tab === 'pelanggaran'
                     ? (item as unknown as Pelanggaran).status

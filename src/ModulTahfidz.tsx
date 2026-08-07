@@ -19,10 +19,10 @@ export function ModulTahfidz({
   const [kelasAktif, setKelasAktif] = useKelasAktif(kelasDiajar);
   const santriList = (
     kelasDiajar.length > 0
-      ? santriListSemua.filter((s) => samaKelas(s.kelas, kelasAktif))
+      ? santriListSemua.filter((s: any) => samaKelas(s.kelas, kelasAktif))
       : santriListSemua
   ).filter(
-    (s) => !jenisKelaminDiampu || s.jenisKelamin === jenisKelaminDiampu
+    (s: any) => !jenisKelaminDiampu || s.jenisKelamin === jenisKelaminDiampu
   );
   const { mutateAsync: tambahRiwayatTahfidz } = useTambahRiwayatTahfidz();
 
@@ -65,10 +65,10 @@ export function ModulTahfidz({
   };
 
   const riwayatGabungan = santriList
-    .flatMap((santri) =>
-      santri.riwayatTahfidz.map((r) => ({ ...r, namaSantri: santri.nama }))
+    .flatMap((santri: any) =>
+      santri.riwayatTahfidz.map((r: any) => ({ ...r, namaSantri: santri.nama }))
     )
-    .sort((a, b) => b.id - a.id);
+    .sort((a: any, b: any) => b.id - a.id);
 
   return (
     <div>
@@ -176,7 +176,7 @@ export function ModulTahfidz({
                 </td>
               </tr>
             ) : (
-              riwayatGabungan.map((item) => (
+              riwayatGabungan.map((item: any) => (
                 <tr key={item.id} className="border-t">
                   <td className="p-4">{item.tanggal}</td>
                   <td className="p-4">{item.namaSantri}</td>

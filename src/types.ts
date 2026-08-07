@@ -164,6 +164,15 @@ export interface IzinPulang {
   diajukanTanggal: string;
 }
 
+export interface LisensiFiturModular {
+  kuotaSantriMax: number;
+  kuotaPegawaiMax: number;
+  fiturSppKeuangan: boolean;
+  fiturPerizinanDisiplin: boolean;
+  fiturCustomBranding: boolean;
+  fiturRewardPelanggaran: boolean;
+}
+
 export interface Yayasan {
   id: string;
   namaYayasan: string;
@@ -175,6 +184,8 @@ export interface Yayasan {
   perkiraanJumlahSantri: string;
   sumberInformasi: string;
   paket: StatusPaket;
+  logoUrl?: string;
+  lisensi?: LisensiFiturModular;
 }
 
 export type YayasanInput = Omit<Yayasan, 'id' | 'paket'>;
@@ -239,4 +250,17 @@ export interface Profil {
   peran: Peran;
   pegawaiId: number | null;
   santriId: number | null;
+}
+
+export interface GoogleChatSpace {
+  id: string;
+  namaRuang: string;
+  kategori: string;
+  linkGoogleChat: string;
+  webhookUrl?: string;
+  deskripsi: string;
+  anggotaTerdaftar: string[];
+  aksesPeran: ('yayasan' | 'kepsek' | 'guru' | 'musyrif' | 'keuangan' | 'kesantrian' | 'wali' | 'semua')[];
+  dibuatOleh: string;
+  createdAt: string;
 }

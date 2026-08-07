@@ -189,31 +189,31 @@ export function ModulPegawai() {
   const [jenisKelaminDiampu, setJenisKelaminDiampu] = useState('');
 
   const jabatanOptions = useMemo(() => {
-    const dariData = pegawaiList.map((p) => p.jabatan).filter(Boolean);
+    const dariData = pegawaiList.map((p: any) => p.jabatan).filter(Boolean);
     return Array.from(new Set([...SARAN_JABATAN, ...dariData]));
   }, [pegawaiList]);
 
   const daftarKelas = useMemo(() => {
-    const dariData = santriList.map((s) => s.kelas).filter(Boolean);
-    return Array.from(new Set(dariData)).sort((a, b) => a.localeCompare(b));
+    const dariData = santriList.map((s: any) => s.kelas).filter(Boolean);
+    return (Array.from(new Set(dariData)) as string[]).sort((a: string, b: string) => a.localeCompare(b));
   }, [santriList]);
 
   const rekapJabatan = useMemo(
-    () => hitungRekap(pegawaiList.map((p) => p.jabatan)),
+    () => hitungRekap(pegawaiList.map((p: any) => p.jabatan)),
     [pegawaiList]
   );
 
   const grupKesantrianMusyrif = useMemo(
     () =>
       pegawaiList.filter(
-        (p) => isJabatanKesantrian(p.jabatan) || isJabatanMusyrif(p.jabatan)
+        (p: any) => isJabatanKesantrian(p.jabatan) || isJabatanMusyrif(p.jabatan)
       ),
     [pegawaiList]
   );
 
   const grupKepsekGuru = useMemo(
     () =>
-      pegawaiList.filter((p) => {
+      pegawaiList.filter((p: any) => {
         const j = p.jabatan.trim().toLowerCase();
         return j === 'kepala sekolah' || j === 'guru';
       }),
@@ -259,7 +259,7 @@ export function ModulPegawai() {
       return;
     }
 
-    if (nip && pegawaiList.some((p) => p.nip === nip)) {
+    if (nip && pegawaiList.some((p: any) => p.nip === nip)) {
       alert('NIP ini sudah dipakai pegawai lain. Gunakan NIP yang berbeda.');
       return;
     }
@@ -327,7 +327,7 @@ export function ModulPegawai() {
 
     if (
       nipEdit &&
-      pegawaiList.some((p) => p.nip === nipEdit && p.id !== pegawaiDiedit.id)
+      pegawaiList.some((p: any) => p.nip === nipEdit && p.id !== pegawaiDiedit.id)
     ) {
       alert('NIP ini sudah dipakai pegawai lain. Gunakan NIP yang berbeda.');
       return;
@@ -442,7 +442,7 @@ export function ModulPegawai() {
                 </td>
               </tr>
             ) : (
-              pegawaiList.map((pegawai) => {
+              pegawaiList.map((pegawai: any) => {
                 const jabatanGuru =
                   pegawai.jabatan.trim().toLowerCase() === 'guru';
 

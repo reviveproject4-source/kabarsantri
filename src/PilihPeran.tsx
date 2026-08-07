@@ -4,9 +4,11 @@ import { InputPassword } from './InputPassword';
 
 interface Props {
   onDaftarBaru: () => void;
+  onBukaWelcomeScreen?: () => void;
+  onBukaSuperAdmin?: () => void;
 }
 
-export function PilihPeran({ onDaftarBaru }: Props) {
+export function PilihPeran({ onDaftarBaru, onBukaWelcomeScreen, onBukaSuperAdmin }: Props) {
   const { masuk, masukPegawaiNip, masukWali, kirimResetPassword } = useAuth();
 
   const [tab, setTab] = useState<'staf' | 'wali'>('staf');

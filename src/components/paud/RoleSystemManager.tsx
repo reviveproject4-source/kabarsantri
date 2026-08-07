@@ -747,7 +747,7 @@ export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
                         <div className="bg-white p-3 rounded-2xl shadow-sm border border-indigo-100">
                           <span className="text-slate-500 font-semibold">Ketercapaian</span>
                           <div className="font-black text-amber-600 text-lg mt-0.5">
-                            {weeklyRep.muridTerobservasiCount > 0 ? `${Math.round((weeklyRep.muridTerobservasiCount / (weeklyRep.totalMuridCount || 1)) * 100)}%` : 'Belum ada data'}
+                            {(weeklyRep.muridTerobservasiCount ?? 0) > 0 ? `${Math.round(((weeklyRep.muridTerobservasiCount ?? 0) / (weeklyRep.totalMuridCount || 1)) * 100)}%` : 'Belum ada data'}
                           </div>
                         </div>
                       </div>

@@ -60,18 +60,18 @@ export function ModulWali({ santri, onKeluar }: Props) {
   const isPremium = yayasan?.paket === 'Premium';
 
   const presensiAnak = presensiSantri
-    .filter((p) => p.santriId === santri.id)
-    .sort((a, b) => b.tanggal.localeCompare(a.tanggal));
+    .filter((p: any) => p.santriId === santri.id)
+    .sort((a: any, b: any) => b.tanggal.localeCompare(a.tanggal));
 
-  const hafalanAnak = [...santri.riwayatTahfidz].sort((a, b) => b.id - a.id);
+  const hafalanAnak = [...santri.riwayatTahfidz].sort((a: any, b: any) => b.id - a.id);
 
   const akhlakAnak = nilaiAkhlakList
-    .filter((a) => a.santriId === santri.id)
-    .sort((a, b) => b.id - a.id);
+    .filter((a: any) => a.santriId === santri.id)
+    .sort((a: any, b: any) => b.id - a.id);
 
   const izinAnak = izinPulangList
-    .filter((i) => i.santriId === santri.id)
-    .sort((a, b) => b.id - a.id);
+    .filter((i: any) => i.santriId === santri.id)
+    .sort((a: any, b: any) => b.id - a.id);
 
   const ajukanIzin = () => {
     if (!tanggalKeluar || !tanggalKembali || !alasan) {
@@ -92,7 +92,7 @@ export function ModulWali({ santri, onKeluar }: Props) {
           setTanggalKembali('');
           setAlasan('');
         },
-        onError: (err) => {
+        onError: (err: any) => {
           const pesan =
             err instanceof Error
               ? err.message
@@ -177,7 +177,7 @@ export function ModulWali({ santri, onKeluar }: Props) {
                     </td>
                   </tr>
                 ) : (
-                  presensiAnak.map((p) => (
+                  presensiAnak.map((p: any) => (
                     <tr key={p.id} className="border-t">
                       <td className="p-4">{p.tanggal}</td>
                       <td className="p-4">{p.status}</td>
@@ -254,7 +254,7 @@ export function ModulWali({ santri, onKeluar }: Props) {
                       </td>
                     </tr>
                   ) : (
-                    akhlakAnak.map((a) => (
+                    akhlakAnak.map((a: any) => (
                       <tr key={a.id} className="border-t">
                         <td className="p-4">{a.tanggal}</td>
                         <td className="p-4">{a.nilai}</td>
@@ -339,7 +339,7 @@ export function ModulWali({ santri, onKeluar }: Props) {
                         </td>
                       </tr>
                     ) : (
-                      izinAnak.map((i) => (
+                      izinAnak.map((i: any) => (
                         <tr key={i.id} className="border-t">
                           <td className="p-4">{i.tanggalKeluar}</td>
                           <td className="p-4">{i.tanggalKembali}</td>
@@ -370,7 +370,7 @@ export function ModulWali({ santri, onKeluar }: Props) {
               </p>
             ) : (
               <div className="divide-y">
-                {pengumumanList.map((p) => (
+                {pengumumanList.map((p: any) => (
                   <div key={p.id} className="p-4">
                     <h4 className="font-semibold">{p.judul}</h4>
                     <p className="text-xs text-gray-500 mb-2">

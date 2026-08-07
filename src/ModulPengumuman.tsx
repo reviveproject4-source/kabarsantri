@@ -15,7 +15,7 @@ interface Props {
 export function ModulPengumuman({ dicatatOleh, jenisKelaminDiampu }: Props) {
   const { data: santriListSemua = [] } = useSantriList();
   const santriList = santriListSemua.filter(
-    (s) => !jenisKelaminDiampu || s.jenisKelamin === jenisKelaminDiampu
+    (s: any) => !jenisKelaminDiampu || s.jenisKelamin === jenisKelaminDiampu
   );
   const { data: pengumumanList = [] } = usePengumumanList();
   const { mutateAsync: tambahPengumuman } = useTambahPengumuman();
@@ -30,8 +30,8 @@ export function ModulPengumuman({ dicatatOleh, jenisKelaminDiampu }: Props) {
 
   const daftarKelas = useMemo(
     () =>
-      Array.from(new Set(santriList.map((s) => s.kelas).filter(Boolean))).sort(
-        (a, b) => a.localeCompare(b)
+      (Array.from(new Set(santriList.map((s: any) => s.kelas).filter(Boolean))) as string[]).sort(
+        (a: string, b: string) => a.localeCompare(b)
       ),
     [santriList]
   );
@@ -230,7 +230,7 @@ export function ModulPengumuman({ dicatatOleh, jenisKelaminDiampu }: Props) {
           </p>
         ) : (
           <div className="divide-y">
-            {pengumumanList.map((p) => (
+            {pengumumanList.map((p: any) => (
               <div key={p.id} className="p-4">
                 <div className="flex justify-between items-start gap-3">
                   <div>
