@@ -123,6 +123,15 @@ export const Sidebar = ({
           </span>
         </button>
 
+        <button
+          onClick={() => setActiveTab('bantuan')}
+          className={menuClass('bantuan')}
+        >
+          <span className="flex items-center gap-2.5">
+            <span>📖</span> Panduan & Bantuan
+          </span>
+        </button>
+
         {(isYayasan || isKepsek) && (
           <button
             onClick={() => setActiveTab('profil-yayasan')}

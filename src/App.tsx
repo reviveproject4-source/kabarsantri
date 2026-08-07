@@ -29,6 +29,7 @@ import { ModulLaporan } from './ModulLaporan';
 import { ModulGoogleChat } from './ModulGoogleChat';
 import { ModulProfilYayasan } from './ModulProfilYayasan';
 import { ModulSuperAdmin } from './ModulSuperAdmin';
+import { ModulBantuan } from './ModulBantuan';
 import { FormPendaftaranYayasan } from './FormPendaftaranYayasan';
 import { PilihPeran } from './PilihPeran';
 import { useAuth } from './AuthContext';
@@ -745,6 +746,14 @@ function RuteStaff({
 
         {activeTab === 'profil-yayasan' && (
           <ModulProfilYayasan onTutup={() => setActiveTab('dashboard')} />
+        )}
+
+        {activeTab === 'bantuan' && (
+          <ModulBantuan
+            peran={isYayasan ? 'yayasan' : pegawaiAktif?.jabatan || profil?.peran || 'pengguna'}
+            namaAktif={yayasan?.namaYayasan || namaAktif}
+            onTutup={() => setActiveTab('dashboard')}
+          />
         )}
 
       </main>
