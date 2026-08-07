@@ -78,10 +78,19 @@ export function ModulBantuan({ peran, namaAktif, onTutup }: ModulBantuanProps) {
 
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-1.5">
                 <h3 className="font-bold text-slate-900 flex items-center gap-1.5 text-xs">
-                  <span>2️⃣</span> Manajemen Pegawai & Guru
+                  <span>2️⃣</span> Manajemen Pegawai & Guru (Password 6 Angka)
                 </h3>
                 <p className="text-slate-500 leading-relaxed text-[11px]">
-                  Buka menu <b>Pegawai</b> untuk mendaftarkan akun Guru, Musyrif, dan Staf Keuangan. Setiap pegawai dibuatkan NIP & Password untuk login masing-masing.
+                  Buka menu <b>Pegawai</b> untuk mendaftarkan akun Guru, Musyrif, dan Staf. Setiap akun Guru/Pegawai dibuatkan NIP &amp; <b>Password yang terdiri dari 6 angka/karakter (6 digit)</b>.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-1.5">
+                <h3 className="font-bold text-slate-900 flex items-center gap-1.5 text-xs">
+                  <span>🔑</span> Akun &amp; PIN Wali Santri (Password 8 Angka)
+                </h3>
+                <p className="text-slate-500 leading-relaxed text-[11px]">
+                  Akun Wali Santri dibuatkan oleh pihak Yayasan/Sekolah dengan <b>Password / PIN keamanan yang terdiri dari 8 angka (8 digit)</b> untuk masuk ke portal orang tua.
                 </p>
               </div>
 
@@ -241,6 +250,10 @@ export function ModulBantuan({ peran, namaAktif, onTutup }: ModulBantuanProps) {
             </div>
 
             <div className="space-y-3 text-[11px] text-slate-600 leading-relaxed">
+              <div className="p-3 bg-indigo-100/50 rounded-xl border border-indigo-200">
+                <span className="font-bold text-indigo-950 block mb-0.5">🔑 Ketentuan Password / PIN Akun Wali Santri:</span>
+                Password / PIN akun Wali Santri terdiri dari <b>8 angka (8 digit)</b> yang dibuatkan dan didaftarkan oleh pihak Yayasan/Sekolah.
+              </div>
               <div className="p-3 bg-slate-50 rounded-xl border">
                 <span className="font-bold text-slate-900 block mb-0.5">📖 Cek Capaian Hafalan Ananda:</span>
                 Buka menu <b>Tahfidz</b> untuk melihat laporan hafalan juz & surah yang telah disetorkan ananda kepada Ustadz/Ustadzah.
