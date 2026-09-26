@@ -18,6 +18,8 @@ export interface RiwayatTahfidz {
 
 export interface Santri {
   id: number;
+  yayasan_id?: string;
+  yayasanId?: string;
 
   // Data Pribadi
   nama: string;

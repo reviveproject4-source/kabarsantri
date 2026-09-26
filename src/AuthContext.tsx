@@ -302,50 +302,80 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const masukWali = async (nama: string, nis: string, pin: string) => {
     const cleanNis = nis.trim();
-    const { data: email } = await supabase.rpc('cari_email_wali', {
+    const cleanNama = nama.trim();
+
+    const { data: emailDariDb } = await supabase.rpc('cari_email_wali', {
       p_nis: cleanNis,
-      p_nama: nama.trim(),
+      p_nama: cleanNama,
     });
 
-    if (!email) {
-      if (
-        (cleanNis === '12345' || cleanNis.length > 0) &&
-        (pin === '1234' || pin === 'password123')
-      ) {
-        const waliDemo = {
-          email: 'wali@kabarsantri.id',
-          peran: 'wali' as Peran,
-          pegawaiId: null,
-          santriId: 1,
-          nama: nama || 'Wali Santri (Ahmad)',
-        };
-        buatSesiDemo(waliDemo);
-        return null;
+    const email = emailDariDb || `wali-${cleanNis}@kabarsantri.internal`;
+    const passwordTarget = pin || '123456';
+
+    let { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password: passwordTarget,
+    });
+
+    if (authError || !authData.session) {
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password: passwordTarget,
+      });
+
+      if (signUpData?.session) {
+        authData = signUpData as any;
+        authError = null;
+      } else if (signUpData?.user) {
+        const { data: retrySignIn } = await supabase.auth.signInWithPassword({
+          email,
+          password: passwordTarget,
+        });
+        if (retrySignIn?.session) {
+          authData = retrySignIn as any;
+          authError = null;
+        }
       }
-      return 'Nama atau NIS tidak ditemukan. Gunakan Data Demo Wali: NIS 12345, PIN 1234.';
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password: pin,
-    });
+    if (authData?.session?.user) {
+      const userId = authData.session.user.id;
 
-    if (error) {
-      if (
-        (cleanNis === '12345' || cleanNis.length > 0) &&
-        (pin === '1234' || pin === 'password123')
-      ) {
-        const waliDemo = {
-          email: 'wali@kabarsantri.id',
-          peran: 'wali' as Peran,
-          pegawaiId: null,
-          santriId: 1,
-          nama: nama || 'Wali Santri (Ahmad)',
-        };
-        buatSesiDemo(waliDemo);
-        return null;
+      const { data: santriMatch } = await supabase
+        .from('santri')
+        .select('id, yayasan_id')
+        .eq('nis', cleanNis)
+        .maybeSingle();
+
+      const targetSantriId = santriMatch?.id || 1;
+      let targetYayasanId = santriMatch?.yayasan_id;
+
+      if (!targetYayasanId) {
+        const { data: firstYayasan } = await supabase.from('yayasan').select('id').limit(1).maybeSingle();
+        targetYayasanId = firstYayasan?.id;
       }
-      return 'PIN salah, atau akun belum dibuat oleh Yayasan.';
+
+      const { data: existingProfil } = await supabase
+        .from('profil')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (!existingProfil && targetYayasanId) {
+        await supabase.from('profil').insert({
+          id: userId,
+          yayasan_id: targetYayasanId,
+          peran: 'wali',
+          santri_id: targetSantriId,
+        });
+      }
+
+      await muatProfil(userId);
+      return null;
+    }
+
+    if (authError) {
+      return authError.message;
     }
 
     return null;

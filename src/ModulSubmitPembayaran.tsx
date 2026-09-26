@@ -96,6 +96,7 @@ export function ModulSubmitPembayaran({ santri }: Props) {
       const baris = KOLOM_PEMBAYARAN.filter(
         (k) => Number(nominalPerJenis[k.jenis]) > 0
       ).map((k) => ({
+        yayasan_id: santri.yayasan_id,
         santri_id: santri.id,
         nama_santri: santri.nama,
         jenis: k.jenis,

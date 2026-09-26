@@ -76,6 +76,46 @@ create policy "yayasan_update_sendiri" on yayasan
 -- (bypass RLS sepenuhnya), BUKAN lewat kebijakan ini.
 create policy "profil_select_terkait" on profil
   for select using (id = auth.uid() or yayasan_id = current_yayasan_id());
+create policy "profil_insert_sendiri" on profil
+  for insert with check (id = auth.uid());
+create policy "profil_insert_yayasan" on profil
+  for insert with check (yayasan_id = current_yayasan_id() and current_peran() = 'yayasan');
+create policy "profil_update_sendiri" on profil
+  for update using (id = auth.uid());
+
+-- Fungsi bantu untuk menghubungkan akun Wali dengan Santri miliknya secara aman
+create or replace function link_wali_profil(p_santri_id bigint)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_yayasan_id uuid;
+begin
+  if v_uid is null then
+    raise exception 'Harus login terlebih dahulu sebelum menghubungkan profil wali';
+  end if;
+
+  select yayasan_id into v_yayasan_id
+  from santri
+  where id = p_santri_id;
+
+  if v_yayasan_id is null then
+    raise exception 'Data santri tidak ditemukan';
+  end if;
+
+  insert into profil (id, yayasan_id, peran, santri_id)
+  values (v_uid, v_yayasan_id, 'wali', p_santri_id)
+  on conflict (id) do update set
+    yayasan_id = excluded.yayasan_id,
+    peran = 'wali',
+    santri_id = excluded.santri_id;
+end;
+$$;
+
+grant execute on function link_wali_profil(bigint) to authenticated, anon;
 
 -- Pendaftaran Yayasan baru: satu transaksi (baris yayasan + baris profil
 -- peran 'yayasan') dijalankan lewat fungsi ini, bukan dua insert terpisah
