@@ -95,6 +95,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const muatProfil = async (userId: string) => {
+    if (userId.startsWith('demo-')) {
+      return;
+    }
+
     const idPermintaan = ++idPermintaanRef.current;
 
     const { data: profilBaris } = await supabase
@@ -109,10 +113,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setProfil(profilBaris as ProfilBaris);
       await muatYayasan(profilBaris.yayasan_id, idPermintaan);
     } else {
-      // Check if logged in user email or id indicates Wali role
       const { data: { session: activeSession } } = await supabase.auth.getSession();
-      const sessionUserEmail = activeSession?.user?.email || '';
-      if (userId.startsWith('demo-wali') || sessionUserEmail.includes('wali')) {
+      const sessionUserEmail = (activeSession?.user?.email || '').toLowerCase();
+      const demoUser = MOCK_DEMO_USERS[sessionUserEmail];
+
+      if (demoUser) {
+        const fakeProfil: ProfilBaris = {
+          id: userId,
+          yayasan_id: 'demo-yayasan-01',
+          peran: demoUser.peran,
+          pegawai_id: demoUser.pegawaiId,
+          santri_id: demoUser.santriId,
+        };
+        const fakeYayasan: Yayasan = {
+          id: 'demo-yayasan-01',
+          namaYayasan: 'Pondok Pesantren KabarSantri',
+          namaPenanggungJawab: demoUser.nama,
+          jabatanPenanggungJawab: 'Pengelola Lembaga',
+          noHp: '081234567890',
+          email: demoUser.email,
+          alamat: 'Jl. Pesantren No. 1, Kota Depok, Jawa Barat',
+          perkiraanJumlahSantri: '250',
+          sumberInformasi: 'Website',
+          paket: 'Premium',
+        };
+        setProfil(fakeProfil);
+        setYayasan(fakeYayasan);
+      } else if (userId.startsWith('demo-wali') || sessionUserEmail.includes('wali')) {
         const waliProfil: ProfilBaris = {
           id: userId,
           yayasan_id: 'demo-yayasan-01',
@@ -130,9 +157,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
-      userIdRef.current = data.session?.user.id ?? null;
-      setSession(data.session);
-      if (data.session) {
+      if (data.session && !data.session.user.id.startsWith('demo-')) {
+        userIdRef.current = data.session.user.id;
+        setSession(data.session);
         await muatProfil(data.session.user.id);
       }
       setMemuat(false);
@@ -145,18 +172,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         const userIdBaru = sesiBaru?.user.id ?? null;
-        if (userIdBaru !== userIdRef.current) {
-          queryClient.clear();
-        }
-        userIdRef.current = userIdBaru;
-
-        setSession(sesiBaru);
-        if (sesiBaru) {
+        if (sesiBaru && userIdBaru && !userIdBaru.startsWith('demo-')) {
+          if (userIdBaru !== userIdRef.current) {
+            queryClient.clear();
+          }
+          userIdRef.current = userIdBaru;
+          setSession(sesiBaru);
           await muatProfil(sesiBaru.user.id);
-        } else {
+        } else if (!sesiBaru && !session?.user?.id?.startsWith('demo-')) {
           idPermintaanRef.current++;
           setProfil(null);
           setYayasan(null);
+          setSession(null);
         }
       }
     );
@@ -240,6 +267,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const buatSesiDemo = (demoUser: (typeof MOCK_DEMO_USERS)[string]) => {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.includes('auth-token')) {
+          localStorage.removeItem(key);
+        }
+      }
+    } catch (e) {}
+
     const fakeSession: any = {
       user: {
         id: `demo-${demoUser.peran}-${demoUser.pegawaiId || demoUser.santriId || 0}`,
@@ -273,14 +309,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const masuk = async (email: string, password: string) => {
     const cleanEmail = email.trim().toLowerCase();
+    const demoUser = MOCK_DEMO_USERS[cleanEmail];
+
+    if (demoUser && (password === 'password123' || password.length >= 4)) {
+      await supabase.auth.signOut().catch(() => {});
+      buatSesiDemo(demoUser);
+      return null;
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email: cleanEmail,
       password,
     });
 
     if (error) {
-      const demoUser = MOCK_DEMO_USERS[cleanEmail];
-      if (demoUser && (password === 'password123' || password.length >= 4)) {
+      if (demoUser) {
         buatSesiDemo(demoUser);
         return null;
       }
@@ -456,7 +499,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const keluar = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut().catch(() => {});
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch (e) {}
+    setProfil(null);
+    setYayasan(null);
+    setSession(null);
   };
 
   const kirimResetPassword = async (email: string) => {

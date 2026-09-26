@@ -35,7 +35,7 @@ import { FormPendaftaranYayasan } from './FormPendaftaranYayasan';
 import { PilihPeran } from './PilihPeran';
 import { useAuth } from './AuthContext';
 import { useSantriList, useSantriById } from './hooks/useSantri';
-import { usePegawaiList } from './hooks/usePegawai';
+import { usePegawaiList, DEFAULT_PEGAWAI } from './hooks/usePegawai';
 import { usePresensiPegawaiList, usePresensiSantriList } from './hooks/usePresensi';
 import { useNilaiAkhlakList } from './hooks/useAkhlak';
 import { useIzinPulangList } from './hooks/useIzinPulang';
@@ -97,8 +97,9 @@ export default function App() {
   useEffect(() => {
     if (session) {
       setIsAllowed(true);
+      setActiveTab('dashboard');
     }
-  }, [session]);
+  }, [session?.user?.id, profil?.id]);
 
   useEffect(() => {
     // Standalone URL check: http://localhost:5184/?admin=true
@@ -275,7 +276,7 @@ function RuteStaff({
 }) {
   const { profil, yayasan } = useAuth();
   const { data: santriList = [] } = useSantriList();
-  const { data: pegawaiList = [] } = usePegawaiList();
+  const { data: pegawaiList = DEFAULT_PEGAWAI } = usePegawaiList();
   const { data: presensiPegawaiList = [] } = usePresensiPegawaiList();
   const { data: presensiSantriList = [] } = usePresensiSantriList();
   const { data: nilaiAkhlakList = [] } = useNilaiAkhlakList();

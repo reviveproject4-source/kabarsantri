@@ -36,15 +36,17 @@ export function PilihPeran({
   const [memproses, setMemproses] = useState(false);
   const [error, setError] = useState('');
 
-  const isiDemoAcc = (
+  const isiDemoAcc = async (
     peranDemo: 'yayasan' | 'guru' | 'musyrif' | 'keuangan' | 'kepsek' | 'ketua_yayasan' | 'kesantrian' | 'wali'
   ) => {
     setError('');
+    setMemproses(true);
     if (peranDemo === 'wali') {
       setTab('wali');
       setNamaSantri('Ahmad Santri');
       setNis('12345');
       setPin('1234');
+      await masukWali('Ahmad Santri', '12345', '1234');
     } else {
       setTab('staf');
       setIdentitasStaf('email');
@@ -57,9 +59,12 @@ export function PilihPeran({
         ketua_yayasan: 'ketuayayasan@kabarsantri.id',
         kesantrian: 'kesantrian@kabarsantri.id',
       };
-      setEmail(emailMap[peranDemo] || 'guru@kabarsantri.id');
+      const targetEmail = emailMap[peranDemo] || 'guru@kabarsantri.id';
+      setEmail(targetEmail);
       setPassword('password123');
+      await masuk(targetEmail, 'password123');
     }
+    setMemproses(false);
   };
 
   React.useEffect(() => {

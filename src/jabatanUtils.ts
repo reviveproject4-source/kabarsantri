@@ -17,11 +17,13 @@ function normalisasiJabatan(jabatan: string): string {
 }
 
 export function isJabatanMusyrif(jabatan: string): boolean {
-  return JABATAN_MUSYRIF.includes(normalisasiJabatan(jabatan));
+  const j = normalisasiJabatan(jabatan);
+  return JABATAN_MUSYRIF.some((m) => j.includes(m));
 }
 
 export function isJabatanKesantrian(jabatan: string): boolean {
-  return JABATAN_KESANTRIAN.includes(normalisasiJabatan(jabatan));
+  const j = normalisasiJabatan(jabatan);
+  return JABATAN_KESANTRIAN.some((k) => j.includes(k));
 }
 
 const JABATAN_KEUANGAN = ['keuangan', 'bendahara', 'bendahara/keuangan', 'staf keuangan', 'kasir'];
