@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../supabaseClient';
+import { useAuth } from '../AuthContext';
 import { RiwayatTahfidz, Santri, SantriInput } from '../types';
 
 function pemetaanTahfidz(baris: any): RiwayatTahfidz {
@@ -157,21 +158,34 @@ export const DEFAULT_SANTRI: Santri[] = [
 ];
 
 export function useSantriList() {
+  const { profil, session } = useAuth();
   return useQuery({
     queryKey: KUNCI_SANTRI,
     queryFn: async () => {
       try {
-        const { data, error } = await supabase
-          .from('santri')
-          .select('*, riwayat_tahfidz(*)')
-          .order('nama');
+        let query = supabase.from('santri').select('*, riwayat_tahfidz(*)');
+        if (profil?.yayasan_id && profil.yayasan_id !== 'demo-yayasan-01') {
+          query = query.eq('yayasan_id', profil.yayasan_id);
+        }
+        const { data, error } = await query.order('nama');
+
+        const isDemo =
+          !profil ||
+          profil.yayasan_id === 'demo-yayasan-01' ||
+          (session?.user?.id && session.user.id.startsWith('demo-')) ||
+          (session?.user?.email && session.user.email.includes('@kabarsantri.id'));
 
         if (error || !data || data.length === 0) {
-          return DEFAULT_SANTRI;
+          return isDemo ? DEFAULT_SANTRI : [];
         }
         return data.map(pemetaanSantri);
       } catch {
-        return DEFAULT_SANTRI;
+        const isDemo =
+          !profil ||
+          profil.yayasan_id === 'demo-yayasan-01' ||
+          (session?.user?.id && session.user.id.startsWith('demo-')) ||
+          (session?.user?.email && session.user.email.includes('@kabarsantri.id'));
+        return isDemo ? DEFAULT_SANTRI : [];
       }
     },
   });

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../supabaseClient';
+import { useAuth } from '../AuthContext';
 import { Pegawai, PegawaiInput } from '../types';
 
 function pemetaanPegawai(baris: any): Pegawai {
@@ -109,21 +110,34 @@ export const DEFAULT_PEGAWAI: Pegawai[] = [
 ];
 
 export function usePegawaiList() {
+  const { profil, session } = useAuth();
   return useQuery({
     queryKey: KUNCI_PEGAWAI,
     queryFn: async () => {
       try {
-        const { data, error } = await supabase
-          .from('pegawai')
-          .select('*')
-          .order('nama');
+        let query = supabase.from('pegawai').select('*');
+        if (profil?.yayasan_id && profil.yayasan_id !== 'demo-yayasan-01') {
+          query = query.eq('yayasan_id', profil.yayasan_id);
+        }
+        const { data, error } = await query.order('nama');
+
+        const isDemo =
+          !profil ||
+          profil.yayasan_id === 'demo-yayasan-01' ||
+          (session?.user?.id && session.user.id.startsWith('demo-')) ||
+          (session?.user?.email && session.user.email.includes('@kabarsantri.id'));
 
         if (error || !data || data.length === 0) {
-          return DEFAULT_PEGAWAI;
+          return isDemo ? DEFAULT_PEGAWAI : [];
         }
         return data.map(pemetaanPegawai);
       } catch {
-        return DEFAULT_PEGAWAI;
+        const isDemo =
+          !profil ||
+          profil.yayasan_id === 'demo-yayasan-01' ||
+          (session?.user?.id && session.user.id.startsWith('demo-')) ||
+          (session?.user?.email && session.user.email.includes('@kabarsantri.id'));
+        return isDemo ? DEFAULT_PEGAWAI : [];
       }
     },
   });
