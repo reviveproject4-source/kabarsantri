@@ -5,7 +5,7 @@ import { tanggalLokal } from '../../tanggal';
 import { useCatatPresensiSantri } from '../../hooks/usePresensi';
 import { useTambahRiwayatTahfidz } from '../../hooks/useSantri';
 import { useTambahNilaiAkhlak } from '../../hooks/useAkhlak';
-import { useTambahPelanggaran, useTambahReward } from '../../hooks/useRewardPelanggaran';
+import { useTambahPelanggaran, useTambahReward, useRewardList, usePelanggaranList } from '../../hooks/useRewardPelanggaran';
 
 interface Props {
   namaAktif: string;
@@ -34,12 +34,17 @@ export function DashboardGuru({
 }: Props) {
   const hariIni = tanggalLokal();
 
-  // Mutations
+  // Gender Filter State
+  const [genderFilter, setGenderFilter] = useState<'Semua' | 'Laki-Laki' | 'Perempuan'>('Semua');
+
+  // Mutations & Queries
   const { mutate: catatPresensiSantri } = useCatatPresensiSantri();
   const { mutateAsync: tambahRiwayatTahfidz } = useTambahRiwayatTahfidz();
   const { mutateAsync: tambahNilaiAkhlak } = useTambahNilaiAkhlak();
   const { mutateAsync: tambahPelanggaran } = useTambahPelanggaran();
   const { mutateAsync: tambahReward } = useTambahReward();
+  const { data: rewardList = [] } = useRewardList();
+  const { data: pelanggaranList = [] } = usePelanggaranList();
 
   // Modals state
   const [showModalTahfidz, setShowModalTahfidz] = useState(false);
@@ -48,6 +53,8 @@ export function DashboardGuru({
 
   // Form states Tahfidz
   const [tahfidzSantriId, setTahfidzSantriId] = useState('');
+  const [kategoriHafalan, setKategoriHafalan] = useState<'Al-Qur\'an' | 'Hadits' | 'Kitab' | 'Lainnya'>('Al-Qur\'an');
+  const [customHafalanJudul, setCustomHafalanJudul] = useState('');
   const [tahfidzJuz, setTahfidzJuz] = useState('');
   const [tahfidzSurat, setTahfidzSurat] = useState('');
   const [tahfidzAyat, setTahfidzAyat] = useState('');
@@ -67,12 +74,19 @@ export function DashboardGuru({
   const [rpCatatan, setRpCatatan] = useState('');
   const [sedangSimpanRp, setSedangSimpanRp] = useState(false);
 
-  // Filter santri for Guru's class scope
+  // Filter santri for Guru's class scope + Gender Filter
   const kelasArray = pegawaiAktif?.kelasDiajar || [];
-  const santriKelas = santriList.filter((s) => {
+  const santriKelasBase = santriList.filter((s) => {
     if (!kelasDiajarAktif || kelasDiajarAktif === 'Semua') return true;
     if (kelasArray.length > 0) return kelasArray.includes(s.kelas);
     return s.kelas === kelasDiajarAktif;
+  });
+
+  const santriKelas = santriKelasBase.filter((s) => {
+    if (genderFilter === 'Semua') return true;
+    if (genderFilter === 'Laki-Laki') return s.jenisKelamin === 'Laki-Laki' || s.jenisKelamin === 'L';
+    if (genderFilter === 'Perempuan') return s.jenisKelamin === 'Perempuan' || s.jenisKelamin === 'P';
+    return true;
   });
 
   const totalSantriKelas = santriKelas.length;
@@ -96,6 +110,24 @@ export function DashboardGuru({
     else if (st === 'Izin') countIzin++;
     else if (st === 'Alfa') countAlfa++;
   });
+
+  // Cumulative Hafalan Metrics
+  const santriDenganHafalanCount = santriKelas.filter(
+    (s) => (s.riwayatTahfidz && s.riwayatTahfidz.length > 0) || s.juzTerakhir
+  ).length;
+
+  const rasioHafalanPersen = totalSantriKelas > 0 ? Math.round((santriDenganHafalanCount / totalSantriKelas) * 100) : 0;
+
+  // Unique Santri Berprestasi & Melanggar
+  const santriIdsSet = new Set(santriKelas.map((s) => s.id));
+
+  const uniqueSantriBerprestasi = new Set(
+    rewardList.filter((r) => santriIdsSet.has(r.santriId)).map((r) => r.santriId)
+  ).size;
+
+  const uniqueSantriMelanggar = new Set(
+    pelanggaranList.filter((p) => santriIdsSet.has(p.santriId)).map((p) => p.santriId)
+  ).size;
 
   // Flatten all riwayat tahfidz from santri in class
   const listTahfidzKelas: Array<{
@@ -128,8 +160,7 @@ export function DashboardGuru({
   const tahfidzTerbaru = listTahfidzKelas.slice(0, 5);
 
   // Nilai Akhlak for santri in class
-  const santriIdsKelasSet = new Set(santriKelas.map((s) => s.id));
-  const akhlakKelas = nilaiAkhlakList.filter((a) => santriIdsKelasSet.has(a.santriId));
+  const akhlakKelas = nilaiAkhlakList.filter((a) => santriIdsSet.has(a.santriId));
   const akhlakTerbaru = akhlakKelas.slice(0, 5);
 
   // Handlers for Direct Presensi
@@ -144,12 +175,32 @@ export function DashboardGuru({
     );
   };
 
-  // Handler for Submitting Setoran Tahfidz
+  // Handler for Submitting Setoran Hafalan with Custom Category
   const handleSimpanTahfidz = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!tahfidzSantriId || !tahfidzJuz) {
-      alert('Pilih santri dan masukkan Juz!');
+    if (!tahfidzSantriId) {
+      alert('Pilih santri terlebih dahulu!');
       return;
+    }
+
+    let finalJuz = tahfidzJuz;
+    let finalHadits = '';
+    let finalKitab = '';
+
+    if (kategoriHafalan === 'Al-Qur\'an') {
+      if (!tahfidzJuz) {
+        alert('Masukkan Juz Al-Qur\'an!');
+        return;
+      }
+      finalJuz = tahfidzJuz.startsWith('Juz') ? tahfidzJuz : `Juz ${tahfidzJuz}`;
+    } else if (kategoriHafalan === 'Hadits') {
+      finalHadits = customHafalanJudul || tahfidzSurat || 'Hadits Arba\'in';
+      finalJuz = 'Hadits';
+    } else if (kategoriHafalan === 'Kitab') {
+      finalKitab = customHafalanJudul || tahfidzSurat || 'Kitab Aqidatul Awam';
+      finalJuz = 'Kitab';
+    } else {
+      finalJuz = customHafalanJudul || 'Hafalan Lainnya';
     }
 
     setSedangSimpanTahfidz(true);
@@ -157,11 +208,11 @@ export function DashboardGuru({
       await tambahRiwayatTahfidz({
         santriId: Number(tahfidzSantriId),
         riwayat: {
-          juz: tahfidzJuz,
+          juz: finalJuz,
           surat: tahfidzSurat || '-',
           ayat: tahfidzAyat || '-',
-          hadits: '',
-          kitab: '',
+          hadits: finalHadits,
+          kitab: finalKitab,
           nilai: tahfidzNilai || 'Mumtaz',
           dicatatOleh: namaAktif,
         },
@@ -171,6 +222,7 @@ export function DashboardGuru({
       setTahfidzJuz('');
       setTahfidzSurat('');
       setTahfidzAyat('');
+      setCustomHafalanJudul('');
     } catch (err: any) {
       alert(`Gagal menyimpan setoran: ${err?.message || err}`);
     } finally {
@@ -277,6 +329,29 @@ export function DashboardGuru({
       {/* Presensi Saya (Pegawai Mandiri) */}
       <PresensiSaya pegawaiId={pegawaiAktif?.id ?? null} presensiPegawai={presensiPegawai} />
 
+      {/* Gender Filter Controls Header */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold text-slate-700">Filter Gender Santri:</span>
+          <span className="text-xs text-slate-400 font-medium">(Pilih ruang tampilan santri)</span>
+        </div>
+        <div className="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200/80 self-start sm:self-auto">
+          {(['Semua', 'Laki-Laki', 'Perempuan'] as const).map((g) => (
+            <button
+              key={g}
+              onClick={() => setGenderFilter(g)}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                genderFilter === g
+                  ? 'bg-[#0A4ABF] text-white shadow'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              {g === 'Semua' ? '🌐 Semua' : g === 'Laki-Laki' ? '👦 Laki-laki / Ikhwan' : '👧 Perempuan / Akhwat'}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Stat Summary Cards */}
       <div>
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Ikhtisar Kelas &amp; Perkembangan Santri</h2>
@@ -296,23 +371,10 @@ export function DashboardGuru({
 
           <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition-all flex items-center justify-between">
             <div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Izin &amp; Sakit</h3>
-              <p className="text-3xl font-black text-amber-600 mt-1">{countIzin + countSakit}</p>
-              <span className="text-[11px] font-semibold text-amber-600 inline-flex items-center gap-1 mt-1">
-                <span>ℹ️</span> {countIzin} Izin, {countSakit} Sakit
-              </span>
-            </div>
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 font-bold flex items-center justify-center text-xl shadow-inner">
-              🤒
-            </div>
-          </div>
-
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition-all flex items-center justify-between">
-            <div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Setoran Hafalan</h3>
-              <p className="text-3xl font-black text-indigo-600 mt-1">{listTahfidzKelas.length}</p>
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Rasio Catatan Hafalan</h3>
+              <p className="text-3xl font-black text-indigo-600 mt-1">{santriDenganHafalanCount} <span className="text-xs font-semibold text-slate-400">/ {totalSantriKelas}</span></p>
               <span className="text-[11px] font-semibold text-indigo-600 inline-flex items-center gap-1 mt-1">
-                <span>📖</span> Riwayat Tahfidz
+                <span>📊</span> {rasioHafalanPersen}% Santri Ada Catatan
               </span>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 font-bold flex items-center justify-center text-xl shadow-inner">
@@ -322,14 +384,27 @@ export function DashboardGuru({
 
           <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition-all flex items-center justify-between">
             <div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Evaluasi Akhlak</h3>
-              <p className="text-3xl font-black text-teal-600 mt-1">{akhlakKelas.length}</p>
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Santri Berprestasi</h3>
+              <p className="text-3xl font-black text-teal-600 mt-1">{uniqueSantriBerprestasi}</p>
               <span className="text-[11px] font-semibold text-teal-600 inline-flex items-center gap-1 mt-1">
-                <span>🌱</span> Catatan Adab
+                <span>🏆</span> Memiliki Reward
               </span>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 font-bold flex items-center justify-center text-xl shadow-inner">
-              🌟
+              ⭐
+            </div>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition-all flex items-center justify-between">
+            <div>
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Santri Melanggar</h3>
+              <p className="text-3xl font-black text-rose-600 mt-1">{uniqueSantriMelanggar}</p>
+              <span className="text-[11px] font-semibold text-rose-600 inline-flex items-center gap-1 mt-1">
+                <span>⚠️</span> Memiliki Pelanggaran
+              </span>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 font-bold flex items-center justify-center text-xl shadow-inner">
+              🚨
             </div>
           </div>
         </div>
@@ -348,7 +423,7 @@ export function DashboardGuru({
             </div>
             <div>
               <div className="text-xs font-bold text-white">+ Input Setoran</div>
-              <div className="text-[10px] text-indigo-100">Tahfidz Al-Qur'an</div>
+              <div className="text-[10px] text-indigo-100">Tahfidz &amp; Hadits</div>
             </div>
           </button>
 
@@ -386,7 +461,7 @@ export function DashboardGuru({
               🏅
             </div>
             <div>
-              <div className="text-xs font-bold text-white">+ Catat Reward / Pelanggaran</div>
+              <div className="text-xs font-bold text-white">+ Catat Reward</div>
               <div className="text-[10px] text-rose-100">Prestasi &amp; Catatan</div>
             </div>
           </button>
@@ -399,53 +474,53 @@ export function DashboardGuru({
               👨‍🎓
             </div>
             <div>
-              <div className="text-xs font-bold text-slate-800 group-hover:text-cyan-700 transition-colors">Data Santri</div>
-              <div className="text-[10px] text-slate-400">Read-Only View</div>
+              <div className="text-xs font-bold text-slate-800 group-hover:text-cyan-700 transition-colors">Daftar Santri</div>
+              <div className="text-[10px] text-slate-400">Detail &amp; NIS</div>
             </div>
           </button>
 
           <button
-            onClick={() => setActiveTab('izin-pulang')}
-            className="bg-white hover:bg-amber-50/50 p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow hover:border-amber-300 transition-all text-left flex flex-col items-start gap-2 group"
+            onClick={() => setActiveTab('google-chat')}
+            className="bg-white hover:bg-blue-50/50 p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow hover:border-blue-300 transition-all text-left flex flex-col items-start gap-2 group"
           >
-            <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform">
-              🏠
+            <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform">
+              💬
             </div>
             <div>
-              <div className="text-xs font-bold text-slate-800 group-hover:text-amber-700 transition-colors">Izin Pulang</div>
-              <div className="text-[10px] text-slate-400">Rekap Perizinan</div>
+              <div className="text-xs font-bold text-slate-800 group-hover:text-blue-700 transition-colors">Chat Ruang</div>
+              <div className="text-[10px] text-slate-400">Komunikasi Guru</div>
             </div>
           </button>
         </div>
       </div>
 
-      {/* Main Workspace Tables & Feeds */}
+      {/* Main Operational Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Setoran Hafalan Terbaru Feed */}
+        {/* Setoran Hafalan Terbaru */}
         <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="font-bold text-slate-800 text-base">Setoran Hafalan Terbaru</h3>
-                <p className="text-xs text-slate-400">Aktivitas hafalan Al-Qur'an santri kelas ini</p>
+                <h3 className="font-bold text-slate-800 text-base">Riwayat Setoran Hafalan Santri</h3>
+                <p className="text-xs text-slate-400">Input setoran hafalan terbaru kelas Anda</p>
               </div>
               <button
                 onClick={() => setShowModalTahfidz(true)}
                 className="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3.5 py-1.5 rounded-xl shadow transition flex items-center gap-1"
               >
-                <span>➕</span> Input Setoran
+                <span>+</span> Setoran
               </button>
             </div>
 
             {tahfidzTerbaru.length === 0 ? (
               <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 my-2">
                 <span className="text-3xl">📖</span>
-                <p className="text-xs text-slate-500 font-medium mt-2">Belum ada setoran hafalan terbaru untuk kelas ini.</p>
+                <p className="text-xs text-slate-500 font-medium mt-2">Belum ada catatan setoran hafalan santri terdaftar.</p>
                 <button
                   onClick={() => setShowModalTahfidz(true)}
                   className="mt-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow transition"
                 >
-                  + Tambah Setoran Hafalan Sekarang
+                  + Input Setoran Pertama
                 </button>
               </div>
             ) : (
@@ -455,7 +530,7 @@ export function DashboardGuru({
                     <div className="min-w-0">
                       <div className="font-bold text-xs text-slate-800 truncate">{t.santriNama}</div>
                       <div className="text-[11px] text-slate-500">
-                        Juz {t.juz || '-'} · Surat {t.surat || '-'} (Ayat {t.ayat || '-'})
+                        {t.juz || '-'} · Surat {t.surat || '-'} (Ayat {t.ayat || '-'})
                       </div>
                     </div>
                     <div className="text-right shrink-0">
@@ -552,7 +627,7 @@ export function DashboardGuru({
               {santriKelas.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="text-center p-8 text-slate-400">
-                    Belum ada santri terdaftar untuk kelas ini
+                    Belum ada santri terdaftar untuk kelas ini / filter gender saat ini
                   </td>
                 </tr>
               ) : (
@@ -608,7 +683,7 @@ export function DashboardGuru({
           <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-200">
             <div className="flex items-center justify-between mb-4 border-b pb-3">
               <h3 className="font-black text-slate-900 text-lg flex items-center gap-2">
-                <span>📖</span> Input Setoran Hafalan Al-Qur'an
+                <span>📖</span> Input Setoran Hafalan Santri
               </h3>
               <button
                 onClick={() => setShowModalTahfidz(false)}
@@ -638,45 +713,103 @@ export function DashboardGuru({
                 </select>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
-                    Juz *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Contoh: 30"
-                    value={tahfidzJuz}
-                    onChange={(e) => setTahfidzJuz(e.target.value)}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
-                    Surat
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="An-Naba"
-                    value={tahfidzSurat}
-                    onChange={(e) => setTahfidzSurat(e.target.value)}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
-                    Ayat
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="1-40"
-                    value={tahfidzAyat}
-                    onChange={(e) => setTahfidzAyat(e.target.value)}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500"
-                  />
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                  Kategori Hafalan
+                </label>
+                <div className="grid grid-cols-4 gap-2 mb-2">
+                  {(['Al-Qur\'an', 'Hadits', 'Kitab', 'Lainnya'] as const).map((kat) => (
+                    <button
+                      key={kat}
+                      type="button"
+                      onClick={() => setKategoriHafalan(kat)}
+                      className={`py-2 px-1 rounded-xl text-xs font-bold border transition ${
+                        kategoriHafalan === kat
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {kat}
+                    </button>
+                  ))}
                 </div>
               </div>
+
+              {kategoriHafalan === 'Al-Qur\'an' ? (
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                      Juz *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="30"
+                      value={tahfidzJuz}
+                      onChange={(e) => setTahfidzJuz(e.target.value)}
+                      className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                      Surat
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="An-Naba"
+                      value={tahfidzSurat}
+                      onChange={(e) => setTahfidzSurat(e.target.value)}
+                      className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                      Ayat
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="1-40"
+                      value={tahfidzAyat}
+                      onChange={(e) => setTahfidzAyat(e.target.value)}
+                      className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                      Judul / Nama {kategoriHafalan} Custom
+                    </label>
+                    <input
+                      type="text"
+                      placeholder={
+                        kategoriHafalan === 'Hadits'
+                          ? 'Contoh: Hadits Arba\'in No. 1'
+                          : kategoriHafalan === 'Kitab'
+                          ? 'Contoh: Kitab Aqidatul Awam'
+                          : 'Contoh: Matan Alfiyyah / Nazham'
+                      }
+                      value={customHafalanJudul}
+                      onChange={(e) => setCustomHafalanJudul(e.target.value)}
+                      className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                      Keterangan / Bab / Bait
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: Bait 1 - 20"
+                      value={tahfidzSurat}
+                      onChange={(e) => setTahfidzSurat(e.target.value)}
+                      className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
@@ -870,27 +1003,31 @@ export function DashboardGuru({
 
               <div>
                 <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
-                  Kategori
+                  Judul Kategori
                 </label>
                 <input
                   type="text"
-                  placeholder={rpJenis === 'reward' ? 'Juara Lomba Tahfidz / Organisasi' : 'Kerapihan Tempat Tidur / Jam Malam / Kebersihan'}
+                  placeholder={
+                    rpJenis === 'reward'
+                      ? 'Contoh: Juara 1 Lomba MHQ / Rajin Shalat'
+                      : 'Contoh: Terlambat Masuk Kelas / Tidak Membawa Kitab'
+                  }
                   value={rpKategori}
                   onChange={(e) => setRpKategori(e.target.value)}
-                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-rose-500"
+                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-rose-500"
                   required
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
-                  Keterangan Catatan
+                  Catatan Rincian
                 </label>
                 <textarea
-                  placeholder="Detail catatan prestasi atau pelanggaran santri..."
+                  placeholder="Penjelasan rincian kejadian..."
                   value={rpCatatan}
                   onChange={(e) => setRpCatatan(e.target.value)}
-                  rows={2}
+                  rows={3}
                   className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-rose-500"
                 />
               </div>
@@ -910,7 +1047,7 @@ export function DashboardGuru({
                     rpJenis === 'reward' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'
                   }`}
                 >
-                  {sedangSimpanRp ? 'Simpan Database...' : 'Simpan Record'}
+                  {sedangSimpanRp ? 'Simpan Database...' : 'Simpan Catatan'}
                 </button>
               </div>
             </form>
