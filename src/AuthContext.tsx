@@ -202,6 +202,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       santriId: null,
       nama: 'Drs. H. Ridwan, M.Pd',
     },
+    'ketuayayasan@kabarsantri.id': {
+      email: 'ketuayayasan@kabarsantri.id',
+      peran: 'pegawai',
+      pegawaiId: 5,
+      santriId: null,
+      nama: 'KH. Ahmad Dahlan, Lc (Ketua Yayasan)',
+    },
+    'ketua.yayasan@kabarsantri.id': {
+      email: 'ketua.yayasan@kabarsantri.id',
+      peran: 'pegawai',
+      pegawaiId: 5,
+      santriId: null,
+      nama: 'KH. Ahmad Dahlan, Lc (Ketua Yayasan)',
+    },
+    'kesantrian@kabarsantri.id': {
+      email: 'kesantrian@kabarsantri.id',
+      peran: 'pegawai',
+      pegawaiId: 6,
+      santriId: null,
+      nama: 'Ust. Ahmad Kesantrian',
+    },
   };
 
   const buatSesiDemo = (demoUser: (typeof MOCK_DEMO_USERS)[string]) => {
@@ -261,6 +282,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       '19900102': 'musyrif@kabarsantri.id',
       '19900103': 'keuangan@kabarsantri.id',
       '19900104': 'kepsek@kabarsantri.id',
+      '19900105': 'ketuayayasan@kabarsantri.id',
+      '19900106': 'kesantrian@kabarsantri.id',
     };
 
     const { data: email } = await supabase.rpc('cari_email_pegawai', {

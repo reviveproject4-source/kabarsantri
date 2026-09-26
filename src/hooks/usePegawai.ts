@@ -68,6 +68,30 @@ export const DEFAULT_PEGAWAI: Pegawai[] = [
     aksesSemuaKelas: true,
     jenisKelaminDiampu: '',
   },
+  {
+    id: 5,
+    nama: 'KH. Ahmad Dahlan, Lc',
+    nip: '19900105',
+    jabatan: 'Ketua Yayasan',
+    hp: '081234567894',
+    email: 'ketuayayasan@kabarsantri.id',
+    status: 'Aktif',
+    kelasDiajar: [],
+    aksesSemuaKelas: true,
+    jenisKelaminDiampu: '',
+  },
+  {
+    id: 6,
+    nama: 'Ust. Ahmad Kesantrian',
+    nip: '19900106',
+    jabatan: 'Kesantrian',
+    hp: '081234567895',
+    email: 'kesantrian@kabarsantri.id',
+    status: 'Aktif',
+    kelasDiajar: [],
+    aksesSemuaKelas: true,
+    jenisKelaminDiampu: '',
+  },
 ];
 
 export function usePegawaiList() {

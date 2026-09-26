@@ -500,11 +500,11 @@ function RuteStaff({
           </>
         )}
 
-        {(isYayasan || isKepsek || isGuru || isMusyrif) && activeTab === 'santri' && (
+        {(isYayasan || isKepsek || isGuru || isMusyrif || isKesantrian || isKetuaYayasan) && activeTab === 'santri' && (
           <ModulSantri isReadOnly={!isYayasan} />
         )}
 
-        {(isYayasan || isKepsek) && activeTab === 'pegawai' && <ModulPegawai />}
+        {(isYayasan || isKepsek || isKesantrian || isKetuaYayasan) && activeTab === 'pegawai' && <ModulPegawai />}
 
         {isYayasan && activeTab === 'wali-master' && <ModulWaliSantri />}
 
@@ -536,7 +536,7 @@ function RuteStaff({
 
         {isYayasan && activeTab === 'paket' && <ModulPaket />}
 
-        {(isYayasan || isKepsek) && activeTab === 'laporan' && <ModulLaporan />}
+        {(isYayasan || isKepsek || isKetuaYayasan) && activeTab === 'laporan' && <ModulLaporan />}
 
         {!isYayasan && activeTab === 'presensi' && (
           <ModulPresensi
@@ -549,7 +549,7 @@ function RuteStaff({
           />
         )}
 
-        {(isGuru || isMusyrif || isKesantrian || isKepsek) && activeTab === 'akhlak' && (
+        {(isGuru || isMusyrif || isKesantrian || isKepsek || isKetuaYayasan) && activeTab === 'akhlak' && (
           <ModulAkhlak
             dicatatOleh={namaAktif}
             kelasDiajar={kelasDiajarAktif}
@@ -559,7 +559,7 @@ function RuteStaff({
           />
         )}
 
-        {(isGuru || isMusyrif || isKepsek) && activeTab === 'tahfidz' && (
+        {(isGuru || isMusyrif || isKepsek || isKesantrian || isKetuaYayasan) && activeTab === 'tahfidz' && (
           <ModulTahfidz
             dicatatOleh={namaAktif}
             kelasDiajar={kelasDiajarAktif}
@@ -567,7 +567,7 @@ function RuteStaff({
           />
         )}
 
-        {(isGuru || isMusyrif || isKesantrian || isKepsek) && activeTab === 'izin-pulang' && (
+        {(isGuru || isMusyrif || isKesantrian || isKepsek || isKetuaYayasan) && activeTab === 'izin-pulang' && (
           <ModulIzinPulang
             kelasDiajar={kelasDiajarAktif}
             bisaMemutuskan={isKesantrian || isKepsek}
@@ -575,18 +575,18 @@ function RuteStaff({
           />
         )}
 
-        {isKesantrian && activeTab === 'pengumuman' && (
+        {(isYayasan || isKesantrian || isKepsek) && activeTab === 'pengumuman' && (
           <ModulPengumuman
             dicatatOleh={namaAktif}
             jenisKelaminDiampu={jenisKelaminDiampuAktif}
           />
         )}
 
-        {isKesantrian && activeTab === 'hubungi-wali' && (
+        {(isKesantrian || isYayasan || isKepsek) && activeTab === 'hubungi-wali' && (
           <ModulHubungiWali jenisKelaminDiampu={jenisKelaminDiampuAktif} />
         )}
 
-        {(isGuru || isMusyrif || isKesantrian) &&
+        {(isGuru || isMusyrif || isKesantrian || isKepsek || isKetuaYayasan) &&
           activeTab === 'reward-pelanggaran' && (
             <ModulRewardPelanggaran
               dicatatOleh={namaAktif}
@@ -597,7 +597,7 @@ function RuteStaff({
             />
           )}
 
-        {isKepsek && activeTab === 'kepsek-progres' && <ModulKepsek />}
+        {(isKepsek || isKetuaYayasan) && activeTab === 'kepsek-progres' && <ModulKepsek />}
 
         {activeTab === 'google-chat' && (
           <ModulGoogleChat
