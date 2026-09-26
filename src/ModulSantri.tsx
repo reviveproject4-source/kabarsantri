@@ -288,7 +288,11 @@ function hitungRekap(nilaiList: string[]) {
   );
 }
 
-export function ModulSantri() {
+interface ModulSantriProps {
+  isReadOnly?: boolean;
+}
+
+export function ModulSantri({ isReadOnly = false }: ModulSantriProps = {}) {
   const { data: santriList = [] } = useSantriList();
   const { mutateAsync: tambahSantri } = useTambahSantri();
   const { mutateAsync: ubahSantri } = useUbahSantri();
@@ -518,12 +522,14 @@ export function ModulSantri() {
           </div>
         </div>
 
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-3 rounded-2xl shadow-lg shadow-emerald-600/20 transition-transform active:scale-95 flex items-center gap-2 shrink-0 self-start md:self-auto"
-        >
-          <span className="text-lg">➕</span> Tambah Santri Baru
-        </button>
+        {!isReadOnly && (
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-3 rounded-2xl shadow-lg shadow-emerald-600/20 transition-transform active:scale-95 flex items-center gap-2 shrink-0 self-start md:self-auto"
+          >
+            <span className="text-lg">➕</span> Tambah Santri Baru
+          </button>
+        )}
       </div>
 
       {/* Search & Filter Bar */}

@@ -153,40 +153,83 @@ export const Sidebar = ({
           </button>
         )}
 
-        {isYayasan && (
+        {/* Data Master & Akademik */}
+        {(isYayasan || isKepsek || isGuru || isMusyrif) && (
           <>
             <div className="px-3 pt-3 py-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-              Data Master
+              Data Master & Akademik
             </div>
             <button
               onClick={() => setActiveTab('santri')}
               className={menuClass('santri')}
             >
               <span className="flex items-center gap-2.5">
-                <span>👨‍🎓</span> Master Santri
+                <span>👨‍🎓</span>{' '}
+                {isGuru
+                  ? 'Data Santri & Kelas'
+                  : isMusyrif
+                  ? 'Data Santri & Asrama'
+                  : 'Master Santri'}
               </span>
             </button>
 
-            <button
-              onClick={() => setActiveTab('pegawai')}
-              className={menuClass('pegawai')}
-            >
-              <span className="flex items-center gap-2.5">
-                <span>👨‍💼</span> Data Pegawai
-              </span>
-            </button>
+            {(isYayasan || isKepsek) && (
+              <button
+                onClick={() => setActiveTab('pegawai')}
+                className={menuClass('pegawai')}
+              >
+                <span className="flex items-center gap-2.5">
+                  <span>👨‍💼</span> Data Pegawai & Staf
+                </span>
+              </button>
+            )}
 
-            <button
-              onClick={() => setActiveTab('wali-master')}
-              className={menuClass('wali-master')}
-            >
-              <span className="flex items-center gap-2.5">
-                <span>👨‍👩‍👧</span> Master Wali Santri
-              </span>
-            </button>
+            {isYayasan && (
+              <button
+                onClick={() => setActiveTab('wali-master')}
+                className={menuClass('wali-master')}
+              >
+                <span className="flex items-center gap-2.5">
+                  <span>👨‍👩‍👧</span> Master Wali Santri
+                </span>
+              </button>
+            )}
+          </>
+        )}
 
+        {/* Executive Monitoring & Laporan */}
+        {(isYayasan || isKepsek) && (
+          <>
             <div className="px-3 pt-3 py-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-              Keuangan & Laporan
+              Monitoring & Laporan
+            </div>
+            {isKepsek && (
+              <button
+                onClick={() => setActiveTab('kepsek-progres')}
+                className={menuClass('kepsek-progres')}
+              >
+                <span className="flex items-center gap-2.5">
+                  <span>📈</span> Progres Akademik Santri
+                </span>
+              </button>
+            )}
+
+            <button
+              onClick={() => setActiveTab('laporan')}
+              className={menuClass('laporan')}
+            >
+              <span className="flex items-center gap-2.5">
+                <span>📑</span> Laporan Executive
+              </span>
+            </button>
+          </>
+        )}
+
+        {/* Financial Modules */}
+        {isYayasan && (
+          <>
+            <div className="px-3 pt-3 py-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+              Keuangan & Langganan
             </div>
             <button
               onClick={() => setActiveTab('validasi-pembayaran')}
@@ -216,15 +259,6 @@ export const Sidebar = ({
             </button>
 
             <button
-              onClick={() => setActiveTab('laporan')}
-              className={menuClass('laporan')}
-            >
-              <span className="flex items-center gap-2.5">
-                <span>📑</span> Laporan Executive
-              </span>
-            </button>
-
-            <button
               onClick={() => setActiveTab('paket')}
               className={menuClass('paket')}
             >
@@ -235,7 +269,8 @@ export const Sidebar = ({
           </>
         )}
 
-        {(isGuru || isMusyrif) && (
+        {/* Karakter, Presensi & Hafalan */}
+        {(isGuru || isMusyrif || isKepsek || isKesantrian) && (
           <>
             <div className="px-3 pt-3 py-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
               Karakter & Presensi
@@ -248,42 +283,46 @@ export const Sidebar = ({
                 <span>✅</span> Presensi Santri
               </span>
             </button>
+
+            <button
+              onClick={() => setActiveTab('tahfidz')}
+              className={menuClass('tahfidz')}
+            >
+              <span className="flex items-center gap-2.5">
+                <span>📖</span> Catatan Hafalan Al-Qur'an
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('akhlak')}
+              className={menuClass('akhlak')}
+            >
+              <span className="flex items-center gap-2.5">
+                <span>🌱</span> Nilai Karakter & Akhlak
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('izin-pulang')}
+              className={menuClass('izin-pulang')}
+            >
+              <span className="flex items-center gap-2.5">
+                <span>🏠</span> Izin Pulang Santri
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('reward-pelanggaran')}
+              className={menuClass('reward-pelanggaran')}
+            >
+              <span className="flex items-center gap-2.5">
+                <span>🏅</span> Reward & Pelanggaran
+              </span>
+            </button>
           </>
         )}
 
-        {(isGuru || isMusyrif || isKesantrian) && (
-          <button
-            onClick={() => setActiveTab('akhlak')}
-            className={menuClass('akhlak')}
-          >
-            <span className="flex items-center gap-2.5">
-              <span>🌱</span> Nilai Akhlak
-            </span>
-          </button>
-        )}
-
-        {isGuru && (
-          <button
-            onClick={() => setActiveTab('tahfidz')}
-            className={menuClass('tahfidz')}
-          >
-            <span className="flex items-center gap-2.5">
-              <span>📖</span> Catatan Hafalan
-            </span>
-          </button>
-        )}
-
-        {(isGuru || isKesantrian) && (
-          <button
-            onClick={() => setActiveTab('izin-pulang')}
-            className={menuClass('izin-pulang')}
-          >
-            <span className="flex items-center gap-2.5">
-              <span>🏠</span> Izin Pulang
-            </span>
-          </button>
-        )}
-
+        {/* Komunikasi Kesantrian */}
         {isKesantrian && (
           <>
             <div className="px-3 pt-3 py-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
@@ -309,17 +348,7 @@ export const Sidebar = ({
           </>
         )}
 
-        {(isGuru || isMusyrif || isKesantrian) && (
-          <button
-            onClick={() => setActiveTab('reward-pelanggaran')}
-            className={menuClass('reward-pelanggaran')}
-          >
-            <span className="flex items-center gap-2.5">
-              <span>🏅</span> Reward & Pelanggaran
-            </span>
-          </button>
-        )}
-
+        {/* Modul Staf Keuangan */}
         {isKeuangan && (
           <>
             <div className="px-3 pt-3 py-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Santri } from './types';
 import { Sidebar } from './sidebar';
 import { ModulSantri } from './ModulSantri';
 import { SplashWelcomeScreen } from './SplashWelcomeScreen';
@@ -190,6 +191,43 @@ export default function App() {
   );
 }
 
+const DEFAULT_SANTRI_WALI: Santri = {
+  id: 1,
+  nama: 'Ahmad Santri',
+  nis: '12345',
+  nisn: '3174001234',
+  jenisKelamin: 'Laki-Laki',
+  tempatLahir: 'Jakarta',
+  tanggalLahir: '2010-05-15',
+  status: 'Aktif',
+  kelas: '7A',
+  asrama: 'Kamar Abu Bakar 01',
+  namaAyah: 'H. Abdullah',
+  pekerjaanAyah: 'Wiraswasta',
+  noHpAyah: '081234567890',
+  namaIbu: 'Hj. Aminah',
+  pekerjaanIbu: 'Ibu Rumah Tangga',
+  noHpIbu: '081234567891',
+  alamatWali: 'Jl. Margonda Raya No. 45, Depok',
+  juzTerakhir: 'Juz 30',
+  suratTerakhir: 'An-Naba',
+  ayatTerakhir: '1-40',
+  nilaiTahfidz: 'A (Lancar)',
+  riwayatTahfidz: [
+    {
+      id: 1,
+      tanggal: '2026-09-20',
+      juz: 'Juz 30',
+      surat: 'An-Naba',
+      ayat: '1-40',
+      hadits: "Hadits Arba'in No. 1",
+      kitab: 'Aqidatul Awam',
+      nilai: 'Mumtaz (A)',
+      dicatatOleh: 'Ust. Abdullah',
+    },
+  ],
+};
+
 function RuteWali({
   santriId,
   onKeluar,
@@ -197,13 +235,20 @@ function RuteWali({
   santriId: number | null;
   onKeluar: () => void;
 }) {
-  const { data: santri, isLoading } = useSantriById(santriId);
+  const { data: santriList = [], isLoading: loadingList } = useSantriList();
+  const { data: santriById, isLoading: loadingById } = useSantriById(santriId);
 
-  if (isLoading || !santri) {
+  const santriAktif =
+    santriById ||
+    (santriId ? santriList.find((s) => s.id === santriId) : null) ||
+    santriList[0] ||
+    DEFAULT_SANTRI_WALI;
+
+  if (loadingById && loadingList && !santriAktif) {
     return <Memuat />;
   }
 
-  return <ModulWali santri={santri} onKeluar={onKeluar} />;
+  return <ModulWali santri={santriAktif} onKeluar={onKeluar} />;
 }
 
 function RuteStaff({
@@ -636,67 +681,147 @@ function RuteStaff({
                 Selamat datang kembali, {namaAktif}!
               </h1>
               <p className="text-slate-300 text-xs sm:text-sm mt-1">
-                Silakan pilih modul di bawah atau navigasi sidebar untuk mulai mencatat aktivitas & progres santri.
+                Silakan pilih modul di bawah atau navigasi sidebar untuk mulai mengelola aktivitas, hafalan, &amp; progres santri.
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              <button
-                onClick={() => setActiveTab('presensi')}
-                className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all text-left group"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 text-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                  ✅
-                </div>
-                <h3 className="font-bold text-slate-800 text-base group-hover:text-emerald-700 transition-colors">Presensi Santri</h3>
-                <p className="text-xs text-slate-400 mt-1">Catat kehadiran santri harian</p>
-              </button>
-
-              {isGuru && (
-                <>
-                  <button
-                    onClick={() => setActiveTab('akhlak')}
-                    className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all text-left group"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-teal-100 text-teal-700 text-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                      🌱
-                    </div>
-                    <h3 className="font-bold text-slate-800 text-base group-hover:text-teal-700 transition-colors">Nilai Akhlak</h3>
-                    <p className="text-xs text-slate-400 mt-1">Evaluasi karakter & kedisiplinan</p>
-                  </button>
-
-                  <button
-                    onClick={() => setActiveTab('tahfidz')}
-                    className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all text-left group"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-700 text-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                      📖
-                    </div>
-                    <h3 className="font-bold text-slate-800 text-base group-hover:text-indigo-700 transition-colors">Hafalan Al-Qur'an</h3>
-                    <p className="text-xs text-slate-400 mt-1">Setoran juz, surat, & ayat</p>
-                  </button>
-                </>
-              )}
-
-              {isKesantrian && (
+              {/* Presensi Santri */}
+              {(isGuru || isMusyrif || isKepsek) && (
                 <button
-                  onClick={() => setActiveTab('pengumuman')}
+                  onClick={() => setActiveTab('presensi')}
                   className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all text-left group"
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-cyan-100 text-cyan-700 text-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    📢
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 text-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    ✅
                   </div>
-                  <h3 className="font-bold text-slate-800 text-base group-hover:text-cyan-700 transition-colors">Pengumuman & WA</h3>
-                  <p className="text-xs text-slate-400 mt-1">Kirim berita ke wali santri</p>
+                  <h3 className="font-bold text-slate-800 text-base group-hover:text-emerald-700 transition-colors">Presensi Santri</h3>
+                  <p className="text-xs text-slate-400 mt-1">Catat &amp; rekap kehadiran santri harian</p>
+                </button>
+              )}
+
+              {/* Setoran Hafalan Al-Qur'an */}
+              {(isGuru || isMusyrif || isKepsek) && (
+                <button
+                  onClick={() => setActiveTab('tahfidz')}
+                  className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all text-left group"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-700 text-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    📖
+                  </div>
+                  <h3 className="font-bold text-slate-800 text-base group-hover:text-indigo-700 transition-colors">Hafalan Al-Qur'an</h3>
+                  <p className="text-xs text-slate-400 mt-1">Setoran juz, surat, &amp; ayat santri</p>
+                </button>
+              )}
+
+              {/* Nilai Karakter & Akhlak */}
+              {(isGuru || isMusyrif || isKepsek || isKesantrian) && (
+                <button
+                  onClick={() => setActiveTab('akhlak')}
+                  className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-teal-300 transition-all text-left group"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-teal-100 text-teal-700 text-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    🌱
+                  </div>
+                  <h3 className="font-bold text-slate-800 text-base group-hover:text-teal-700 transition-colors">Nilai Karakter &amp; Akhlak</h3>
+                  <p className="text-xs text-slate-400 mt-1">Evaluasi adab, perilaku, &amp; kedisiplinan</p>
+                </button>
+              )}
+
+              {/* Data Santri & Kelas / Asrama */}
+              {(isGuru || isMusyrif || isKepsek) && (
+                <button
+                  onClick={() => setActiveTab('santri')}
+                  className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-cyan-300 transition-all text-left group"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-cyan-100 text-cyan-700 text-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    👨‍🎓
+                  </div>
+                  <h3 className="font-bold text-slate-800 text-base group-hover:text-cyan-700 transition-colors">
+                    {isGuru ? 'Data Santri & Kelas' : isMusyrif ? 'Data Santri & Asrama' : 'Master Santri'}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">Lihat daftar santri, kelas, &amp; wali</p>
+                </button>
+              )}
+
+              {/* Izin Pulang Santri */}
+              {(isGuru || isMusyrif || isKepsek || isKesantrian) && (
+                <button
+                  onClick={() => setActiveTab('izin-pulang')}
+                  className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-amber-300 transition-all text-left group"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 text-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    🏠
+                  </div>
+                  <h3 className="font-bold text-slate-800 text-base group-hover:text-amber-700 transition-colors">Izin Pulang Santri</h3>
+                  <p className="text-xs text-slate-400 mt-1">Persetujuan &amp; rekap perizinan santri</p>
+                </button>
+              )}
+
+              {/* Reward & Pelanggaran */}
+              {(isGuru || isMusyrif || isKepsek || isKesantrian) && (
+                <button
+                  onClick={() => setActiveTab('reward-pelanggaran')}
+                  className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-rose-300 transition-all text-left group"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-700 text-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    🏅
+                  </div>
+                  <h3 className="font-bold text-slate-800 text-base group-hover:text-rose-700 transition-colors">Reward &amp; Pelanggaran</h3>
+                  <p className="text-xs text-slate-400 mt-1">Catat prestasi &amp; pelanggaran santri</p>
+                </button>
+              )}
+
+              {/* Kepsek: Progres Santri */}
+              {isKepsek && (
+                <button
+                  onClick={() => setActiveTab('kepsek-progres')}
+                  className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-blue-300 transition-all text-left group"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 text-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    📈
+                  </div>
+                  <h3 className="font-bold text-slate-800 text-base group-hover:text-blue-700 transition-colors">Progres Santri</h3>
+                  <p className="text-xs text-slate-400 mt-1">Monitoring perkembangan hafalan &amp; adab</p>
+                </button>
+              )}
+
+              {/* Kepsek: Data Pegawai */}
+              {isKepsek && (
+                <button
+                  onClick={() => setActiveTab('pegawai')}
+                  className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-teal-300 transition-all text-left group"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-teal-100 text-teal-700 text-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    👨‍💼
+                  </div>
+                  <h3 className="font-bold text-slate-800 text-base group-hover:text-teal-700 transition-colors">Data Pegawai &amp; Staf</h3>
+                  <p className="text-xs text-slate-400 mt-1">Daftar tenaga pendidik &amp; kepegawaian</p>
+                </button>
+              )}
+
+              {/* Kepsek: Laporan Executive */}
+              {isKepsek && (
+                <button
+                  onClick={() => setActiveTab('laporan')}
+                  className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-purple-300 transition-all text-left group"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 text-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    📑
+                  </div>
+                  <h3 className="font-bold text-slate-800 text-base group-hover:text-purple-700 transition-colors">Laporan Executive</h3>
+                  <p className="text-xs text-slate-400 mt-1">Rekap Laporan Bulanan Lembaga</p>
                 </button>
               )}
             </div>
           </div>
         )}
 
-        {isYayasan && activeTab === 'santri' && <ModulSantri />}
+        {(isYayasan || isKepsek || isGuru || isMusyrif) && activeTab === 'santri' && (
+          <ModulSantri isReadOnly={!isYayasan} />
+        )}
 
-        {isYayasan && activeTab === 'pegawai' && <ModulPegawai />}
+        {(isYayasan || isKepsek) && activeTab === 'pegawai' && <ModulPegawai />}
 
         {isYayasan && activeTab === 'wali-master' && <ModulWaliSantri />}
 
@@ -728,7 +853,7 @@ function RuteStaff({
 
         {isYayasan && activeTab === 'paket' && <ModulPaket />}
 
-        {isYayasan && activeTab === 'laporan' && <ModulLaporan />}
+        {(isYayasan || isKepsek) && activeTab === 'laporan' && <ModulLaporan />}
 
         {!isYayasan && activeTab === 'presensi' && (
           <ModulPresensi
@@ -741,17 +866,17 @@ function RuteStaff({
           />
         )}
 
-        {(isGuru || isMusyrif || isKesantrian) && activeTab === 'akhlak' && (
+        {(isGuru || isMusyrif || isKesantrian || isKepsek) && activeTab === 'akhlak' && (
           <ModulAkhlak
             dicatatOleh={namaAktif}
             kelasDiajar={kelasDiajarAktif}
-            bisaMemutuskan={isKesantrian}
+            bisaMemutuskan={isKesantrian || isKepsek}
             perluAcc={isMusyrif}
             jenisKelaminDiampu={jenisKelaminDiampuAktif}
           />
         )}
 
-        {isGuru && activeTab === 'tahfidz' && (
+        {(isGuru || isMusyrif || isKepsek) && activeTab === 'tahfidz' && (
           <ModulTahfidz
             dicatatOleh={namaAktif}
             kelasDiajar={kelasDiajarAktif}
@@ -759,10 +884,10 @@ function RuteStaff({
           />
         )}
 
-        {(isGuru || isKesantrian) && activeTab === 'izin-pulang' && (
+        {(isGuru || isMusyrif || isKesantrian || isKepsek) && activeTab === 'izin-pulang' && (
           <ModulIzinPulang
             kelasDiajar={kelasDiajarAktif}
-            bisaMemutuskan={isKesantrian}
+            bisaMemutuskan={isKesantrian || isKepsek}
             jenisKelaminDiampu={jenisKelaminDiampuAktif}
           />
         )}
