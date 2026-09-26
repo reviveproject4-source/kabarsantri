@@ -22,7 +22,7 @@ import { ModulWali } from './ModulWali';
 import { ModulPengumuman } from './ModulPengumuman';
 import { ModulHubungiWali } from './ModulHubungiWali';
 import { PresensiSaya } from './PresensiSaya';
-import { isJabatanMusyrif, isJabatanKesantrian } from './jabatanUtils';
+import { isJabatanMusyrif, isJabatanKesantrian, isJabatanKeuangan } from './jabatanUtils';
 import { AturPasswordBaru } from './AturPasswordBaru';
 import { tanggalLokal } from './tanggal';
 import { ModulKepsek } from './ModulKepsek';
@@ -285,7 +285,7 @@ function RuteStaff({
   const jabatanAktif = (pegawaiAktif?.jabatan ?? '').trim().toLowerCase();
   const isGuru = jabatanAktif === 'guru';
   const isMusyrif = isJabatanMusyrif(jabatanAktif);
-  const isKeuangan = jabatanAktif === 'keuangan';
+  const isKeuangan = isJabatanKeuangan(jabatanAktif);
   const isKepsek = jabatanAktif === 'kepala sekolah';
   const isKesantrian = isJabatanKesantrian(jabatanAktif);
   const isKetuaYayasan = jabatanAktif.includes('ketua') || (profil?.peran as string) === 'ketua_yayasan';
@@ -461,6 +461,7 @@ function RuteStaff({
               <DashboardKeuangan
                 namaAktif={namaAktif}
                 pegawaiAktif={pegawaiAktif}
+                presensiPegawaiList={presensiPegawaiList}
                 setActiveTab={setActiveTab}
                 totalPemasukan={totalPemasukan}
                 totalDonasi={totalDonasi}

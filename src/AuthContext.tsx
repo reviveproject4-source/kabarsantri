@@ -310,31 +310,49 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     const email = emailDariDb || `wali-${cleanNis}@kabarsantri.internal`;
-    const passwordTarget = pin || '123456';
+    const paddedPin = pin.length < 6 ? pin.padEnd(6, '0') : pin;
+    const candidatePasswords = Array.from(new Set([paddedPin, '123456', 'password123', pin])).filter((p) => p && p.length >= 6);
 
-    let { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password: passwordTarget,
-    });
+    let authData: any = null;
+    let authError: any = null;
 
-    if (authError || !authData.session) {
+    for (const pwd of candidatePasswords) {
+      const res = await supabase.auth.signInWithPassword({
+        email,
+        password: pwd,
+      });
+      if (res.data?.session) {
+        authData = res.data;
+        authError = null;
+        break;
+      } else {
+        authError = res.error;
+      }
+    }
+
+    if (!authData?.session) {
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
-        password: passwordTarget,
+        password: paddedPin,
       });
 
       if (signUpData?.session) {
         authData = signUpData as any;
         authError = null;
       } else if (signUpData?.user) {
-        const { data: retrySignIn } = await supabase.auth.signInWithPassword({
-          email,
-          password: passwordTarget,
-        });
-        if (retrySignIn?.session) {
-          authData = retrySignIn as any;
-          authError = null;
+        for (const pwd of candidatePasswords) {
+          const retryRes = await supabase.auth.signInWithPassword({
+            email,
+            password: pwd,
+          });
+          if (retryRes.data?.session) {
+            authData = retryRes.data as any;
+            authError = null;
+            break;
+          }
         }
+      } else if (signUpError) {
+        authError = signUpError;
       }
     }
 

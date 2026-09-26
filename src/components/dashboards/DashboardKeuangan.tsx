@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Pegawai, TipeBiaya } from '../../types';
+import { Pegawai, PresensiPegawai, TipeBiaya } from '../../types';
+import { PresensiSaya } from '../../PresensiSaya';
 import { GrafikGaris, WARNA_STATUS } from '../../Grafik';
 import { tanggalLokal } from '../../tanggal';
 import { supabase, supabaseAktif } from '../../supabaseClient';
@@ -17,6 +18,7 @@ import { openDirectWA } from '../../teleponUtils';
 interface Props {
   namaAktif: string;
   pegawaiAktif?: Pegawai;
+  presensiPegawaiList?: PresensiPegawai[];
   setActiveTab: (tab: string) => void;
   totalPemasukan: number;
   totalDonasi: number;
@@ -29,6 +31,7 @@ interface Props {
 export function DashboardKeuangan({
   namaAktif,
   pegawaiAktif,
+  presensiPegawaiList,
   setActiveTab,
   totalPemasukan,
   totalDonasi,
@@ -327,6 +330,9 @@ export function DashboardKeuangan({
           </div>
         </div>
       </div>
+
+      {/* Absen Pribadi Staf Keuangan */}
+      <PresensiSaya pegawaiId={pegawaiAktif?.id ?? null} presensiPegawai={presensiPegawaiList ?? []} />
 
       {/* QUICK OPERATIONAL WORKFLOW ACTION BUTTONS */}
       <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm flex flex-wrap items-center justify-between gap-3">

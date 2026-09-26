@@ -24,6 +24,13 @@ export function isJabatanKesantrian(jabatan: string): boolean {
   return JABATAN_KESANTRIAN.includes(normalisasiJabatan(jabatan));
 }
 
+const JABATAN_KEUANGAN = ['keuangan', 'bendahara', 'bendahara/keuangan', 'staf keuangan', 'kasir'];
+
+export function isJabatanKeuangan(jabatan: string): boolean {
+  const j = normalisasiJabatan(jabatan);
+  return JABATAN_KEUANGAN.some((k) => j.includes(k));
+}
+
 // Nebak "Santri Diampu" dari nama jabatan, supaya Yayasan tidak perlu isi 2
 // field terpisah (jabatan + gender) untuk peran yang sudah jelas gendernya
 // dari namanya sendiri. Hasil tebakan ini masih bisa diubah manual di form.
