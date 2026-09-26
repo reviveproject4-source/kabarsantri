@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
+import { openDirectWA } from './teleponUtils';
 
 export interface DataProspekLembaga {
   id: string;
@@ -266,11 +267,6 @@ export function ModulSuperAdmin({ onKembali }: { onKembali?: () => void }) {
   };
 
   const hubungiWhatsApp = (prospek: DataProspekLembaga) => {
-    const noHpFormatted = prospek.noHp.replace(/[^0-9]/g, '');
-    const cleanHp = noHpFormatted.startsWith('0')
-      ? '62' + noHpFormatted.slice(1)
-      : noHpFormatted;
-
     const pesan = [
       `Assalamu'alaikum Warahmatullahi Wabarakatuh,`,
       ``,
@@ -286,10 +282,7 @@ export function ModulSuperAdmin({ onKembali }: { onKembali?: () => void }) {
       `*Tim Operations KabarSantri*`,
     ].join('\n');
 
-    window.open(
-      `https://wa.me/${cleanHp}?text=${encodeURIComponent(pesan)}`,
-      '_blank'
-    );
+    openDirectWA(prospek.noHp, pesan);
   };
 
   const filtered = daftarProspek.filter((p) => {

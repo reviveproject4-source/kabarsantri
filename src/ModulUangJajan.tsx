@@ -79,7 +79,7 @@ export function ModulUangJajan({ bisaInput = true }: Props) {
     <div>
       <h1 className="text-3xl font-bold mb-6">Uang Jajan Santri</h1>
 
-      <div className="bg-white rounded-2xl border overflow-hidden mb-6">
+      <div className="bg-white rounded-2xl border overflow-x-auto mb-6">
         <h3 className="font-semibold p-4 border-b bg-slate-50">
           Saldo per Santri
         </h3>
@@ -162,7 +162,7 @@ export function ModulUangJajan({ bisaInput = true }: Props) {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border overflow-hidden">
+      <div className="bg-white rounded-2xl border overflow-x-auto">
         <table className="w-full">
           <thead className="bg-slate-100">
             <tr>

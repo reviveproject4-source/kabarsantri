@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from './AuthContext';
 import { useSetPaket } from './hooks/useYayasan';
+import { openDirectWA } from './teleponUtils';
 
 const NOMOR_WA_MINARA = '6281215566630';
 
@@ -46,10 +47,7 @@ export function ModulPaket() {
       'Wassalam,',
     ].join('\n');
 
-    window.open(
-      `https://wa.me/${NOMOR_WA_MINARA}?text=${encodeURIComponent(pesan)}`,
-      '_blank'
-    );
+    openDirectWA(NOMOR_WA_MINARA, pesan);
   };
 
   return (
@@ -178,7 +176,7 @@ export function ModulPaket() {
       )}
 
       {/* Tabel Perbandingan Fitur */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm">
+      <div className="bg-white rounded-3xl border border-slate-200/80 overflow-x-auto shadow-sm">
         <table className="w-full text-left border-collapse text-sm">
           <thead className="bg-slate-100/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200/60">
             <tr>

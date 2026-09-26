@@ -418,7 +418,7 @@ export function ModulPegawai() {
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl border overflow-hidden mb-6">
+      <div className="bg-white rounded-2xl border overflow-x-auto mb-6">
         <table className="w-full">
           <thead className="bg-slate-100">
             <tr>
@@ -512,7 +512,7 @@ export function ModulPegawai() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border overflow-hidden">
+      <div className="bg-white rounded-2xl border overflow-x-auto">
         <h3 className="font-semibold p-4 border-b bg-slate-50">
           Rekap per Jabatan
         </h3>

@@ -13,34 +13,7 @@ export const DAFTAR_TENANT_DEFAULT: TenantPaud[] = [
   { id: 'tenant-paud-01', namaSekolah: 'PAUD CeritaAnanda (Sekolah Pertama)', kodeYayasan: 'YYS-PAUD-01', alamat: 'Jl. Utama Sekolah' }
 ];
 
-const DEFAULT_INITIAL_MURID: RekapMuridPaud[] = [
-  {
-    id: 'm-01',
-    tenantId: 'tenant-paud-01',
-    classId: 'kelas-a',
-    nama: 'Muhammad Bintang',
-    panggilan: 'Bintang',
-    kategoriUsia: '3_tahun',
-    tanggalLahir: '2023-03-15',
-    fotoEmoji: '👦',
-    skorLogika: { pencocokanBentuk: 100, mengurutkanUkuran: 80, menghitungBenda: 90, polaWarna: 85 },
-    skorMotorikHalus: { tracingGaris: 90, puzzleBentuk: 85, bubblePopSensory: 95 },
-    evaluasiMotorikKasar: []
-  },
-  {
-    id: 'm-02',
-    tenantId: 'tenant-paud-01',
-    classId: 'kelas-b',
-    nama: 'Aisyah Putri',
-    panggilan: 'Aisyah',
-    kategoriUsia: '4_tahun',
-    tanggalLahir: '2022-06-20',
-    fotoEmoji: '👧',
-    skorLogika: { pencocokanBentuk: 95, mengurutkanUkuran: 90, menghitungBenda: 100, polaWarna: 90 },
-    skorMotorikHalus: { tracingGaris: 95, puzzleBentuk: 90, bubblePopSensory: 100 },
-    evaluasiMotorikKasar: []
-  }
-];
+const DEFAULT_INITIAL_MURID: RekapMuridPaud[] = [];
 
 interface ModulPaudUtamaProps {
   onKembaliKeUtama?: () => void;
@@ -54,7 +27,12 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
   const [newSekolahKode, setNewSekolahKode] = useState('');
 
   // USER & ROLE SYSTEM STATE
-  const [currentUser, setCurrentUser] = useState<UserAccount>(MOCK_USERS_LIST[0]);
+  const [currentUser, setCurrentUser] = useState<UserAccount>(() => MOCK_USERS_LIST[0] || {
+    id: 'u-1',
+    nama: 'Pengguna',
+    role: 'guru',
+    tenantId: 'tenant-paud-01'
+  });
 
   const currentTenant = daftarTenant.find((t) => t.id === activeTenantId) || daftarTenant[0];
 
@@ -64,7 +42,7 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
       const saved = localStorage.getItem(`paud_daftar_murid_${activeTenantId}`);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {
       // Fallback
@@ -74,7 +52,7 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
 
   const [activeView, setActiveView] = useState<'dashboard' | 'kasar' | 'sensorik' | 'anak' | 'roles' | 'proyektor' | 'pendaftaran'>('dashboard');
   const [dashboardTab, setDashboardTab] = useState<'rapor' | 'kurikulum'>('rapor');
-  const [selectedChildForPlay, setSelectedChildForPlay] = useState<RekapMuridPaud>(daftarMurid[0] || DEFAULT_INITIAL_MURID[0]);
+  const [selectedChildForPlay, setSelectedChildForPlay] = useState<RekapMuridPaud | undefined>(daftarMurid[0]);
 
   // Simpan otomatis per tenantId
   React.useEffect(() => {
@@ -179,6 +157,7 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
 
   // Handler Update Skor Game saat Anak Bermain
   const handleScoreUpdateChild = (domain: 'logika' | 'motorikHalus', subKey: string, score: number) => {
+    if (!selectedChildForPlay) return;
     setDaftarMurid((prev) =>
       prev.map((m) => {
         if (m.id === selectedChildForPlay.id) {
@@ -207,10 +186,13 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
     );
   };
 
-  const startPlayForChild = (child: MuridPaud) => {
+  const startPlayForChild = (child?: MuridPaud) => {
+    if (!child) return;
     const fullChild = daftarMurid.find((m) => m.id === child.id) || daftarMurid[0];
-    setSelectedChildForPlay(fullChild);
-    setActiveView('anak');
+    if (fullChild) {
+      setSelectedChildForPlay(fullChild);
+      setActiveView('anak');
+    }
   };
 
   if (activeView === 'proyektor') {
@@ -225,7 +207,7 @@ export const ModulPaudUtama: React.FC<ModulPaudUtamaProps> = ({ onKembaliKeUtama
     );
   }
 
-  if (activeView === 'anak') {
+  if (activeView === 'anak' && selectedChildForPlay) {
     return (
       <ModeMainAnak
         muridAktif={selectedChildForPlay}

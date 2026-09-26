@@ -36,47 +36,7 @@ interface RoleSystemManagerProps {
   onDeleteTenant: (tenantId: string) => void;
 }
 
-export const MOCK_USERS_LIST: UserAccount[] = [
-  {
-    id: 'u-guru-1',
-    nama: 'Ustadzah Fatimah, S.Pd',
-    email: 'fatimah@paud.sch.id',
-    role: 'guru',
-    tenantId: 'tenant-paud-01',
-    schoolId: 'sch-01',
-    classId: 'kelas-a',
-    avatarEmoji: '👩‍🏫',
-    lastInputDate: '2026-07-30'
-  },
-  {
-    id: 'u-guru-2',
-    nama: 'Ustadzah Mariam, S.Pd',
-    email: 'mariam@paud.sch.id',
-    role: 'guru',
-    tenantId: 'tenant-paud-01',
-    schoolId: 'sch-01',
-    classId: 'kelas-b',
-    avatarEmoji: '👩‍🏫',
-    lastInputDate: '2026-07-20'
-  },
-  {
-    id: 'u-kepsek-1',
-    nama: 'Hj. Aminah, M.Pd (Kepala Sekolah)',
-    email: 'kepsek@paud.sch.id',
-    role: 'kepala_sekolah',
-    tenantId: 'tenant-paud-01',
-    schoolId: 'sch-01',
-    avatarEmoji: '🎓'
-  },
-  {
-    id: 'u-yayasan-1',
-    nama: 'Drs. H. Ahmad (Pengurus Yayasan)',
-    email: 'yayasan@cendekia.or.id',
-    role: 'yayasan',
-    tenantId: 'tenant-paud-01',
-    avatarEmoji: '🏛️'
-  }
-];
+export const MOCK_USERS_LIST: UserAccount[] = [];
 
 export const RoleSystemManager: React.FC<RoleSystemManagerProps> = ({
   currentUser,

@@ -1,4 +1,5 @@
 import React from 'react';
+import { openDirectWA } from './teleponUtils';
 
 interface ModulBantuanProps {
   peran: string; // 'yayasan' | 'kepsek' | 'guru' | 'musyrif' | 'keuangan' | 'kesantrian' | 'wali' | string;
@@ -18,7 +19,7 @@ export function ModulBantuan({ peran, namaAktif, onTutup }: ModulBantuanProps) {
 
   const hubungiWaSupport = () => {
     const pesan = `Assalamu'alaikum Warahmatullahi Wabarakatuh,\nSaya dari Yayasan/Lembaga *${namaAktif || '-'}* membutuhkan bantuan terkait penggunaan sistem KabarSantri.\nMohon bantuannya, terima kasih.`;
-    window.open(`https://wa.me/${NOMOR_WA_SUPPORT}?text=${encodeURIComponent(pesan)}`, '_blank');
+    openDirectWA(NOMOR_WA_SUPPORT, pesan);
   };
 
   return (

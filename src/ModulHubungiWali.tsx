@@ -2,14 +2,13 @@ import React, { useState } from 'react';
 import { Santri } from './types';
 import { useSantriList } from './hooks/useSantri';
 import { PemilihSantri } from './PemilihSantri';
-import { normalisasiNomorHp } from './teleponUtils';
+import { normalisasiNomorHp, openDirectWA } from './teleponUtils';
 
 interface Props {
   jenisKelaminDiampu: string;
 }
 
 function bukaWhatsApp(nomor: string, santri: Santri, pesan: string) {
-  const nomorRapi = normalisasiNomorHp(nomor);
   const teks = [
     "Assalamua'laikum Warahmatullahi Wabarakatuh,",
     '',
@@ -21,10 +20,7 @@ function bukaWhatsApp(nomor: string, santri: Santri, pesan: string) {
     'Kesantrian',
   ].join('\n');
 
-  window.open(
-    `https://wa.me/${nomorRapi}?text=${encodeURIComponent(teks)}`,
-    '_blank'
-  );
+  openDirectWA(nomor, teks);
 }
 
 export function ModulHubungiWali({ jenisKelaminDiampu }: Props) {

@@ -122,7 +122,7 @@ export function ModulUangPendaftaran({ bisaInput = true }: Props) {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border overflow-hidden">
+      <div className="bg-white rounded-2xl border overflow-x-auto">
         <table className="w-full">
           <thead className="bg-slate-100">
             <tr>

@@ -38,6 +38,7 @@ import { usePegawaiList } from './hooks/usePegawai';
 import { usePresensiPegawaiList } from './hooks/usePresensi';
 import { useRingkasanKeuangan } from './hooks/useRingkasanKeuangan';
 import { bulanEnamTerakhir, GrafikGaris, WARNA_STATUS } from './Grafik';
+import { WebsiteKabarSantri } from './website/WebsiteKabarSantri';
 import ModulPaudUtama from './ModulPaudUtama';
 import { ModulPendaftaranLembaga } from './components/paud/ModulPendaftaranLembaga';
 
@@ -101,8 +102,8 @@ export default function App() {
 
   if (!isAllowed) {
     return (
-      <SplashWelcomeScreen
-        onConfirm={() => setIsAllowed(true)}
+      <WebsiteKabarSantri
+        onBukaLogin={() => setIsAllowed(true)}
         onBukaPendaftaranLembaga={() => setShowPendaftaranLembagaPublik(true)}
         onBukaSuperAdmin={bukaPortalSuperAdminWithPin}
       />
