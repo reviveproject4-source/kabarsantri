@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase } from './supabaseClient';
+import { openDirectWA } from './teleponUtils';
+
+const NOMOR_WA_MINARA = '6281215566630';
 
 interface ModulProfilYayasanProps {
   onTutup?: () => void;
@@ -8,6 +11,8 @@ interface ModulProfilYayasanProps {
 
 export function ModulProfilYayasan({ onTutup }: ModulProfilYayasanProps) {
   const { yayasan, muatUlangYayasan } = useAuth();
+
+  const isPremium = yayasan?.paket === 'Premium';
 
   const [namaYayasan, setNamaYayasan] = useState(yayasan?.namaYayasan || '');
   const [logoUrl, setLogoUrl] = useState(yayasan?.logoUrl || '');
@@ -27,11 +32,19 @@ export function ModulProfilYayasan({ onTutup }: ModulProfilYayasanProps) {
 
   // Handle local image file upload to Supabase Storage or DataURL fallback
   const handleUploadLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isPremium) {
+      alert(
+        '🔒 Fitur Kustomisasi Logo Lembaga hanya tersedia untuk pengguna Paket Premium.\n\nSilakan upgrade paket langganan Anda untuk mengunggah logo internal pesantren.'
+      );
+      e.target.value = '';
+      return;
+    }
+
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Pilih file gambar (PNG / JPG / WEBP).');
+      alert('Pilih file gambar dari galeri (PNG / JPG / WEBP).');
       return;
     }
 
@@ -93,6 +106,7 @@ export function ModulProfilYayasan({ onTutup }: ModulProfilYayasanProps) {
             jabatan_penanggung_jawab: jabatanPenanggungJawab,
             no_hp: noHp,
             email: email,
+            ...(isPremium ? { logo_url: logoUrl } : {}),
           })
           .eq('id', yayasan.id);
 
@@ -105,7 +119,9 @@ export function ModulProfilYayasan({ onTutup }: ModulProfilYayasanProps) {
       if (yayasan) {
         yayasan.namaYayasan = namaYayasan;
         yayasan.alamat = alamat;
-        yayasan.logoUrl = logoUrl;
+        if (isPremium) {
+          yayasan.logoUrl = logoUrl;
+        }
         yayasan.namaPenanggungJawab = namaPenanggungJawab;
         yayasan.jabatanPenanggungJawab = jabatanPenanggungJawab;
         yayasan.noHp = noHp;
@@ -136,7 +152,7 @@ export function ModulProfilYayasan({ onTutup }: ModulProfilYayasanProps) {
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Atur nama resmi lembaga, logo pesantren/sekolah, alamat lengkap, dan kontak penanggung jawab.
+            Atur nama resmi lembaga, logo internal pesantren/sekolah, alamat lengkap, dan kontak penanggung jawab.
           </p>
         </div>
 
@@ -161,33 +177,92 @@ export function ModulProfilYayasan({ onTutup }: ModulProfilYayasanProps) {
         <form onSubmit={simpanProfil} className="space-y-6 text-xs">
           {/* Logo Section */}
           <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200/80">
-            <label className="font-black text-slate-800 text-sm block mb-1">
-              🖼️ Logo Resmi Pesantren / Sekolah
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="font-black text-slate-800 text-sm block">
+                🖼️ Logo Internal Lembaga / Pesantren
+              </label>
+              <span
+                className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                  isPremium
+                    ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                    : 'bg-slate-200 text-slate-600'
+                }`}
+              >
+                {isPremium ? '👑 Paket Premium Active' : '🔒 Khusus Paket Premium'}
+              </span>
+            </div>
             <p className="text-slate-500 text-xs mb-4">
-              Logo ini akan muncul di Sidebar Navigasi, Header Mobile, Banner Dashboard, dan Kop Surat Cetak Laporan.
+              Logo Aplikasi KabarSantri tetap menjadi brand utama. Logo internal tenant ini akan tampil sebagai pendamping di Sidebar, Header Mobile, & Kop Surat Cetak.
             </p>
 
+            {!isPremium && (
+              <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-900">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xl">👑</span>
+                  <div>
+                    <p className="font-bold">Ganti Logo Lembaga Khusus Paket Premium</p>
+                    <p className="text-amber-700 text-[11px]">
+                      Status Paket Saat Ini: <span className="font-bold uppercase text-slate-800">{yayasan?.paket || 'Gratis'}</span>. Upgrade ke Paket Premium untuk memasang Logo Internal Lembaga Anda.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const pesan = `Assalamua'laikum Admin KabarSantri, saya (${yayasan?.namaYayasan || 'Lembaga'}) ingin upgrade ke Paket Premium untuk kustomisasi logo internal lembaga.`;
+                    openDirectWA(NOMOR_WA_MINARA, pesan);
+                  }}
+                  className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-4 py-2 rounded-xl shrink-0 transition active:scale-95 shadow-xs flex items-center gap-1.5"
+                >
+                  <span>💬</span> Upgrade via WhatsApp
+                </button>
+              </div>
+            )}
+
             <div className="flex flex-col sm:flex-row items-center gap-5">
-              <div className="relative group shrink-0">
-                <img
-                  src={logoUrl || '/logo-kabarsantri.png'}
-                  alt="Logo Lembaga"
-                  className="w-24 h-24 rounded-3xl object-cover border-4 border-white shadow-md bg-white"
-                />
+              {/* Preview Both Logos */}
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="text-center">
+                  <div className="relative">
+                    <img
+                      src="/logo-kabarsantri.png"
+                      alt="Logo Utama KabarSantri"
+                      className="w-16 h-16 rounded-2xl object-cover border-2 border-blue-500 shadow-md bg-white mx-auto"
+                    />
+                  </div>
+                  <span className="text-[9px] font-bold text-blue-600 block mt-1">Logo App Utama</span>
+                </div>
+
+                <span className="text-slate-400 font-bold text-lg">+</span>
+
+                <div className="text-center">
+                  <div className="relative">
+                    <img
+                      src={logoUrl || '/logo-kabarsantri.png'}
+                      alt="Logo Tenant Lembaga"
+                      className="w-16 h-16 rounded-2xl object-cover border-2 border-amber-400 shadow-md bg-white mx-auto"
+                    />
+                  </div>
+                  <span className="text-[9px] font-bold text-amber-600 block mt-1">Logo Internal Tenant</span>
+                </div>
               </div>
 
               <div className="space-y-3 flex-1 w-full">
                 <div>
-                  <label className="font-bold text-slate-700 block mb-1">Upload File Logo dari Laptop/HP</label>
+                  <label className="font-bold text-slate-700 block mb-1">
+                    📁 Upload Gambar Logo dari Galeri Device / HP
+                  </label>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleUploadLogo}
-                    disabled={mengunggah}
-                    className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#0A4ABF] file:text-white hover:file:bg-blue-700 cursor-pointer"
+                    disabled={mengunggah || !isPremium}
+                    className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#0A4ABF] file:text-white hover:file:bg-blue-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   {mengunggah && <span className="text-[11px] text-blue-600 font-bold mt-1 block">Mengunggah logo...</span>}
+                  <span className="text-[10px] text-slate-400 mt-1 block">
+                    Klik tombol di atas untuk membuka galeri foto/file secara langsung di perangkat HP/Laptop Anda.
+                  </span>
                 </div>
 
                 <div className="pt-1">
@@ -196,8 +271,17 @@ export function ModulProfilYayasan({ onTutup }: ModulProfilYayasanProps) {
                     type="text"
                     placeholder="https://domain-pesantren.id/logo.png"
                     value={logoUrl}
-                    onChange={(e) => setLogoUrl(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 font-mono text-xs focus:ring-2 focus:ring-[#0A4ABF] focus:outline-none"
+                    onChange={(e) => {
+                      if (!isPremium) {
+                        alert(
+                          '🔒 Fitur Kustomisasi Logo Lembaga hanya tersedia untuk Paket Premium. Silakan upgrade paket langganan Anda.'
+                        );
+                        return;
+                      }
+                      setLogoUrl(e.target.value);
+                    }}
+                    disabled={!isPremium}
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 font-mono text-xs focus:ring-2 focus:ring-[#0A4ABF] focus:outline-none disabled:bg-slate-100 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>

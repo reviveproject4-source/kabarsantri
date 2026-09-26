@@ -262,9 +262,19 @@ function RuteStaff({
       <main className="flex-1 p-4 sm:p-8 bg-slate-50/50 overflow-y-auto">
         {/* Sticky Mobile Navbar */}
         <div className="md:hidden flex items-center justify-between bg-slate-900 text-white p-3 px-4 rounded-2xl mb-4 shadow-md border border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <img src="/logo-kabarsantri.png" alt="Logo KabarSantri" className="w-8 h-8 rounded-xl object-cover" />
-            <span className="font-black text-sm tracking-tight text-white">KABARSANTRI</span>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <img src="/logo-kabarsantri.png" alt="Logo KabarSantri" className="w-8 h-8 rounded-xl object-cover shrink-0" />
+            {yayasan?.logoUrl && (
+              <img
+                src={yayasan.logoUrl}
+                alt="Logo Lembaga Tenant"
+                className="w-7 h-7 rounded-xl object-cover border border-amber-400/40 shrink-0 bg-white/10"
+                title={yayasan.namaYayasan}
+              />
+            )}
+            <span className="font-black text-sm tracking-tight text-white truncate">
+              {yayasan?.namaYayasan || 'KABARSANTRI'}
+            </span>
           </div>
 
           <button

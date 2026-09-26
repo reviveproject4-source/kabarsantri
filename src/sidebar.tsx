@@ -69,18 +69,28 @@ export const Sidebar = ({
       >
         {/* Header Logo & Brand */}
         <div className="mb-6 pt-2 px-2 flex items-center justify-between">
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            {/* Logo Aplikasi Utama KabarSantri (Fixed) */}
             <img
-              src={logoYayasanUrl || '/logo-kabarsantri.png'}
-              alt="Logo Lembaga"
-              className="w-10 h-10 rounded-2xl shadow-lg shadow-blue-600/40 object-cover border border-white/20 shrink-0"
+              src="/logo-kabarsantri.png"
+              alt="Logo KabarSantri App"
+              className="w-9 h-9 rounded-xl shadow-md shadow-blue-600/40 object-cover border border-white/20 shrink-0"
             />
+            {/* Logo Pendamping Internal Tenant Lembaga (Jika Ada / Paket Premium) */}
+            {logoYayasanUrl && (
+              <img
+                src={logoYayasanUrl}
+                alt="Logo Lembaga Tenant"
+                className="w-8 h-8 rounded-xl object-cover border border-amber-400/40 shrink-0 bg-white/10"
+                title={namaYayasan}
+              />
+            )}
             <div className="min-w-0">
-              <h2 className="font-black tracking-tight text-white text-sm sm:text-base leading-tight truncate">
+              <h2 className="font-black tracking-tight text-white text-sm leading-tight truncate">
                 {namaYayasan || 'KABARSANTRI'}
               </h2>
               {alamatYayasan ? (
-                <p className="text-[10px] text-slate-400 truncate max-w-[140px] mt-0.5" title={alamatYayasan}>
+                <p className="text-[10px] text-slate-400 truncate max-w-[130px] mt-0.5" title={alamatYayasan}>
                   📍 {alamatYayasan}
                 </p>
               ) : (

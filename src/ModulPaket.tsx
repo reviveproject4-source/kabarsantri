@@ -114,9 +114,9 @@ export function ModulPaket() {
               🎨
             </div>
             <div>
-              <h2 className="text-lg font-black text-white">Pengaturan Branding & Custom Logo (White-Label)</h2>
+              <h2 className="text-lg font-black text-white">Pengaturan Branding & Custom Logo Internal (White-Label)</h2>
               <p className="text-xs text-blue-200">
-                Fitur eksklusif Paket Premium: Ganti logo KabarSantri dengan Logo Resmi Yayasan & Alamat Lembaga Anda sendiri.
+                Fitur eksklusif Paket Premium: Tambah logo internal lembaga pendamping logo KabarSantri & alamat lembaga.
               </p>
             </div>
           </div>
@@ -129,7 +129,35 @@ export function ModulPaket() {
             className="space-y-4 text-xs pt-2"
           >
             <div>
-              <label className="font-bold text-slate-300 block mb-1">URL Logo Resmi Yayasan / Sekolah (Link Gambar PNG/JPG)</label>
+              <label className="font-bold text-slate-300 block mb-1">
+                📁 Upload Gambar Logo dari Galeri Device / HP (Khusus Premium)
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (!file.type.startsWith('image/')) {
+                    alert('Pilih file gambar dari galeri (PNG / JPG / WEBP).');
+                    return;
+                  }
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    if (yayasan) {
+                      yayasan.logoUrl = reader.result as string;
+                      muatUlangYayasan();
+                    }
+                  };
+                  reader.readAsDataURL(file);
+                }}
+                className="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#0A4ABF] file:text-white hover:file:bg-blue-600 cursor-pointer mb-2"
+              />
+              <span className="text-[10px] text-slate-400 block mb-3">
+                Klik untuk langsung memilih file gambar logo dari galeri HP/Laptop Anda.
+              </span>
+
+              <label className="font-bold text-slate-300 block mb-1">Atau Masukkan URL Logo Resmi Yayasan / Sekolah</label>
               <input
                 type="text"
                 placeholder="https://domain-yayasan.id/logo.png"
@@ -142,9 +170,6 @@ export function ModulPaket() {
                 }}
                 className="w-full bg-slate-800/80 border border-slate-700 text-white rounded-xl px-3.5 py-2.5 font-mono text-xs focus:ring-2 focus:ring-[#0A4ABF] focus:outline-none"
               />
-              <span className="text-[10px] text-slate-400 mt-1 block">
-                Contoh: Masukkan link gambar logo yayasan Anda. Jika dikosongkan, akan memakai Logo Default KabarSantri.
-              </span>
             </div>
 
             <div>
