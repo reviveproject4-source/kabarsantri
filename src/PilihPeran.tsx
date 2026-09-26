@@ -37,7 +37,7 @@ export function PilihPeran({
   const [error, setError] = useState('');
 
   const isiDemoAcc = (
-    peranDemo: 'yayasan' | 'guru' | 'musyrif' | 'keuangan' | 'kepsek' | 'wali'
+    peranDemo: 'yayasan' | 'guru' | 'musyrif' | 'keuangan' | 'kepsek' | 'ketua_yayasan' | 'kesantrian' | 'wali'
   ) => {
     setError('');
     if (peranDemo === 'wali') {
@@ -48,17 +48,32 @@ export function PilihPeran({
     } else {
       setTab('staf');
       setIdentitasStaf('email');
-      const emailMap = {
+      const emailMap: Record<string, string> = {
         yayasan: 'demo.yayasan@kabarsantri.id',
         guru: 'guru@kabarsantri.id',
         musyrif: 'musyrif@kabarsantri.id',
         keuangan: 'keuangan@kabarsantri.id',
         kepsek: 'kepsek@kabarsantri.id',
+        ketua_yayasan: 'ketuayayasan@kabarsantri.id',
+        kesantrian: 'kesantrian@kabarsantri.id',
       };
-      setEmail(emailMap[peranDemo]);
+      setEmail(emailMap[peranDemo] || 'guru@kabarsantri.id');
       setPassword('password123');
     }
   };
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const roleParam = params.get('role') || params.get('peran') || params.get('demo');
+      if (roleParam) {
+        const r = roleParam.toLowerCase();
+        if (['yayasan', 'guru', 'musyrif', 'keuangan', 'kepsek', 'ketua_yayasan', 'kesantrian', 'wali'].includes(r)) {
+          isiDemoAcc(r as any);
+        }
+      }
+    }
+  }, []);
 
   const kirimStaf = async () => {
     if (identitasStaf === 'email') {
@@ -171,13 +186,13 @@ export function PilihPeran({
               <span>💡</span> Klik Kredensial Uji Coba Peran (Auto-Fill):
             </span>
           </div>
-          <div className="grid grid-cols-2 gap-1 text-[11px]">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 text-[11px]">
             <button
               type="button"
-              onClick={() => isiDemoAcc('yayasan')}
+              onClick={() => isiDemoAcc('wali')}
               className="px-2 py-1.5 bg-white border border-blue-200 rounded-lg font-semibold text-blue-800 hover:bg-blue-100 text-left truncate transition flex items-center gap-1"
             >
-              <span>👑</span> Yayasan
+              <span>👨‍👩‍👧</span> Wali Santri
             </button>
             <button
               type="button"
@@ -195,6 +210,13 @@ export function PilihPeran({
             </button>
             <button
               type="button"
+              onClick={() => isiDemoAcc('kepsek')}
+              className="px-2 py-1.5 bg-white border border-blue-200 rounded-lg font-semibold text-blue-800 hover:bg-blue-100 text-left truncate transition flex items-center gap-1"
+            >
+              <span>🎓</span> Kepsek
+            </button>
+            <button
+              type="button"
               onClick={() => isiDemoAcc('keuangan')}
               className="px-2 py-1.5 bg-white border border-blue-200 rounded-lg font-semibold text-blue-800 hover:bg-blue-100 text-left truncate transition flex items-center gap-1"
             >
@@ -202,17 +224,24 @@ export function PilihPeran({
             </button>
             <button
               type="button"
-              onClick={() => isiDemoAcc('kepsek')}
+              onClick={() => isiDemoAcc('yayasan')}
               className="px-2 py-1.5 bg-white border border-blue-200 rounded-lg font-semibold text-blue-800 hover:bg-blue-100 text-left truncate transition flex items-center gap-1"
             >
-              <span>📈</span> Kepsek
+              <span>👑</span> Yayasan
             </button>
             <button
               type="button"
-              onClick={() => isiDemoAcc('wali')}
-              className="px-2 py-1.5 bg-white border border-blue-200 rounded-lg font-semibold text-blue-800 hover:bg-blue-100 text-left truncate transition flex items-center gap-1"
+              onClick={() => isiDemoAcc('ketua_yayasan')}
+              className="px-2 py-1.5 bg-white border border-amber-300 bg-amber-50/50 rounded-lg font-bold text-amber-900 hover:bg-amber-100 text-left truncate transition flex items-center gap-1"
             >
-              <span>👨‍👩‍👧</span> Wali Santri
+              <span>📜</span> Ketua Yayasan
+            </button>
+            <button
+              type="button"
+              onClick={() => isiDemoAcc('kesantrian')}
+              className="px-2 py-1.5 bg-white border border-purple-200 bg-purple-50/50 rounded-lg font-semibold text-purple-800 hover:bg-purple-100 text-left truncate transition flex items-center gap-1"
+            >
+              <span>🛡️</span> Kesantrian
             </button>
           </div>
         </div>
