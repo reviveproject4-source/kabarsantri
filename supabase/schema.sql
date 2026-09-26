@@ -123,6 +123,8 @@ begin
 end;
 $$;
 
+grant execute on function daftar_yayasan(text, text, text, text, text, text, text, text) to authenticated;
+
 -- ----------------------------------------------------------------------------
 -- 2. SANTRI & PEGAWAI (master data)
 -- ----------------------------------------------------------------------------

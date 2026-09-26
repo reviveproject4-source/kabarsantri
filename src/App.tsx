@@ -103,8 +103,14 @@ export default function App() {
   if (!isAllowed) {
     return (
       <WebsiteKabarSantri
-        onBukaLogin={() => setIsAllowed(true)}
-        onBukaPendaftaranLembaga={() => setShowPendaftaranLembagaPublik(true)}
+        onBukaLogin={() => {
+          setIsAllowed(true);
+          setModeDaftar(false);
+        }}
+        onBukaPendaftaranLembaga={() => {
+          setIsAllowed(true);
+          setModeDaftar(true);
+        }}
         onBukaSuperAdmin={bukaPortalSuperAdminWithPin}
       />
     );
@@ -120,7 +126,14 @@ export default function App() {
 
   if (!session) {
     if (modeDaftar) {
-      return <FormPendaftaranYayasan onKembali={() => setModeDaftar(false)} />;
+      return (
+        <FormPendaftaranYayasan
+          onKembali={() => {
+            setModeDaftar(false);
+            setIsAllowed(false);
+          }}
+        />
+      );
     }
     return <PilihPeran onDaftarBaru={() => setModeDaftar(true)} />;
   }

@@ -207,34 +207,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     password: string,
     data: YayasanInput
   ) => {
-    const { data: hasilDaftar, error: errorDaftar } =
-      await supabase.auth.signUp({ email, password });
+    try {
+      const { data: hasilDaftar, error: errorDaftar } =
+        await supabase.auth.signUp({ email, password });
 
-    if (errorDaftar || !hasilDaftar.user) {
-      return errorDaftar?.message ?? 'Gagal mendaftar';
+      if (errorDaftar || !hasilDaftar.user) {
+        return errorDaftar?.message ?? 'Gagal mendaftar';
+      }
+
+      if (!hasilDaftar.session) {
+        return 'Pendaftaran akun berhasil, tapi email Anda perlu dikonfirmasi dulu (cek inbox/spam email Anda), baru bisa melengkapi data yayasan. Setelah konfirmasi, silakan masuk lagi.';
+      }
+
+      const { error: errorRpc } = await supabase.rpc('daftar_yayasan', {
+        p_nama_yayasan: data.namaYayasan,
+        p_nama_penanggung_jawab: data.namaPenanggungJawab,
+        p_jabatan_penanggung_jawab: data.jabatanPenanggungJawab,
+        p_no_hp: data.noHp,
+        p_email: data.email,
+        p_alamat: data.alamat,
+        p_perkiraan_jumlah_santri: data.perkiraanJumlahSantri,
+        p_sumber_informasi: data.sumberInformasi,
+      });
+
+      if (errorRpc) {
+        return errorRpc.message;
+      }
+
+      await muatProfil(hasilDaftar.user.id);
+      return null;
+    } catch (err: any) {
+      return err?.message || 'Gagal terhubung ke server Supabase. Periksa koneksi atau kredensial Supabase.';
     }
-
-    if (!hasilDaftar.session) {
-      return 'Pendaftaran akun berhasil, tapi email Anda perlu dikonfirmasi dulu (cek inbox/spam email Anda), baru bisa melengkapi data yayasan. Setelah konfirmasi, silakan masuk lagi.';
-    }
-
-    const { error: errorRpc } = await supabase.rpc('daftar_yayasan', {
-      p_nama_yayasan: data.namaYayasan,
-      p_nama_penanggung_jawab: data.namaPenanggungJawab,
-      p_jabatan_penanggung_jawab: data.jabatanPenanggungJawab,
-      p_no_hp: data.noHp,
-      p_email: data.email,
-      p_alamat: data.alamat,
-      p_perkiraan_jumlah_santri: data.perkiraanJumlahSantri,
-      p_sumber_informasi: data.sumberInformasi,
-    });
-
-    if (errorRpc) {
-      return errorRpc.message;
-    }
-
-    await muatProfil(hasilDaftar.user.id);
-    return null;
   };
 
   const keluar = async () => {
