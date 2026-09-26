@@ -6,9 +6,15 @@ interface Props {
   onDaftarBaru: () => void;
   onBukaWelcomeScreen?: () => void;
   onBukaSuperAdmin?: () => void;
+  onKeWebsite?: () => void;
 }
 
-export function PilihPeran({ onDaftarBaru, onBukaWelcomeScreen, onBukaSuperAdmin }: Props) {
+export function PilihPeran({
+  onDaftarBaru,
+  onBukaWelcomeScreen,
+  onBukaSuperAdmin,
+  onKeWebsite,
+}: Props) {
   const { masuk, masukPegawaiNip, masukWali, kirimResetPassword } = useAuth();
 
   const [tab, setTab] = useState<'staf' | 'wali'>('staf');
@@ -111,9 +117,28 @@ export function PilihPeran({ onDaftarBaru, onBukaWelcomeScreen, onBukaSuperAdmin
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="bg-white rounded-2xl border p-8 w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-1">Masuk ke KabarSantri</h1>
+    <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+      <div className="bg-white rounded-3xl border border-slate-200/80 p-8 w-full max-w-md shadow-lg">
+        {onKeWebsite && (
+          <button
+            onClick={onKeWebsite}
+            className="text-xs text-slate-400 hover:text-slate-700 font-semibold mb-4 flex items-center gap-1 transition"
+          >
+            ← Kembali ke Website Utama
+          </button>
+        )}
+
+        <div className="flex items-center gap-3 mb-1">
+          <img
+            src="/logo-kabarsantri.png"
+            alt="Logo KabarSantri"
+            className="w-10 h-10 rounded-2xl object-cover shadow-sm border border-slate-200"
+          />
+          <div>
+            <h1 className="text-xl font-black text-slate-900 tracking-tight">Portal Aplikasi</h1>
+            <p className="text-[11px] text-slate-500 font-medium">KabarSantri System Operation</p>
+          </div>
+        </div>
 
         <div className="flex gap-2 mt-4 mb-6">
           <button
@@ -349,6 +374,17 @@ export function PilihPeran({ onDaftarBaru, onBukaWelcomeScreen, onBukaSuperAdmin
               Akun Wali Santri (Nama, NIS, PIN) dibuatkan oleh pihak Yayasan.
             </p>
           </>
+        )}
+
+        {onKeWebsite && (
+          <div className="mt-6 pt-4 border-t border-slate-100 text-center">
+            <button
+              onClick={onKeWebsite}
+              className="text-xs text-slate-400 hover:text-slate-600 font-medium"
+            >
+              🌐 Kunjungi Website Profil & Informasi KabarSantri
+            </button>
+          </div>
         )}
       </div>
     </div>

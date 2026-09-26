@@ -51,7 +51,21 @@ function Memuat() {
 }
 
 export default function App() {
-  const [isAllowed, setIsAllowed] = useState(false);
+  const [isAllowed, setIsAllowed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (
+        params.get('app') === 'true' ||
+        params.get('portal') === 'true' ||
+        params.get('login') === 'true' ||
+        window.location.hash === '#app' ||
+        window.location.hash === '#portal'
+      ) {
+        return true;
+      }
+    }
+    return false;
+  });
   const [activeTab, setActiveTab] = useState('dashboard');
   const [modeDaftar, setModeDaftar] = useState(false);
   const [showSuperAdmin, setShowSuperAdmin] = useState(false);
@@ -69,6 +83,12 @@ export default function App() {
       alert('❌ PIN Salah! Akses Portal Super Admin Ditolak.');
     }
   };
+
+  useEffect(() => {
+    if (session) {
+      setIsAllowed(true);
+    }
+  }, [session]);
 
   useEffect(() => {
     // Standalone URL check: http://localhost:5184/?admin=true
@@ -100,7 +120,7 @@ export default function App() {
     );
   }
 
-  if (!isAllowed) {
+  if (!isAllowed && !session) {
     return (
       <WebsiteKabarSantri
         onBukaLogin={() => {
@@ -143,7 +163,12 @@ export default function App() {
         />
       );
     }
-    return <PilihPeran onDaftarBaru={() => setModeDaftar(true)} />;
+    return (
+      <PilihPeran
+        onDaftarBaru={() => setModeDaftar(true)}
+        onKeWebsite={() => setIsAllowed(false)}
+      />
+    );
   }
 
   if (!profil || !yayasan) {
