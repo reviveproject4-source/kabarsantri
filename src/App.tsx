@@ -276,7 +276,7 @@ function RuteStaff({
 }) {
   const { profil, yayasan } = useAuth();
   const { data: santriList = [] } = useSantriList();
-  const { data: pegawaiList = DEFAULT_PEGAWAI } = usePegawaiList();
+  const { data: pegawaiList = [] } = usePegawaiList();
   const { data: presensiPegawaiList = [] } = usePresensiPegawaiList();
   const { data: presensiSantriList = [] } = usePresensiSantriList();
   const { data: nilaiAkhlakList = [] } = useNilaiAkhlakList();

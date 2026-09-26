@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase, supabaseAktif } from '../supabaseClient';
+import { useAuth } from '../AuthContext';
 import { LogKomunikasiWali } from '../types';
 
 const KUNCI_LOG_KOMUNIKASI = ['log_komunikasi_wali'];
@@ -21,23 +22,35 @@ export const DEFAULT_LOG_KOMUNIKASI: LogKomunikasiWali[] = [
 
 export function useLogKomunikasiWaliList() {
   const queryClient = useQueryClient();
+  const { profil, session } = useAuth();
 
   return useQuery({
     queryKey: KUNCI_LOG_KOMUNIKASI,
     queryFn: async () => {
+      const isDemo =
+        !profil ||
+        profil.yayasan_id === 'demo-yayasan-01' ||
+        (session?.user?.id && session.user.id.startsWith('demo-')) ||
+        (session?.user?.email && session.user.email.includes('@kabarsantri.id'));
+
       if (!supabaseAktif) {
         const cached = queryClient.getQueryData<LogKomunikasiWali[]>(KUNCI_LOG_KOMUNIKASI);
-        return cached ?? DEFAULT_LOG_KOMUNIKASI;
+        return cached ?? (isDemo ? DEFAULT_LOG_KOMUNIKASI : []);
       }
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('log_komunikasi_wali')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*');
 
-      if (error) {
+      if (profil?.yayasan_id && profil.yayasan_id !== 'demo-yayasan-01') {
+        query = query.eq('yayasan_id', profil.yayasan_id);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
+
+      if (error || !data || data.length === 0) {
         const cached = queryClient.getQueryData<LogKomunikasiWali[]>(KUNCI_LOG_KOMUNIKASI);
-        return cached ?? DEFAULT_LOG_KOMUNIKASI;
+        return cached ?? (isDemo ? DEFAULT_LOG_KOMUNIKASI : []);
       }
 
       return (data as any[]).map((row) => ({
@@ -53,7 +66,6 @@ export function useLogKomunikasiWaliList() {
         isiPesan: row.isi_pesan,
       }));
     },
-    initialData: DEFAULT_LOG_KOMUNIKASI,
   });
 }
 

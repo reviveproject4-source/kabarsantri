@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase, supabaseAktif } from '../supabaseClient';
+import { useAuth } from '../AuthContext';
 import { Pengeluaran, PengeluaranInput } from '../types';
 
 const KUNCI_PENGELUARAN = ['pengeluaran'];
@@ -39,23 +40,32 @@ export const DEFAULT_PENGELUARAN: Pengeluaran[] = [
 
 export function usePengeluaranList() {
   const queryClient = useQueryClient();
+  const { profil, session } = useAuth();
 
   return useQuery({
     queryKey: KUNCI_PENGELUARAN,
     queryFn: async () => {
+      const isDemo =
+        !profil ||
+        profil.yayasan_id === 'demo-yayasan-01' ||
+        (session?.user?.id && session.user.id.startsWith('demo-')) ||
+        (session?.user?.email && session.user.email.includes('@kabarsantri.id'));
+
       if (!supabaseAktif) {
         const cached = queryClient.getQueryData<Pengeluaran[]>(KUNCI_PENGELUARAN);
-        return cached ?? DEFAULT_PENGELUARAN;
+        return cached ?? (isDemo ? DEFAULT_PENGELUARAN : []);
       }
 
-      const { data, error } = await supabase
-        .from('pengeluaran')
-        .select('*')
-        .order('tanggal', { ascending: false });
+      let query = supabase.from('pengeluaran').select('*');
+      if (profil?.yayasan_id && profil.yayasan_id !== 'demo-yayasan-01') {
+        query = query.eq('yayasan_id', profil.yayasan_id);
+      }
 
-      if (error) {
+      const { data, error } = await query.order('tanggal', { ascending: false });
+
+      if (error || !data || data.length === 0) {
         const cached = queryClient.getQueryData<Pengeluaran[]>(KUNCI_PENGELUARAN);
-        return cached ?? DEFAULT_PENGELUARAN;
+        return cached ?? (isDemo ? DEFAULT_PENGELUARAN : []);
       }
 
       return (data as any[]).map((row) => ({
@@ -70,7 +80,6 @@ export function usePengeluaranList() {
         dicatatOleh: row.dicatat_oleh ?? 'Keuangan',
       }));
     },
-    initialData: DEFAULT_PENGELUARAN,
   });
 }
 

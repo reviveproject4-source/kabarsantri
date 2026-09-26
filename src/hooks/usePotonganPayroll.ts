@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase, supabaseAktif } from '../supabaseClient';
+import { useAuth } from '../AuthContext';
 import { PotonganPayroll, PotonganPayrollInput } from '../types';
 
 const KUNCI_POTONGAN = ['potongan_payroll'];
@@ -19,23 +20,32 @@ export const DEFAULT_POTONGAN: PotonganPayroll[] = [
 
 export function usePotonganPayrollList() {
   const queryClient = useQueryClient();
+  const { profil, session } = useAuth();
 
   return useQuery({
     queryKey: KUNCI_POTONGAN,
     queryFn: async () => {
+      const isDemo =
+        !profil ||
+        profil.yayasan_id === 'demo-yayasan-01' ||
+        (session?.user?.id && session.user.id.startsWith('demo-')) ||
+        (session?.user?.email && session.user.email.includes('@kabarsantri.id'));
+
       if (!supabaseAktif) {
         const cached = queryClient.getQueryData<PotonganPayroll[]>(KUNCI_POTONGAN);
-        return cached ?? DEFAULT_POTONGAN;
+        return cached ?? (isDemo ? DEFAULT_POTONGAN : []);
       }
 
-      const { data, error } = await supabase
-        .from('potongan_payroll')
-        .select('*')
-        .order('tanggal_input', { ascending: false });
+      let query = supabase.from('potongan_payroll').select('*');
+      if (profil?.yayasan_id && profil.yayasan_id !== 'demo-yayasan-01') {
+        query = query.eq('yayasan_id', profil.yayasan_id);
+      }
 
-      if (error) {
+      const { data, error } = await query.order('tanggal_input', { ascending: false });
+
+      if (error || !data || data.length === 0) {
         const cached = queryClient.getQueryData<PotonganPayroll[]>(KUNCI_POTONGAN);
-        return cached ?? DEFAULT_POTONGAN;
+        return cached ?? (isDemo ? DEFAULT_POTONGAN : []);
       }
 
       return (data as any[]).map((row) => ({
@@ -49,7 +59,6 @@ export function usePotonganPayrollList() {
         petugasKeuangan: row.petugas_keuangan ?? 'Keuangan',
       }));
     },
-    initialData: DEFAULT_POTONGAN,
   });
 }
 
