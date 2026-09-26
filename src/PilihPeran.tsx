@@ -36,6 +36,30 @@ export function PilihPeran({
   const [memproses, setMemproses] = useState(false);
   const [error, setError] = useState('');
 
+  const isiDemoAcc = (
+    peranDemo: 'yayasan' | 'guru' | 'musyrif' | 'keuangan' | 'kepsek' | 'wali'
+  ) => {
+    setError('');
+    if (peranDemo === 'wali') {
+      setTab('wali');
+      setNamaSantri('Ahmad Santri');
+      setNis('12345');
+      setPin('1234');
+    } else {
+      setTab('staf');
+      setIdentitasStaf('email');
+      const emailMap = {
+        yayasan: 'demo.yayasan@kabarsantri.id',
+        guru: 'guru@kabarsantri.id',
+        musyrif: 'musyrif@kabarsantri.id',
+        keuangan: 'keuangan@kabarsantri.id',
+        kepsek: 'kepsek@kabarsantri.id',
+      };
+      setEmail(emailMap[peranDemo]);
+      setPassword('password123');
+    }
+  };
+
   const kirimStaf = async () => {
     if (identitasStaf === 'email') {
       if (!email || !password) {
@@ -140,23 +164,76 @@ export function PilihPeran({
           </div>
         </div>
 
-        <div className="flex gap-2 mt-4 mb-6">
+        {/* Card Bantuan Kredensial Uji Coba Peran */}
+        <div className="mt-4 mb-4 p-3 bg-blue-50/80 border border-blue-200/80 rounded-2xl text-xs">
+          <div className="flex items-center justify-between font-bold text-blue-900 mb-2">
+            <span className="flex items-center gap-1.5 text-[11px]">
+              <span>💡</span> Klik Kredensial Uji Coba Peran (Auto-Fill):
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-1 text-[11px]">
+            <button
+              type="button"
+              onClick={() => isiDemoAcc('yayasan')}
+              className="px-2 py-1.5 bg-white border border-blue-200 rounded-lg font-semibold text-blue-800 hover:bg-blue-100 text-left truncate transition flex items-center gap-1"
+            >
+              <span>👑</span> Yayasan
+            </button>
+            <button
+              type="button"
+              onClick={() => isiDemoAcc('guru')}
+              className="px-2 py-1.5 bg-white border border-blue-200 rounded-lg font-semibold text-blue-800 hover:bg-blue-100 text-left truncate transition flex items-center gap-1"
+            >
+              <span>👨‍🏫</span> Guru
+            </button>
+            <button
+              type="button"
+              onClick={() => isiDemoAcc('musyrif')}
+              className="px-2 py-1.5 bg-white border border-blue-200 rounded-lg font-semibold text-blue-800 hover:bg-blue-100 text-left truncate transition flex items-center gap-1"
+            >
+              <span>🏠</span> Musyrif
+            </button>
+            <button
+              type="button"
+              onClick={() => isiDemoAcc('keuangan')}
+              className="px-2 py-1.5 bg-white border border-blue-200 rounded-lg font-semibold text-blue-800 hover:bg-blue-100 text-left truncate transition flex items-center gap-1"
+            >
+              <span>💳</span> Keuangan
+            </button>
+            <button
+              type="button"
+              onClick={() => isiDemoAcc('kepsek')}
+              className="px-2 py-1.5 bg-white border border-blue-200 rounded-lg font-semibold text-blue-800 hover:bg-blue-100 text-left truncate transition flex items-center gap-1"
+            >
+              <span>📈</span> Kepsek
+            </button>
+            <button
+              type="button"
+              onClick={() => isiDemoAcc('wali')}
+              className="px-2 py-1.5 bg-white border border-blue-200 rounded-lg font-semibold text-blue-800 hover:bg-blue-100 text-left truncate transition flex items-center gap-1"
+            >
+              <span>👨‍👩‍👧</span> Wali Santri
+            </button>
+          </div>
+        </div>
+
+        <div className="flex gap-2 mb-6">
           <button
             onClick={() => gantiTab('staf')}
-            className={`flex-1 px-4 py-2 rounded-xl text-sm border ${
+            className={`flex-1 px-4 py-2 rounded-xl text-sm border font-bold ${
               tab === 'staf'
                 ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-white hover:bg-slate-50'
+                : 'bg-white hover:bg-slate-50 text-slate-700'
             }`}
           >
             Yayasan / Pegawai
           </button>
           <button
             onClick={() => gantiTab('wali')}
-            className={`flex-1 px-4 py-2 rounded-xl text-sm border ${
+            className={`flex-1 px-4 py-2 rounded-xl text-sm border font-bold ${
               tab === 'wali'
                 ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-white hover:bg-slate-50'
+                : 'bg-white hover:bg-slate-50 text-slate-700'
             }`}
           >
             Wali Santri
