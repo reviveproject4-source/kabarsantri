@@ -130,6 +130,14 @@ export default function App() {
         <FormPendaftaranYayasan
           onKembali={() => {
             setModeDaftar(false);
+            setIsAllowed(true);
+          }}
+          onKeLogin={() => {
+            setModeDaftar(false);
+            setIsAllowed(true);
+          }}
+          onKeWebsite={() => {
+            setModeDaftar(false);
             setIsAllowed(false);
           }}
         />

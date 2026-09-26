@@ -13,9 +13,11 @@ const SUMBER_INFORMASI = [
 
 interface Props {
   onKembali: () => void;
+  onKeLogin?: () => void;
+  onKeWebsite?: () => void;
 }
 
-export function FormPendaftaranYayasan({ onKembali }: Props) {
+export function FormPendaftaranYayasan({ onKembali, onKeLogin, onKeWebsite }: Props) {
   const { daftarYayasan } = useAuth();
 
   const [password, setPassword] = useState('');
@@ -183,10 +185,24 @@ export function FormPendaftaranYayasan({ onKembali }: Props) {
           {memproses ? 'Memproses...' : 'Daftar & Lanjutkan'}
         </button>
 
-        <div className="text-center mt-4">
-          <button onClick={onKembali} className="text-sm text-gray-500 underline">
-            Sudah punya akun? Kembali ke halaman masuk
+        <div className="text-center mt-5 space-y-2">
+          <button
+            type="button"
+            onClick={onKeLogin || onKembali}
+            className="text-xs sm:text-sm font-bold text-[#0A4ABF] hover:underline block w-full text-center"
+          >
+            Sudah punya akun? Kembali ke halaman masuk (Login)
           </button>
+
+          {onKeWebsite && (
+            <button
+              type="button"
+              onClick={onKeWebsite}
+              className="text-xs text-slate-400 hover:text-slate-600 block w-full text-center mt-1"
+            >
+              ← Kembali ke Website Utama
+            </button>
+          )}
         </div>
       </div>
     </div>
