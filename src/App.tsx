@@ -64,17 +64,11 @@ export default function App() {
   const [isAllowed, setIsAllowed] = useState(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      if (
-        params.get('app') === 'true' ||
-        params.get('portal') === 'true' ||
-        params.get('login') === 'true' ||
-        window.location.hash === '#app' ||
-        window.location.hash === '#portal'
-      ) {
-        return true;
+      if (params.get('website') === 'true' || window.location.hash === '#website') {
+        return false;
       }
     }
-    return false;
+    return true;
   });
   const [activeTab, setActiveTab] = useState('dashboard');
   const [modeDaftar, setModeDaftar] = useState(false);
