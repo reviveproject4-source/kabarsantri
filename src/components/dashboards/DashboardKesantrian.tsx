@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Pegawai, PresensiPegawai, Santri, NilaiAkhlak, IzinPulang } from '../../types';
 import { PresensiSaya } from '../../PresensiSaya';
 import { tanggalLokal } from '../../tanggal';
 import { usePerbaruiStatusIzinPulang } from '../../hooks/useIzinPulang';
 import { useRewardList, usePelanggaranList, useTambahPelanggaran, useTambahReward } from '../../hooks/useRewardPelanggaran';
 import { useTambahNilaiAkhlak } from '../../hooks/useAkhlak';
+import { FilterKelasSantriPanel } from '../common/FilterKelasSantriPanel';
 
 interface Props {
   namaAktif: string;
@@ -38,6 +39,20 @@ export function DashboardKesantrian({
 
   const [genderFilter, setGenderFilter] = useState<'Semua' | 'Laki-Laki' | 'Perempuan'>(defaultGender);
 
+  // Available classes for Kesantrian
+  const listKelasTersedia = useMemo(() => {
+    const santriFilteredByGender = santriList.filter((s) => {
+      if (genderFilter === 'Semua') return true;
+      if (genderFilter === 'Laki-Laki') return s.jenisKelamin === 'Laki-Laki' || s.jenisKelamin === 'L';
+      if (genderFilter === 'Perempuan') return s.jenisKelamin === 'Perempuan' || s.jenisKelamin === 'P';
+      return true;
+    });
+    return Array.from(new Set(santriFilteredByGender.map((s) => s.kelas).filter(Boolean))).sort();
+  }, [santriList, genderFilter]);
+
+  const [selectedKelas, setSelectedKelas] = useState<string>(listKelasTersedia[0] || '');
+  const [selectedSantriId, setSelectedSantriId] = useState<string>('');
+
   // Mutations
   const { mutate: perbaruiStatusIzin } = usePerbaruiStatusIzinPulang();
   const { mutateAsync: tambahNilaiAkhlak } = useTambahNilaiAkhlak();
@@ -64,13 +79,16 @@ export function DashboardKesantrian({
   const [rpCatatan, setRpCatatan] = useState('');
   const [sedangSimpanRp, setSedangSimpanRp] = useState(false);
 
-  // Filter santri by Gender
-  const santriKesantrian = santriList.filter((s) => {
-    if (genderFilter === 'Semua') return true;
-    if (genderFilter === 'Laki-Laki') return s.jenisKelamin === 'Laki-Laki' || s.jenisKelamin === 'L';
-    if (genderFilter === 'Perempuan') return s.jenisKelamin === 'Perempuan' || s.jenisKelamin === 'P';
-    return true;
-  });
+  // Filter santri by Class & Gender
+  const santriKesantrian = useMemo(() => {
+    return santriList.filter((s) => {
+      if (selectedKelas && s.kelas !== selectedKelas) return false;
+      if (genderFilter === 'Semua') return true;
+      if (genderFilter === 'Laki-Laki') return s.jenisKelamin === 'Laki-Laki' || s.jenisKelamin === 'L';
+      if (genderFilter === 'Perempuan') return s.jenisKelamin === 'Perempuan' || s.jenisKelamin === 'P';
+      return true;
+    });
+  }, [santriList, selectedKelas, genderFilter]);
 
   const totalSantri = santriKesantrian.length;
   const santriIdsSet = new Set(santriKesantrian.map((s) => s.id));
@@ -198,28 +216,32 @@ export function DashboardKesantrian({
       {/* Presensi Saya */}
       <PresensiSaya pegawaiId={pegawaiAktif?.id ?? null} presensiPegawai={presensiPegawaiList} />
 
-      {/* Gender Filter Controls Header */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-slate-700">Filter Gender Santri:</span>
-          <span className="text-xs text-slate-400 font-medium">(Ganti ruang pemantauan kesantrian)</span>
-        </div>
-        <div className="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200/80 self-start sm:self-auto">
-          {(['Semua', 'Laki-Laki', 'Perempuan'] as const).map((g) => (
-            <button
-              key={g}
-              onClick={() => setGenderFilter(g)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                genderFilter === g
-                  ? 'bg-[#0A4ABF] text-white shadow'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              {g === 'Semua' ? '🌐 Semua Santri' : g === 'Laki-Laki' ? '👦 Santri Ikhwan' : '👧 Santri Akhwat'}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* DEPENDENT FILTER KELAS & SANTRI PANEL */}
+      <FilterKelasSantriPanel
+        roleTitle="Kesantrian"
+        labelScope="Pilih Kelas"
+        labelSantri="Pilih Santri"
+        availableScopes={listKelasTersedia}
+        selectedScope={selectedKelas}
+        onScopeChange={(kelas) => {
+          setSelectedKelas(kelas);
+          setSelectedSantriId('');
+        }}
+        santriInScope={santriKesantrian}
+        selectedSantriId={selectedSantriId}
+        onSantriChange={(id) => setSelectedSantriId(id)}
+        genderFilter={genderFilter}
+        onGenderFilterChange={setGenderFilter}
+        showGenderFilter={true}
+        onOpenAkhlakModal={(id) => {
+          setAkhlakSantriId(id);
+          setShowModalAkhlak(true);
+        }}
+        onOpenRewardModal={(id) => {
+          setRpSantriId(id);
+          setShowModalReward(true);
+        }}
+      />
 
       {/* Stat Summary Cards */}
       <div>

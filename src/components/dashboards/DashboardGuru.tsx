@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Pegawai, PresensiPegawai, PresensiSantri, Santri, NilaiAkhlak, IzinPulang, StatusPresensi } from '../../types';
 import { PresensiSaya } from '../../PresensiSaya';
 import { tanggalLokal } from '../../tanggal';
@@ -6,6 +6,7 @@ import { useCatatPresensiSantri } from '../../hooks/usePresensi';
 import { useTambahRiwayatTahfidz } from '../../hooks/useSantri';
 import { useTambahNilaiAkhlak } from '../../hooks/useAkhlak';
 import { useTambahPelanggaran, useTambahReward, useRewardList, usePelanggaranList } from '../../hooks/useRewardPelanggaran';
+import { FilterKelasSantriPanel } from '../common/FilterKelasSantriPanel';
 
 interface Props {
   namaAktif: string;
@@ -36,6 +37,24 @@ export function DashboardGuru({
 
   // Gender Filter State
   const [genderFilter, setGenderFilter] = useState<'Semua' | 'Laki-Laki' | 'Perempuan'>('Semua');
+
+  // Available classes for Guru
+  const listKelasTersedia = useMemo(() => {
+    const teacherClasses = pegawaiAktif?.kelasDiajar || [];
+    if (teacherClasses.length > 0 && !pegawaiAktif?.aksesSemuaKelas) {
+      return teacherClasses;
+    }
+    const unique = Array.from(new Set(santriList.map((s) => s.kelas).filter(Boolean))).sort();
+    return unique;
+  }, [pegawaiAktif, santriList]);
+
+  // Dependent Filter States
+  const [selectedKelas, setSelectedKelas] = useState<string>(
+    kelasDiajarAktif && kelasDiajarAktif !== 'Semua' && listKelasTersedia.includes(kelasDiajarAktif)
+      ? kelasDiajarAktif
+      : listKelasTersedia[0] || ''
+  );
+  const [selectedSantriId, setSelectedSantriId] = useState<string>('');
 
   // Mutations & Queries
   const { mutate: catatPresensiSantri } = useCatatPresensiSantri();
@@ -77,9 +96,11 @@ export function DashboardGuru({
   // Filter santri for Guru's class scope + Gender Filter
   const kelasArray = pegawaiAktif?.kelasDiajar || [];
   const santriKelasBase = santriList.filter((s) => {
-    if (!kelasDiajarAktif || kelasDiajarAktif === 'Semua') return true;
-    if (kelasArray.length > 0) return kelasArray.includes(s.kelas);
-    return s.kelas === kelasDiajarAktif;
+    if (!selectedKelas) return false;
+    if (kelasArray.length > 0 && !pegawaiAktif?.aksesSemuaKelas) {
+      return kelasArray.includes(s.kelas) && s.kelas === selectedKelas;
+    }
+    return s.kelas === selectedKelas;
   });
 
   const santriKelas = santriKelasBase.filter((s) => {
@@ -329,28 +350,38 @@ export function DashboardGuru({
       {/* Presensi Saya (Pegawai Mandiri) */}
       <PresensiSaya pegawaiId={pegawaiAktif?.id ?? null} presensiPegawai={presensiPegawai} />
 
-      {/* Gender Filter Controls Header */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-slate-700">Filter Gender Santri:</span>
-          <span className="text-xs text-slate-400 font-medium">(Pilih ruang tampilan santri)</span>
-        </div>
-        <div className="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200/80 self-start sm:self-auto">
-          {(['Semua', 'Laki-Laki', 'Perempuan'] as const).map((g) => (
-            <button
-              key={g}
-              onClick={() => setGenderFilter(g)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                genderFilter === g
-                  ? 'bg-[#0A4ABF] text-white shadow'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              {g === 'Semua' ? '🌐 Semua' : g === 'Laki-Laki' ? '👦 Laki-laki / Ikhwan' : '👧 Perempuan / Akhwat'}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* DEPENDENT FILTER KELAS & SANTRI PANEL */}
+      <FilterKelasSantriPanel
+        roleTitle="Guru"
+        labelScope="Pilih Kelas"
+        labelSantri="Pilih Santri"
+        availableScopes={listKelasTersedia}
+        selectedScope={selectedKelas}
+        onScopeChange={(kelas) => {
+          setSelectedKelas(kelas);
+          setSelectedSantriId('');
+        }}
+        santriInScope={santriKelas}
+        selectedSantriId={selectedSantriId}
+        onSantriChange={(id) => setSelectedSantriId(id)}
+        genderFilter={genderFilter}
+        onGenderFilterChange={setGenderFilter}
+        showGenderFilter={true}
+        presensiHariIniMap={presensiHariIniMap}
+        onDirectPresensi={handlePresensiStatus}
+        onOpenTahfidzModal={(id) => {
+          setTahfidzSantriId(id);
+          setShowModalTahfidz(true);
+        }}
+        onOpenAkhlakModal={(id) => {
+          setAkhlakSantriId(id);
+          setShowModalAkhlak(true);
+        }}
+        onOpenRewardModal={(id) => {
+          setRpSantriId(id);
+          setShowModalReward(true);
+        }}
+      />
 
       {/* Stat Summary Cards */}
       <div>
@@ -415,7 +446,10 @@ export function DashboardGuru({
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Aksi Cepat &amp; Alur Kerja Langsung Guru</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
           <button
-            onClick={() => setShowModalTahfidz(true)}
+            onClick={() => {
+              if (selectedSantriId) setTahfidzSantriId(selectedSantriId);
+              setShowModalTahfidz(true);
+            }}
             className="bg-gradient-to-br from-indigo-500 to-indigo-700 hover:from-indigo-600 hover:to-indigo-800 text-white p-4 rounded-2xl shadow-md hover:shadow-lg transition-all text-left flex flex-col items-start gap-2 group border border-indigo-400/30"
           >
             <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform">
@@ -441,7 +475,10 @@ export function DashboardGuru({
           </button>
 
           <button
-            onClick={() => setShowModalAkhlak(true)}
+            onClick={() => {
+              if (selectedSantriId) setAkhlakSantriId(selectedSantriId);
+              setShowModalAkhlak(true);
+            }}
             className="bg-gradient-to-br from-teal-500 to-teal-700 hover:from-teal-600 hover:to-teal-800 text-white p-4 rounded-2xl shadow-md hover:shadow-lg transition-all text-left flex flex-col items-start gap-2 group border border-teal-400/30"
           >
             <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform">
@@ -454,7 +491,10 @@ export function DashboardGuru({
           </button>
 
           <button
-            onClick={() => setShowModalReward(true)}
+            onClick={() => {
+              if (selectedSantriId) setRpSantriId(selectedSantriId);
+              setShowModalReward(true);
+            }}
             className="bg-gradient-to-br from-rose-500 to-rose-700 hover:from-rose-600 hover:to-rose-800 text-white p-4 rounded-2xl shadow-md hover:shadow-lg transition-all text-left flex flex-col items-start gap-2 group border border-rose-400/30"
           >
             <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform">

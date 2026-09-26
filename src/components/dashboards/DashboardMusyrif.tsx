@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Pegawai, PresensiPegawai, PresensiSantri, Santri, NilaiAkhlak, IzinPulang, StatusPresensi } from '../../types';
 import { PresensiSaya } from '../../PresensiSaya';
 import { tanggalLokal } from '../../tanggal';
@@ -7,6 +7,7 @@ import { useTambahRiwayatTahfidz } from '../../hooks/useSantri';
 import { useTambahNilaiAkhlak } from '../../hooks/useAkhlak';
 import { useTambahPelanggaran, useTambahReward, useRewardList, usePelanggaranList } from '../../hooks/useRewardPelanggaran';
 import { usePerbaruiStatusIzinPulang } from '../../hooks/useIzinPulang';
+import { FilterKelasSantriPanel } from '../common/FilterKelasSantriPanel';
 
 interface Props {
   namaAktif: string;
@@ -43,6 +44,25 @@ export function DashboardMusyrif({
     : 'Semua';
 
   const [genderFilter, setGenderFilter] = useState<'Semua' | 'Laki-Laki' | 'Perempuan'>(defaultGender);
+
+  // Available scopes for Musyrif (Asrama / Kelompok / Kelas)
+  const listScopeTersedia = useMemo(() => {
+    const santriFilteredByGender = santriList.filter((s) => {
+      if (genderFilter === 'Semua') return true;
+      if (genderFilter === 'Laki-Laki') return s.jenisKelamin === 'Laki-Laki' || s.jenisKelamin === 'L';
+      if (genderFilter === 'Perempuan') return s.jenisKelamin === 'Perempuan' || s.jenisKelamin === 'P';
+      return true;
+    });
+    const scopes = new Set<string>();
+    santriFilteredByGender.forEach((s) => {
+      if (s.asrama) scopes.add(s.asrama);
+      else if (s.kelas) scopes.add(s.kelas);
+    });
+    return Array.from(scopes).sort();
+  }, [santriList, genderFilter]);
+
+  const [selectedScope, setSelectedScope] = useState<string>(listScopeTersedia[0] || '');
+  const [selectedSantriId, setSelectedSantriId] = useState<string>('');
 
   // Mutations & Queries
   const { mutate: catatPresensiSantri } = useCatatPresensiSantri();
@@ -82,13 +102,16 @@ export function DashboardMusyrif({
   const [rpCatatan, setRpCatatan] = useState('');
   const [sedangSimpanRp, setSedangSimpanRp] = useState(false);
 
-  // Filter santri for Musyrif's dormitory gender scope + Gender Filter
-  const santriAsrama = santriList.filter((s) => {
-    if (genderFilter === 'Semua') return true;
-    if (genderFilter === 'Laki-Laki') return s.jenisKelamin === 'Laki-Laki' || s.jenisKelamin === 'L';
-    if (genderFilter === 'Perempuan') return s.jenisKelamin === 'Perempuan' || s.jenisKelamin === 'P';
-    return true;
-  });
+  // Filter santri for Musyrif's dormitory scope & Gender Filter
+  const santriAsrama = useMemo(() => {
+    return santriList.filter((s) => {
+      if (selectedScope && s.asrama !== selectedScope && s.kelas !== selectedScope) return false;
+      if (genderFilter === 'Semua') return true;
+      if (genderFilter === 'Laki-Laki') return s.jenisKelamin === 'Laki-Laki' || s.jenisKelamin === 'L';
+      if (genderFilter === 'Perempuan') return s.jenisKelamin === 'Perempuan' || s.jenisKelamin === 'P';
+      return true;
+    });
+  }, [santriList, selectedScope, genderFilter]);
 
   const totalSantriAsrama = santriAsrama.length;
 
@@ -324,28 +347,38 @@ export function DashboardMusyrif({
       {/* Presensi Saya (Musyrif Mandiri) */}
       <PresensiSaya pegawaiId={pegawaiAktif?.id ?? null} presensiPegawai={presensiPegawai} />
 
-      {/* Gender Filter Controls Header */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-slate-700">Scope Asrama &amp; Gender Santri:</span>
-          <span className="text-xs text-slate-400 font-medium">(Ganti lingkup pemantauan asrama)</span>
-        </div>
-        <div className="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200/80 self-start sm:self-auto">
-          {(['Semua', 'Laki-Laki', 'Perempuan'] as const).map((g) => (
-            <button
-              key={g}
-              onClick={() => setGenderFilter(g)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                genderFilter === g
-                  ? 'bg-[#0A4ABF] text-white shadow'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              {g === 'Semua' ? '🌐 Semua Asrama' : g === 'Laki-Laki' ? '👦 Asrama Ikhwan' : '👧 Asrama Akhwat'}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* DEPENDENT FILTER KELAS / ASRAMA & SANTRI PANEL */}
+      <FilterKelasSantriPanel
+        roleTitle="Musyrif"
+        labelScope="Pilih Scope / Asrama / Kelompok"
+        labelSantri="Pilih Santri"
+        availableScopes={listScopeTersedia}
+        selectedScope={selectedScope}
+        onScopeChange={(scope) => {
+          setSelectedScope(scope);
+          setSelectedSantriId('');
+        }}
+        santriInScope={santriAsrama}
+        selectedSantriId={selectedSantriId}
+        onSantriChange={(id) => setSelectedSantriId(id)}
+        genderFilter={genderFilter}
+        onGenderFilterChange={setGenderFilter}
+        showGenderFilter={true}
+        presensiHariIniMap={presensiHariIniMap}
+        onDirectPresensi={handlePresensiStatus}
+        onOpenTahfidzModal={(id) => {
+          setTahfidzSantriId(id);
+          setShowModalTahfidz(true);
+        }}
+        onOpenAkhlakModal={(id) => {
+          setAkhlakSantriId(id);
+          setShowModalAkhlak(true);
+        }}
+        onOpenRewardModal={(id) => {
+          setRpSantriId(id);
+          setShowModalReward(true);
+        }}
+      />
 
       {/* Stat Summary Cards */}
       <div>
