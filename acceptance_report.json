@@ -1,0 +1,147 @@
+{
+  "acceptanceMatrix": {
+    "wali": {
+      "role": "Wali Santri",
+      "login": "PASS",
+      "dashboard": "PASS",
+      "workflow": "PASS",
+      "scope": "PASS",
+      "permission": "PASS",
+      "mobile": "PASS",
+      "chat": "PASS",
+      "status": "PASS"
+    },
+    "guru": {
+      "role": "Guru",
+      "login": "PASS",
+      "dashboard": "PASS",
+      "workflow": "PASS",
+      "scope": "PASS",
+      "permission": "PASS",
+      "mobile": "PASS",
+      "chat": "PASS",
+      "status": "PASS"
+    },
+    "musyrif": {
+      "role": "Musyrif",
+      "login": "PASS",
+      "dashboard": "PASS",
+      "workflow": "PASS",
+      "scope": "PASS",
+      "permission": "PASS",
+      "mobile": "PASS",
+      "chat": "PASS",
+      "status": "PASS"
+    },
+    "kepsek": {
+      "role": "Kepala Sekolah",
+      "login": "PASS",
+      "dashboard": "PASS",
+      "workflow": "PASS",
+      "scope": "PASS",
+      "permission": "PASS",
+      "mobile": "PASS",
+      "chat": "PASS",
+      "status": "PASS"
+    },
+    "keuangan": {
+      "role": "Keuangan",
+      "login": "PASS",
+      "dashboard": "PASS",
+      "workflow": "PASS",
+      "scope": "PASS",
+      "permission": "PASS",
+      "mobile": "PASS",
+      "chat": "PASS",
+      "status": "PASS"
+    },
+    "yayasan": {
+      "role": "Admin / Yayasan",
+      "login": "PASS",
+      "dashboard": "PASS",
+      "workflow": "PASS",
+      "scope": "PASS",
+      "permission": "PASS",
+      "mobile": "PASS",
+      "chat": "PASS",
+      "status": "PASS"
+    },
+    "ketua_yayasan": {
+      "role": "Ketua Yayasan",
+      "login": "PASS",
+      "dashboard": "PASS",
+      "workflow": "PASS",
+      "scope": "PASS",
+      "permission": "PASS",
+      "mobile": "PASS",
+      "chat": "PASS",
+      "status": "PASS"
+    },
+    "kesantrian": {
+      "role": "Kesantrian",
+      "login": "PASS",
+      "dashboard": "PASS",
+      "workflow": "PASS",
+      "scope": "PASS",
+      "permission": "PASS",
+      "mobile": "PASS",
+      "chat": "PASS",
+      "status": "PASS"
+    }
+  },
+  "mobileAuditResults": [
+    {
+      "width": 320,
+      "overflow": false,
+      "screenshot": "C:\\Users\\USER\\.gemini\\antigravity\\brain\\da29aa04-586d-4bd7-ac56-d5bc5515d7ec\\screenshots\\mobile_320px.png"
+    },
+    {
+      "width": 360,
+      "overflow": false,
+      "screenshot": "C:\\Users\\USER\\.gemini\\antigravity\\brain\\da29aa04-586d-4bd7-ac56-d5bc5515d7ec\\screenshots\\mobile_360px.png"
+    },
+    {
+      "width": 390,
+      "overflow": false,
+      "screenshot": "C:\\Users\\USER\\.gemini\\antigravity\\brain\\da29aa04-586d-4bd7-ac56-d5bc5515d7ec\\screenshots\\mobile_390px.png"
+    },
+    {
+      "width": 430,
+      "overflow": false,
+      "screenshot": "C:\\Users\\USER\\.gemini\\antigravity\\brain\\da29aa04-586d-4bd7-ac56-d5bc5515d7ec\\screenshots\\mobile_430px.png"
+    },
+    {
+      "width": 768,
+      "overflow": false,
+      "screenshot": "C:\\Users\\USER\\.gemini\\antigravity\\brain\\da29aa04-586d-4bd7-ac56-d5bc5515d7ec\\screenshots\\mobile_768px.png"
+    },
+    {
+      "width": 1024,
+      "overflow": false,
+      "screenshot": "C:\\Users\\USER\\.gemini\\antigravity\\brain\\da29aa04-586d-4bd7-ac56-d5bc5515d7ec\\screenshots\\mobile_1024px.png"
+    },
+    {
+      "width": 1440,
+      "overflow": false,
+      "screenshot": "C:\\Users\\USER\\.gemini\\antigravity\\brain\\da29aa04-586d-4bd7-ac56-d5bc5515d7ec\\screenshots\\mobile_1440px.png"
+    }
+  ],
+  "consoleErrors": [
+    "[Console Error] Failed to load resource: the server responded with a status of 406 ()",
+    "[Console Error] Failed to load resource: the server responded with a status of 406 ()",
+    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
+    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
+    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
+    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
+    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
+    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
+    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
+    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
+    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
+    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
+    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
+    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
+    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
+    "[Console Error] Failed to load resource: the server responded with a status of 400 ()"
+  ]
+}
