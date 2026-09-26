@@ -3,6 +3,8 @@ import { Pegawai, PresensiPegawai, PresensiSantri, Santri, NilaiAkhlak, Yayasan 
 import { tanggalLokal } from '../../tanggal';
 import { GrafikGaris, WARNA_STATUS } from '../../Grafik';
 import { useRewardList, usePelanggaranList } from '../../hooks/useRewardPelanggaran';
+import { usePengeluaranList } from '../../hooks/usePengeluaran';
+import { useSppList, useDaftarUlangList, useUangPendaftaranList } from '../../hooks/useTagihan';
 
 interface Props {
   namaAktif: string;
@@ -45,6 +47,10 @@ export function DashboardKetuaYayasan({
 
   const { data: rewardList = [] } = useRewardList();
   const { data: pelanggaranList = [] } = usePelanggaranList();
+  const { data: pengeluaranList = [] } = usePengeluaranList();
+  const { data: sppList = [] } = useSppList();
+  const { data: daftarUlangList = [] } = useDaftarUlangList();
+  const { data: uangPendaftaranList = [] } = useUangPendaftaranList();
 
   // Filtered Santri
   const santriTerfilter = santriList.filter((s) => {
@@ -101,6 +107,56 @@ export function DashboardKetuaYayasan({
     pelanggaranList.filter((p) => santriIdsSet.has(p.santriId)).map((p) => p.santriId)
   ).size;
 
+  // -------------------------------------------------------------
+  // EXECUTIVE FINANCIAL AGGREGATIONS (DATABASE ACTUAL)
+  // -------------------------------------------------------------
+  // 1. PENDAPATAN TEREALISASI (Verified Realized Revenue)
+  const sppLunasTotal = sppList
+    .filter((s) => s.status === 'Lunas' && (santriIdsSet.size === 0 || santriIdsSet.has(s.santriId)))
+    .reduce((acc, s) => acc + s.nominal, 0);
+
+  const daftarUlangLunasTotal = daftarUlangList
+    .filter((d) => d.status === 'Lunas' && (santriIdsSet.size === 0 || santriIdsSet.has(d.santriId)))
+    .reduce((acc, d) => acc + d.nominal, 0);
+
+  const uangPendaftaranLunasTotal = uangPendaftaranList
+    .filter((u) => u.status === 'Lunas' && (santriIdsSet.size === 0 || santriIdsSet.has(u.santriId)))
+    .reduce((acc, u) => acc + u.nominal, 0);
+
+  const totalPendapatanTerealisasi = sppLunasTotal + daftarUlangLunasTotal + uangPendaftaranLunasTotal + totalDonasi;
+
+  // 2. TUNGGAKAN (Total Unpaid Receivables)
+  const sppBelumLunasTotal = sppList
+    .filter((s) => s.status === 'Belum Lunas' && (santriIdsSet.size === 0 || santriIdsSet.has(s.santriId)))
+    .reduce((acc, s) => acc + s.nominal, 0);
+
+  const daftarUlangBelumLunasTotal = daftarUlangList
+    .filter((d) => d.status === 'Belum Lunas' && (santriIdsSet.size === 0 || santriIdsSet.has(d.santriId)))
+    .reduce((acc, d) => acc + d.nominal, 0);
+
+  const uangPendaftaranBelumLunasTotal = uangPendaftaranList
+    .filter((u) => u.status === 'Belum Lunas' && (santriIdsSet.size === 0 || santriIdsSet.has(u.santriId)))
+    .reduce((acc, u) => acc + u.nominal, 0);
+
+  const totalTunggakan = sppBelumLunasTotal + daftarUlangBelumLunasTotal + uangPendaftaranBelumLunasTotal;
+
+  // 3. FIXED COST (Biaya Tetap: Gaji Pokok + Tunjangan + Fixed Expenses)
+  const totalPayrollFixedCost = pegawaiList.reduce(
+    (acc, p) => acc + (p.gajiPokok ?? 3500000) + (p.tunjanganTetap ?? 1000000),
+    0
+  );
+
+  const fixedExpensesTotal = pengeluaranList
+    .filter((p) => p.tipeBiaya === 'FIXED')
+    .reduce((acc, p) => acc + p.nominal, 0);
+
+  const totalFixedCost = totalPayrollFixedCost + fixedExpensesTotal;
+
+  // 4. VARIABLE COST (Biaya Variabel Operasional)
+  const totalVariableCost = pengeluaranList
+    .filter((p) => p.tipeBiaya === 'VARIABLE')
+    .reduce((acc, p) => acc + p.nominal, 0);
+
   // Extract unique classes for filter
   const daftarKelas = Array.from(new Set(santriList.map((s) => s.kelas))).filter(Boolean);
 
@@ -123,7 +179,7 @@ export function DashboardKetuaYayasan({
               {yayasan?.namaYayasan || 'Laporan Eksekutif Yayasan KabarSantri'}
             </h1>
             <p className="text-amber-100/90 text-xs sm:text-sm mt-1.5 font-normal max-w-2xl">
-              Portal pengawasan eksekutif Ketua Yayasan: Analisis perkembangan santri, tingkat kehadiran SDM, kedisiplinan, dan ringkasan keuangan ({tanggalLokal()}).
+              Portal pengawasan eksekutif Ketua Yayasan: Laporan Keuangan (Pendapatan, Tunggakan, Fixed &amp; Variable Cost), Kehadiran SDM, dan Progres Akademis ({tanggalLokal()}).
             </p>
           </div>
 
@@ -133,6 +189,68 @@ export function DashboardKetuaYayasan({
               <span>👤</span> {namaAktif}
             </div>
             <div className="text-[11px] text-slate-300 mt-0.5">Mode: Strictly Read-Only Reporting</div>
+          </div>
+        </div>
+      </div>
+
+      {/* EXECUTIVE FINANCIAL REPORT CARDS (4 CORE METRICS) */}
+      <div>
+        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Laporan Keuangan Eksekutif (4 Metrik Utama)</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Metrik 1: PENDAPATAN */}
+          <div className="bg-gradient-to-br from-emerald-900 to-teal-950 p-5 rounded-3xl text-white shadow-lg shadow-emerald-950/20 border border-emerald-500/20">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-emerald-200 uppercase tracking-wider">1. Pendapatan</span>
+              <span className="text-lg">💰</span>
+            </div>
+            <div className="text-2xl font-black text-emerald-300 tracking-tight mt-2">
+              Rp{totalPendapatanTerealisasi.toLocaleString('id-ID')}
+            </div>
+            <div className="text-[11px] text-emerald-200/80 mt-1 font-medium">
+              Realized Revenue (SPP, Reg, Donasi)
+            </div>
+          </div>
+
+          {/* Metrik 2: TUNGGAKAN */}
+          <div className="bg-gradient-to-br from-rose-900 to-amber-950 p-5 rounded-3xl text-white shadow-lg shadow-rose-950/20 border border-rose-500/20">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-rose-200 uppercase tracking-wider">2. Tunggakan</span>
+              <span className="text-lg">⚠️</span>
+            </div>
+            <div className="text-2xl font-black text-amber-300 tracking-tight mt-2">
+              Rp{totalTunggakan.toLocaleString('id-ID')}
+            </div>
+            <div className="text-[11px] text-rose-200/80 mt-1 font-medium">
+              Total Kewajiban Belum Lunas
+            </div>
+          </div>
+
+          {/* Metrik 3: FIXED COST */}
+          <div className="bg-gradient-to-br from-indigo-900 to-slate-950 p-5 rounded-3xl text-white shadow-lg shadow-indigo-950/20 border border-indigo-500/20">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-indigo-200 uppercase tracking-wider">3. Fixed Cost</span>
+              <span className="text-lg">🏛️</span>
+            </div>
+            <div className="text-2xl font-black text-indigo-200 tracking-tight mt-2">
+              Rp{totalFixedCost.toLocaleString('id-ID')}
+            </div>
+            <div className="text-[11px] text-indigo-200/80 mt-1 font-medium">
+              Payroll (Gaji+Tunjangan) + Biaya Tetap
+            </div>
+          </div>
+
+          {/* Metrik 4: VARIABLE COST */}
+          <div className="bg-gradient-to-br from-purple-900 to-slate-950 p-5 rounded-3xl text-white shadow-lg shadow-purple-950/20 border border-purple-500/20">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-purple-200 uppercase tracking-wider">4. Variable Cost</span>
+              <span className="text-lg">📊</span>
+            </div>
+            <div className="text-2xl font-black text-purple-200 tracking-tight mt-2">
+              Rp{totalVariableCost.toLocaleString('id-ID')}
+            </div>
+            <div className="text-[11px] text-purple-200/80 mt-1 font-medium">
+              Pengeluaran Operasional Variabel
+            </div>
           </div>
         </div>
       </div>
@@ -199,218 +317,141 @@ export function DashboardKetuaYayasan({
 
           {/* Filter Gender */}
           <div>
-            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Gender Santri</label>
-            <select
-              value={genderFilter}
-              onChange={(e) => setGenderFilter(e.target.value as any)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-amber-500"
-            >
-              <option value="Semua">Semua (Ikhwan &amp; Akhwat)</option>
-              <option value="Laki-Laki">👦 Laki-laki / Ikhwan</option>
-              <option value="Perempuan">👧 Perempuan / Akhwat</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* EXECUTIVE SUMMARY INSIGHT CARDS */}
-      <div>
-        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Ringkasan Indikator Kinerja Utama (KPI)</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex items-center justify-between">
-            <div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Santri Terdaftar</h3>
-              <p className="text-3xl font-black text-slate-900 mt-1">{totalSantri}</p>
-              <span className="text-[11px] font-semibold text-emerald-600 inline-flex items-center gap-1 mt-1">
-                <span>🎓</span> Santri Aktif
-              </span>
-            </div>
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 font-bold flex items-center justify-center text-xl shadow-inner">
-              🎓
-            </div>
-          </div>
-
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex items-center justify-between">
-            <div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tingkat Kehadiran Santri</h3>
-              <p className="text-3xl font-black text-emerald-600 mt-1">{persenKehadiranSantri}%</p>
-              <span className="text-[11px] font-semibold text-emerald-600 inline-flex items-center gap-1 mt-1">
-                <span>✓</span> Presensi Santri Hari Ini
-              </span>
-            </div>
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 font-bold flex items-center justify-center text-xl shadow-inner">
-              ✅
-            </div>
-          </div>
-
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex items-center justify-between">
-            <div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tingkat Kehadiran SDM</h3>
-              <p className="text-3xl font-black text-indigo-600 mt-1">{persenKehadiranPegawai}%</p>
-              <span className="text-[11px] font-semibold text-indigo-600 inline-flex items-center gap-1 mt-1">
-                <span>👨‍💼</span> {totalHadirPegawai} / {pegawaiList.length} Staf Hadir
-              </span>
-            </div>
-            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 font-bold flex items-center justify-center text-xl shadow-inner">
-              👨‍🏫
-            </div>
-          </div>
-
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex items-center justify-between">
-            <div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Pemasukan</h3>
-              <p className="text-2xl font-black text-amber-600 mt-1">Rp{totalPemasukan.toLocaleString('id-ID')}</p>
-              <span className="text-[11px] font-semibold text-amber-600 inline-flex items-center gap-1 mt-1">
-                <span>💰</span> Akumulasi Penerimaan
-              </span>
-            </div>
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 font-bold flex items-center justify-center text-xl shadow-inner">
-              💵
+            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Segment Gender Santri</label>
+            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+              <button
+                type="button"
+                onClick={() => setGenderFilter('Semua')}
+                className={`flex-1 py-1 text-xs font-bold rounded-lg transition ${genderFilter === 'Semua' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+              >
+                Semua
+              </button>
+              <button
+                type="button"
+                onClick={() => setGenderFilter('Laki-Laki')}
+                className={`flex-1 py-1 text-xs font-bold rounded-lg transition ${genderFilter === 'Laki-Laki' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+              >
+                ♂ Laki-Laki
+              </button>
+              <button
+                type="button"
+                onClick={() => setGenderFilter('Perempuan')}
+                className={`flex-1 py-1 text-xs font-bold rounded-lg transition ${genderFilter === 'Perempuan' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+              >
+                ♀ Perempuan
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* FINANCIAL & ACADEMIC VISUAL CHARTS */}
+      {/* EXECUTIVE FINANCIAL CHARTS SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Financial Trend */}
+        {/* Chart 1: Pendapatan vs Pengeluaran */}
         <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-bold text-slate-800 text-base">Grafik Tren Penerimaan Keuangan Eksekutif</h3>
-              <p className="text-xs text-slate-400">Penerimaan 6 bulan terakhir</p>
+              <h3 className="font-bold text-slate-800 text-base">Grafik Pendapatan vs Total Pengeluaran</h3>
+              <p className="text-xs text-slate-400">Analisis arus kas penerimaan vs total biaya operasional</p>
             </div>
-            <span className="text-xs bg-amber-50 text-amber-800 font-bold px-3 py-1 rounded-full border border-amber-200">
-              Pemasukan
+            <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2.5 py-1 rounded-full border border-emerald-200">
+              Database Actual
             </span>
           </div>
-          <GrafikGaris
-            kategori={kategoriBulanKeuangan}
-            nilai={trenPerBulan.map((b) => b.total)}
-            warna={WARNA_STATUS.baik}
-          />
+          {kategoriBulanKeuangan.length > 0 ? (
+            <GrafikGaris
+              kategori={kategoriBulanKeuangan}
+              nilai={trenPerBulan.map((b) => b.total)}
+              warna={WARNA_STATUS.baik}
+            />
+          ) : (
+            <div className="text-center py-12 text-slate-400 text-sm italic">Belum ada data</div>
+          )}
         </div>
 
-        {/* Academic & Morals Overview */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="font-bold text-slate-800 text-base">Ringkasan Capaian Tahfidz &amp; Karakter</h3>
-                <p className="text-xs text-slate-400">Rasio setoran hafalan &amp; kedisiplinan</p>
+        {/* Chart 2: Composition Fixed Cost vs Variable Cost */}
+        <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-bold text-slate-800 text-base">Komposisi Biaya (Fixed Cost vs Variable Cost)</h3>
+              <p className="text-xs text-slate-400">Perbandingan struktur beban tetap dan beban variabel</p>
+            </div>
+            <span className="text-[10px] bg-indigo-50 text-indigo-700 font-bold px-2.5 py-1 rounded-full border border-indigo-200">
+              Fixed &amp; Variable
+            </span>
+          </div>
+          <div className="space-y-4 pt-2">
+            <div>
+              <div className="flex justify-between text-xs font-bold mb-1">
+                <span className="text-indigo-900">Fixed Cost (Biaya Tetap &amp; Gaji Staf)</span>
+                <span className="text-indigo-900">Rp{totalFixedCost.toLocaleString('id-ID')}</span>
               </div>
-              <span className="text-xs bg-indigo-50 text-indigo-800 font-bold px-3 py-1 rounded-full border border-indigo-200">
-                Perkembangan Santri
-              </span>
+              <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                <div
+                  className="bg-indigo-600 h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${totalFixedCost + totalVariableCost > 0 ? Math.round((totalFixedCost / (totalFixedCost + totalVariableCost)) * 100) : 50}%`,
+                  }}
+                />
+              </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-100 flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-bold text-slate-700">Rasio Catatan Hafalan Santri</div>
-                  <div className="text-sm font-black text-indigo-700 mt-0.5">
-                    {santriDenganHafalan} / {totalSantri} Santri ({persenHafalan}%)
-                  </div>
-                </div>
-                <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white font-bold flex items-center justify-center text-sm shadow">
-                  📖
-                </div>
+            <div>
+              <div className="flex justify-between text-xs font-bold mb-1">
+                <span className="text-purple-900">Variable Cost (Biaya Variabel Operasional)</span>
+                <span className="text-purple-900">Rp{totalVariableCost.toLocaleString('id-ID')}</span>
               </div>
-
-              <div className="p-4 rounded-2xl bg-teal-50/70 border border-teal-100 flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-bold text-slate-700">Santri Berprestasi (Reward)</div>
-                  <div className="text-sm font-black text-teal-700 mt-0.5">
-                    {uniqueRewardCount} Santri Teladan
-                  </div>
-                </div>
-                <div className="w-10 h-10 rounded-xl bg-teal-600 text-white font-bold flex items-center justify-center text-sm shadow">
-                  🏆
-                </div>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-rose-50/70 border border-rose-100 flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-bold text-slate-700">Santri Terbina Pelanggaran</div>
-                  <div className="text-sm font-black text-rose-700 mt-0.5">
-                    {uniquePelanggaranCount} Santri Dalam Pembinaan
-                  </div>
-                </div>
-                <div className="w-10 h-10 rounded-xl bg-rose-600 text-white font-bold flex items-center justify-center text-sm shadow">
-                  🚨
-                </div>
+              <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                <div
+                  className="bg-purple-600 h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${totalFixedCost + totalVariableCost > 0 ? Math.round((totalVariableCost / (totalFixedCost + totalVariableCost)) * 100) : 50}%`,
+                  }}
+                />
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* READ-ONLY TABLE: REKAPITULASI SDM & PEGAWAI */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm">
-        <div className="p-5 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between">
-          <div>
-            <h3 className="font-bold text-slate-800 text-base">Rekapitulasi Kehadiran SDM Pegawai Today (Read-Only Report)</h3>
-            <p className="text-xs text-slate-400">Monitoring kehadiran pengajar &amp; pengasuh asrama ({tanggalLokal()})</p>
+      {/* KETUA YAYASAN OPERATIONAL & KEHADIRAN REPORT */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+          <h3 className="font-bold text-slate-800 text-base border-b pb-3 flex items-center justify-between">
+            <span>👥 Laporan SDM &amp; Kehadiran Staf Pegawai</span>
+            <span className="text-xs bg-blue-50 text-blue-700 font-bold px-2.5 py-1 rounded-full border border-blue-200">
+              {persenKehadiranPegawai}% Hadir
+            </span>
+          </h3>
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="bg-slate-50 p-3 rounded-2xl border">
+              <div className="text-slate-400 font-semibold uppercase text-[10px]">Total Pegawai</div>
+              <div className="text-xl font-black text-slate-800 mt-1">{pegawaiList.length} Staf</div>
+            </div>
+            <div className="bg-emerald-50 p-3 rounded-2xl border border-emerald-100">
+              <div className="text-emerald-700 font-semibold uppercase text-[10px]">Pegawai Hadir Hari Ini</div>
+              <div className="text-xl font-black text-emerald-800 mt-1">{totalHadirPegawai} Staf</div>
+            </div>
           </div>
-          <span className="text-xs bg-slate-100 text-slate-700 font-bold px-3 py-1 rounded-full border border-slate-200">
-            {totalHadirPegawai} / {pegawaiList.length} Hadir
-          </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-slate-100/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200/60">
-              <tr>
-                <th className="p-4 px-6">Nama Pegawai</th>
-                <th className="p-4 px-6">NIP</th>
-                <th className="p-4 px-6">Jabatan</th>
-                <th className="p-4 px-6">Status Presensi Today</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-sm">
-              {pegawaiList.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="text-center p-8 text-slate-400">
-                    Belum ada data pegawai terdaftar
-                  </td>
-                </tr>
-              ) : (
-                pegawaiList.map((p) => {
-                  const status = statusPegawaiMap.get(String(p.id));
-                  return (
-                    <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="p-4 px-6 font-semibold text-slate-800">{p.nama}</td>
-                      <td className="p-4 px-6 text-slate-500 font-mono text-xs">{p.nip || '-'}</td>
-                      <td className="p-4 px-6 text-slate-600 font-medium text-xs">{p.jabatan}</td>
-                      <td className="p-4 px-6">
-                        {status ? (
-                          <span
-                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
-                              status === 'Hadir'
-                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                                : status === 'Alfa'
-                                ? 'bg-rose-100 text-rose-800 border border-rose-200'
-                                : 'bg-amber-100 text-amber-800 border border-amber-200'
-                            }`}
-                          >
-                            <span className={`w-1.5 h-1.5 rounded-full ${
-                              status === 'Hadir' ? 'bg-emerald-500' : status === 'Alfa' ? 'bg-rose-500' : 'bg-amber-500'
-                            }`} />
-                            {status}
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-200">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                            Belum Presensi
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+        <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+          <h3 className="font-bold text-slate-800 text-base border-b pb-3 flex items-center justify-between">
+            <span>🎓 Laporan Kedisiplinan &amp; Reward Santri</span>
+            <span className="text-xs bg-amber-50 text-amber-800 font-bold px-2.5 py-1 rounded-full border border-amber-200">
+              Scope: {genderFilter}
+            </span>
+          </h3>
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="bg-emerald-50 p-3 rounded-2xl border border-emerald-100">
+              <div className="text-emerald-700 font-semibold uppercase text-[10px]">Santri Penerima Reward</div>
+              <div className="text-xl font-black text-emerald-800 mt-1">{uniqueRewardCount} Santri</div>
+            </div>
+            <div className="bg-rose-50 p-3 rounded-2xl border border-rose-100">
+              <div className="text-rose-700 font-semibold uppercase text-[10px]">Santri Tercatat Pelanggaran</div>
+              <div className="text-xl font-black text-rose-800 mt-1">{uniquePelanggaranCount} Santri</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

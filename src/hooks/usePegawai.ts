@@ -14,6 +14,8 @@ function pemetaanPegawai(baris: any): Pegawai {
     kelasDiajar: baris.kelas_diajar ?? [],
     aksesSemuaKelas: baris.akses_semua_kelas ?? false,
     jenisKelaminDiampu: baris.jenis_kelamin_diampu ?? '',
+    gajiPokok: baris.gaji_pokok ?? 3500000,
+    tunjanganTetap: baris.tunjangan_tetap ?? 1000000,
   };
 }
 
@@ -31,6 +33,8 @@ export const DEFAULT_PEGAWAI: Pegawai[] = [
     kelasDiajar: ['7A', '7B'],
     aksesSemuaKelas: false,
     jenisKelaminDiampu: 'L',
+    gajiPokok: 3500000,
+    tunjanganTetap: 1000000,
   },
   {
     id: 2,
@@ -43,6 +47,8 @@ export const DEFAULT_PEGAWAI: Pegawai[] = [
     kelasDiajar: [],
     aksesSemuaKelas: true,
     jenisKelaminDiampu: 'L',
+    gajiPokok: 3000000,
+    tunjanganTetap: 800000,
   },
   {
     id: 3,
@@ -55,6 +61,8 @@ export const DEFAULT_PEGAWAI: Pegawai[] = [
     kelasDiajar: [],
     aksesSemuaKelas: true,
     jenisKelaminDiampu: '',
+    gajiPokok: 4000000,
+    tunjanganTetap: 1200000,
   },
   {
     id: 4,
@@ -67,6 +75,8 @@ export const DEFAULT_PEGAWAI: Pegawai[] = [
     kelasDiajar: [],
     aksesSemuaKelas: true,
     jenisKelaminDiampu: '',
+    gajiPokok: 6000000,
+    tunjanganTetap: 2000000,
   },
   {
     id: 5,
@@ -79,6 +89,8 @@ export const DEFAULT_PEGAWAI: Pegawai[] = [
     kelasDiajar: [],
     aksesSemuaKelas: true,
     jenisKelaminDiampu: '',
+    gajiPokok: 8000000,
+    tunjanganTetap: 3000000,
   },
   {
     id: 6,
@@ -91,6 +103,8 @@ export const DEFAULT_PEGAWAI: Pegawai[] = [
     kelasDiajar: [],
     aksesSemuaKelas: true,
     jenisKelaminDiampu: '',
+    gajiPokok: 3800000,
+    tunjanganTetap: 1000000,
   },
 ];
 

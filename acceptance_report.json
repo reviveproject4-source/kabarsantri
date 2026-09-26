@@ -127,21 +127,13 @@
     }
   ],
   "consoleErrors": [
-    "[Console Error] Failed to load resource: the server responded with a status of 406 ()",
-    "[Console Error] Failed to load resource: the server responded with a status of 406 ()",
-    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
-    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
-    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
-    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
-    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
-    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
-    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
-    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
-    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
-    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
-    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
-    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
-    "[Console Error] Failed to load resource: the server responded with a status of 400 ()",
-    "[Console Error] Failed to load resource: the server responded with a status of 400 ()"
+    "[Console Error (guru)] Failed to load resource: the server responded with a status of 400 ()",
+    "[Console Error (musyrif)] Failed to load resource: the server responded with a status of 400 ()",
+    "[Console Error (kepsek)] Failed to load resource: the server responded with a status of 400 ()",
+    "[Console Error (keuangan)] Failed to load resource: the server responded with a status of 400 ()",
+    "[Console Error (yayasan)] Failed to load resource: the server responded with a status of 400 ()",
+    "[Console Error (ketua_yayasan)] Failed to load resource: the server responded with a status of 400 ()",
+    "[Console Error (ketua_yayasan)] Failed to load resource: the server responded with a status of 404 ()",
+    "[Console Error (kesantrian)] Failed to load resource: the server responded with a status of 400 ()"
   ]
 }

@@ -369,6 +369,11 @@ export function ModulSantri({ isReadOnly = false }: ModulSantriProps = {}) {
   };
 
   const handleSimpan = async () => {
+    if (isReadOnly) {
+      alert('Akses ditolak: Master Data Santri bersifat READ ONLY untuk peran Anda.');
+      return;
+    }
+
     if (santriList.length >= MAX_SANTRI) {
       alert('Kuota Paket Gratis maksimal 50 santri');
       return;
@@ -432,6 +437,11 @@ export function ModulSantri({ isReadOnly = false }: ModulSantriProps = {}) {
   };
 
   const handleSimpanEdit = async () => {
+    if (isReadOnly) {
+      alert('Akses ditolak: Master Data Santri bersifat READ ONLY untuk peran Anda.');
+      return;
+    }
+
     if (santriDiedit === null) return;
 
     if (!formEdit.nama || !formEdit.nis || !formEdit.kelas) {
@@ -665,20 +675,26 @@ export function ModulSantri({ isReadOnly = false }: ModulSantriProps = {}) {
                       </td>
 
                       <td className="p-4 px-6 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => bukaEdit(santri.id)}
-                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs transition"
-                          >
-                            ✏️ Edit
-                          </button>
-                          <button
-                            onClick={() => bukaAkunWali(santri.id)}
-                            className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-semibold px-3 py-1.5 rounded-xl text-xs transition"
-                          >
-                            🔑 Akun Wali
-                          </button>
-                        </div>
+                        {!isReadOnly ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => bukaEdit(santri.id)}
+                              className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs transition"
+                            >
+                              ✏️ Edit
+                            </button>
+                            <button
+                              onClick={() => bukaAkunWali(santri.id)}
+                              className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-semibold px-3 py-1.5 rounded-xl text-xs transition"
+                            >
+                              🔑 Akun Wali
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-400 font-medium italic bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
+                            👁️ Read Only
+                          </span>
+                        )}
                       </td>
                     </tr>
                   );

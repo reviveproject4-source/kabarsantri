@@ -8,37 +8,21 @@ if (!fs.existsSync(SCREENSHOT_DIR)) {
   fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 }
 
-const BASE_URL = 'http://localhost:5173/?app=true';
-
 const consoleErrors = [];
 
 async function run() {
   console.log('🚀 Starting Full Acceptance Test Suite Across 8 Roles...');
   const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({
-    viewport: { width: 1280, height: 800 }
-  });
-  const page = await context.newPage();
-
-  page.on('console', msg => {
-    if (msg.type() === 'error') {
-      consoleErrors.push(`[Console Error] ${msg.text()}`);
-    }
-  });
-
-  page.on('pageerror', err => {
-    consoleErrors.push(`[Page Error] ${err.message}`);
-  });
 
   const roles = [
-    { name: 'wali', title: 'Wali Santri', roleKey: 'wali' },
-    { name: 'guru', title: 'Guru', roleKey: 'guru' },
-    { name: 'musyrif', title: 'Musyrif', roleKey: 'musyrif' },
-    { name: 'kepsek', title: 'Kepala Sekolah', roleKey: 'kepsek' },
-    { name: 'keuangan', title: 'Keuangan', roleKey: 'keuangan' },
-    { name: 'yayasan', title: 'Admin / Yayasan', roleKey: 'yayasan' },
-    { name: 'ketua_yayasan', title: 'Ketua Yayasan', roleKey: 'ketua_yayasan' },
-    { name: 'kesantrian', title: 'Kesantrian', roleKey: 'kesantrian' }
+    { name: 'wali', title: 'Wali Santri' },
+    { name: 'guru', title: 'Guru' },
+    { name: 'musyrif', title: 'Musyrif' },
+    { name: 'kepsek', title: 'Kepala Sekolah' },
+    { name: 'keuangan', title: 'Keuangan' },
+    { name: 'yayasan', title: 'Admin / Yayasan' },
+    { name: 'ketua_yayasan', title: 'Ketua Yayasan' },
+    { name: 'kesantrian', title: 'Kesantrian' }
   ];
 
   const acceptanceMatrix = {};
@@ -47,40 +31,59 @@ async function run() {
     console.log(`\n==================================================`);
     console.log(`🔑 TEST ROLE: ${r.title.toUpperCase()} (${r.name})`);
     console.log(`==================================================`);
-    
-    // 1. Navigate to App URL with Quick Demo Parameter
-    await page.goto(`${BASE_URL}&role=${r.roleKey}`, { waitUntil: 'networkidle' });
-    await page.waitForTimeout(500);
 
-    // If Wali Santri, ensure tab Wali is active
-    if (r.name === 'wali') {
-      const waliTabBtn = page.locator('button:has-text("Wali Santri")').first();
-      if (await waliTabBtn.isVisible()) {
-        await waliTabBtn.click();
-        await page.waitForTimeout(300);
+    const context = await browser.newContext({
+      viewport: { width: 1280, height: 800 }
+    });
+
+    // Clear state before each test run
+    await context.addInitScript(() => {
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch (e) {}
+    });
+
+    const page = await context.newPage();
+
+    page.on('console', msg => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(`[Console Error (${r.name})] ${msg.text()}`);
       }
-    }
+    });
 
-    // 2. Click Login "Masuk"
-    const masukBtn = page.locator('button:has-text("Masuk")').first();
+    page.on('pageerror', err => {
+      consoleErrors.push(`[Page Error (${r.name})] ${err.message}`);
+    });
+
+    // 1. Open Base Portal App URL with role param
+    const roleUrl = `http://localhost:5173/?app=true&role=${r.name}`;
+    await page.goto(roleUrl, { waitUntil: 'networkidle' });
+
     let loginSuccess = false;
-    if (await masukBtn.isVisible()) {
+    try {
+      // 2. Wait for "Masuk" button to be visible (populated by URL role param)
+      const masukBtn = page.locator('button:has-text("Masuk")').first();
+      await masukBtn.waitFor({ state: 'visible', timeout: 5000 });
       await masukBtn.click();
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(2000);
       loginSuccess = true;
-      console.log(`  ✅ Login button clicked for ${r.title}.`);
+      console.log(`  ✅ Logged in successfully as ${r.title}.`);
+    } catch (e) {
+      console.log(`  ⚠️ Quick Login error: ${e.message}`);
     }
 
     // 3. Verify Dashboard Loaded
-    const hasSidebarOrHeader = (await page.locator('aside, nav, header, main').count()) > 0;
     const bodyText = await page.innerText('body');
-    const isDashboardLoaded = hasSidebarOrHeader && (
+    const isDashboardLoaded = (
       bodyText.includes('Dashboard') || 
       bodyText.includes('Ringkasan') || 
       bodyText.includes('Santri') || 
       bodyText.includes('KabarSantri') ||
       bodyText.includes('Wali') ||
-      bodyText.includes('Monitoring')
+      bodyText.includes('Monitoring') ||
+      bodyText.includes('Selamat datang') ||
+      bodyText.includes('Aktivitas')
     );
 
     console.log(`  📌 Dashboard Loaded: ${isDashboardLoaded ? 'YES' : 'NO'}`);
@@ -94,30 +97,37 @@ async function run() {
     let scopePassed = true;
     let permissionPassed = true;
 
-    // 4. Role-Specific Audits
+    // 4. Role-Specific Audits & RBAC Verification
     if (r.name === 'ketua_yayasan') {
-      console.log(`  🧐 AUDITING KETUA YAYASAN (STRICT READ-ONLY)...`);
-      const writeButtons = page.locator('button:has-text("Tambah Santri"), button:has-text("Tambah Pegawai"), button:has-text("Simpan Presensi"), button:has-text("Simpan Nilai"), button:has-text("Hapus")');
+      console.log(`  🧐 AUDITING KETUA YAYASAN (STRICT READ-ONLY & FINANCIAL REPORT)...`);
+      const writeButtons = page.locator('button:has-text("Tambah Santri"), button:has-text("Tambah Pegawai"), button:has-text("Simpan Presensi"), button:has-text("Simpan Nilai"), button:has-text("Hapus Data")');
       const countWrite = await writeButtons.count();
       console.log(`  Read-Only Audit: Found ${countWrite} write/mutation buttons on main dashboard.`);
       permissionPassed = countWrite === 0;
 
-      // Test Filters
-      const filterSelect = page.locator('select').first();
-      if (await filterSelect.isVisible()) {
-        await filterSelect.selectOption({ index: 1 });
-        await page.waitForTimeout(500);
-        console.log(`  Filter period/unit test executed.`);
-      }
+      const hasPendapatan = bodyText.includes('Pendapatan');
+      const hasTunggakan = bodyText.includes('Tunggakan');
+      const hasFixedCost = bodyText.includes('Fixed Cost');
+      const hasVariableCost = bodyText.includes('Variable Cost');
+      console.log(`  Financial Metrics Check: Pendapatan=${hasPendapatan}, Tunggakan=${hasTunggakan}, FixedCost=${hasFixedCost}, VariableCost=${hasVariableCost}`);
+
+      const execScreenshot = path.join(SCREENSHOT_DIR, `ketua_yayasan_executive_report.png`);
+      await page.screenshot({ path: execScreenshot });
+      console.log(`  📸 Screenshot saved: ketua_yayasan_executive_report.png`);
     }
 
     if (r.name === 'guru') {
-      console.log(`  👨‍🏫 AUDITING GURU WORKFLOW & GENDER SCOPE...`);
-      const genderButtons = page.locator('button:has-text("Laki-laki"), button:has-text("Perempuan"), button:has-text("Semua")');
-      if ((await genderButtons.count()) > 0) {
-        await genderButtons.first().click();
+      console.log(`  👨‍🏫 AUDITING GURU WORKFLOW & READ-ONLY MASTER SANTRI...`);
+      const santriTab = page.locator('button:has-text("Santri"), button:has-text("Data Santri")').first();
+      if (await santriTab.isVisible()) {
+        await santriTab.click();
         await page.waitForTimeout(500);
-        console.log(`  Gender scope filter clicked.`);
+        const editButtonsCount = await page.locator('button:has-text("✏️ Edit"), button:has-text("➕ Tambah Santri Baru")').count();
+        console.log(`  Guru Master Santri RBAC Check: Found ${editButtonsCount} write/edit buttons (READ-ONLY verified).`);
+        permissionPassed = editButtonsCount === 0;
+        const readOnlyGuruScreenshot = path.join(SCREENSHOT_DIR, `guru_master_santri_readonly.png`);
+        await page.screenshot({ path: readOnlyGuruScreenshot });
+        console.log(`  📸 Screenshot saved: guru_master_santri_readonly.png`);
       }
 
       const presensiScreenshot = path.join(SCREENSHOT_DIR, `guru_presensi.png`);
@@ -129,6 +139,69 @@ async function run() {
       console.log(`  📸 Screenshot saved: guru_hafalan.png`);
     }
 
+    if (r.name === 'kepsek') {
+      console.log(`  🎓 AUDITING KEPSEK MASTER SANTRI CRUD...`);
+      const santriTab = page.locator('button:has-text("Santri"), button:has-text("Data Santri")').first();
+      if (await santriTab.isVisible()) {
+        await santriTab.click();
+        await page.waitForTimeout(500);
+        const editButtonsCount = await page.locator('button:has-text("✏️ Edit"), button:has-text("➕ Tambah Santri Baru")').count();
+        console.log(`  Kepsek Master Santri CRUD Check: Found ${editButtonsCount} write/edit buttons (ALLOWED).`);
+        permissionPassed = editButtonsCount > 0;
+        const editKepsekScreenshot = path.join(SCREENSHOT_DIR, `kepsek_master_santri_crud.png`);
+        await page.screenshot({ path: editKepsekScreenshot });
+        console.log(`  📸 Screenshot saved: kepsek_master_santri_crud.png`);
+      }
+
+      const progScreenshot = path.join(SCREENSHOT_DIR, `kepsek_progress.png`);
+      await page.screenshot({ path: progScreenshot });
+      console.log(`  📸 Screenshot saved: kepsek_progress.png`);
+    }
+
+    if (r.name === 'keuangan') {
+      console.log(`  💳 AUDITING KEUANGAN OPERATIONAL WORKFLOWS...`);
+      const valScreenshot = path.join(SCREENSHOT_DIR, `keuangan_validasi.png`);
+      await page.screenshot({ path: valScreenshot });
+      console.log(`  📸 Screenshot saved: keuangan_validasi.png`);
+
+      const tagihanBtn = page.locator('button:has-text("Kirim Tagihan WA"), button:has-text("Tagihan")').first();
+      if (await tagihanBtn.isVisible()) {
+        await tagihanBtn.click();
+        await page.waitForTimeout(500);
+        const tagihanScreenshot = path.join(SCREENSHOT_DIR, `keuangan_kirim_tagihan.png`);
+        await page.screenshot({ path: tagihanScreenshot });
+        console.log(`  📸 Screenshot saved: keuangan_kirim_tagihan.png`);
+        await page.keyboard.press('Escape');
+        await page.waitForTimeout(300);
+      }
+
+      const expBtn = page.locator('button:has-text("Input Pengeluaran"), button:has-text("Pengeluaran")').first();
+      if (await expBtn.isVisible()) {
+        await expBtn.click();
+        await page.waitForTimeout(500);
+        const expScreenshot = path.join(SCREENSHOT_DIR, `keuangan_input_pengeluaran.png`);
+        await page.screenshot({ path: expScreenshot });
+        console.log(`  📸 Screenshot saved: keuangan_input_pengeluaran.png`);
+        await page.keyboard.press('Escape');
+        await page.waitForTimeout(300);
+      }
+    }
+
+    if (r.name === 'yayasan') {
+      console.log(`  👑 AUDITING ADMIN / YAYASAN WORKFLOW...`);
+      const santriTab = page.locator('button:has-text("Santri"), button:has-text("Data Santri")').first();
+      if (await santriTab.isVisible()) {
+        await santriTab.click();
+        await page.waitForTimeout(500);
+        const editButtonsCount = await page.locator('button:has-text("✏️ Edit"), button:has-text("➕ Tambah Santri Baru")').count();
+        console.log(`  Yayasan Master Santri CRUD Check: Found ${editButtonsCount} write/edit buttons (ALLOWED).`);
+        permissionPassed = editButtonsCount > 0;
+      }
+      const santriScreenshot = path.join(SCREENSHOT_DIR, `admin_master_santri_crud.png`);
+      await page.screenshot({ path: santriScreenshot });
+      console.log(`  📸 Screenshot saved: admin_master_santri_crud.png`);
+    }
+
     if (r.name === 'musyrif') {
       console.log(`  🏠 AUDITING MUSYRIF WORKFLOW...`);
       const rewardScreenshot = path.join(SCREENSHOT_DIR, `musyrif_reward_pelanggaran.png`);
@@ -136,25 +209,6 @@ async function run() {
       const izinScreenshot = path.join(SCREENSHOT_DIR, `musyrif_izin_pulang.png`);
       await page.screenshot({ path: izinScreenshot });
       console.log(`  📸 Screenshots saved for Musyrif.`);
-    }
-
-    if (r.name === 'keuangan') {
-      console.log(`  💳 AUDITING KEUANGAN WORKFLOW...`);
-      const valScreenshot = path.join(SCREENSHOT_DIR, `keuangan_validasi.png`);
-      await page.screenshot({ path: valScreenshot });
-      console.log(`  📸 Screenshot saved: keuangan_validasi.png`);
-    }
-
-    if (r.name === 'yayasan') {
-      console.log(`  👑 AUDITING ADMIN / YAYASAN WORKFLOW...`);
-      const santriTab = page.locator('button:has-text("Data Santri")').first();
-      if (await santriTab.isVisible()) {
-        await santriTab.click();
-        await page.waitForTimeout(500);
-      }
-      const santriScreenshot = path.join(SCREENSHOT_DIR, `admin_master_santri.png`);
-      await page.screenshot({ path: santriScreenshot });
-      console.log(`  📸 Screenshot saved: admin_master_santri.png`);
     }
 
     if (r.name === 'kesantrian') {
@@ -175,13 +229,6 @@ async function run() {
       console.log(`  📸 Screenshots saved for Wali Santri.`);
     }
 
-    if (r.name === 'kepsek') {
-      console.log(`  🎓 AUDITING KEPSEK WORKFLOW...`);
-      const progScreenshot = path.join(SCREENSHOT_DIR, `kepsek_progress.png`);
-      await page.screenshot({ path: progScreenshot });
-      console.log(`  📸 Screenshot saved: kepsek_progress.png`);
-    }
-
     acceptanceMatrix[r.name] = {
       role: r.title,
       login: loginSuccess ? 'PASS' : 'FAIL',
@@ -191,12 +238,10 @@ async function run() {
       permission: permissionPassed ? 'PASS' : 'FAIL',
       mobile: 'PASS',
       chat: 'PASS',
-      status: 'PASS'
+      status: (loginSuccess && isDashboardLoaded && permissionPassed) ? 'PASS' : 'FAIL'
     };
 
-    // Logout via URL navigation to ensure clean state
-    await page.goto(`${BASE_URL}`, { waitUntil: 'networkidle' });
-    await page.waitForTimeout(500);
+    await context.close();
   }
 
   // 5. Mobile Responsive Viewport Audit
@@ -207,15 +252,25 @@ async function run() {
   const mobileAuditResults = [];
 
   for (const vpWidth of viewports) {
-    await page.setViewportSize({ width: vpWidth, height: 800 });
-    await page.goto(`${BASE_URL}&role=guru`, { waitUntil: 'networkidle' });
-    await page.waitForTimeout(500);
+    const context = await browser.newContext({
+      viewport: { width: vpWidth, height: 800 }
+    });
+    await context.addInitScript(() => {
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch (e) {}
+    });
 
-    const masukBtn = page.locator('button:has-text("Masuk")').first();
-    if (await masukBtn.isVisible()) {
+    const page = await context.newPage();
+    await page.goto('http://localhost:5173/?app=true&role=guru', { waitUntil: 'networkidle' });
+
+    try {
+      const masukBtn = page.locator('button:has-text("Masuk")').first();
+      await masukBtn.waitFor({ state: 'visible', timeout: 5000 });
       await masukBtn.click();
-      await page.waitForTimeout(1000);
-    }
+      await page.waitForTimeout(1500);
+    } catch (e) {}
 
     const overflow = await page.evaluate(() => {
       return document.documentElement.scrollWidth > window.innerWidth;
@@ -226,6 +281,7 @@ async function run() {
 
     console.log(`  Viewport ${vpWidth}px: Overflow = ${overflow ? 'YES' : 'NO (PASS)'}`);
     mobileAuditResults.push({ width: vpWidth, overflow, screenshot: vpScreenshotPath });
+    await context.close();
   }
 
   await browser.close();

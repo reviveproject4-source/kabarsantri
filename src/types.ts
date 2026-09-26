@@ -67,9 +67,53 @@ export interface Pegawai {
   aksesSemuaKelas: boolean;
   // '' berarti tidak dibatasi (bisa lihat santri Ikhwan & Akhwat).
   jenisKelaminDiampu: string;
+  gajiPokok?: number;
+  tunjanganTetap?: number;
 }
 
 export type PegawaiInput = Omit<Pegawai, 'id' | 'email'>;
+
+export type TipeBiaya = 'FIXED' | 'VARIABLE';
+
+export interface Pengeluaran {
+  id: number;
+  tanggal: string;
+  kategori: string;
+  nominal: number;
+  tipeBiaya: TipeBiaya;
+  sumberDana: string;
+  keterangan: string;
+  buktiUrl?: string;
+  dicatatOleh: string;
+}
+
+export type PengeluaranInput = Omit<Pengeluaran, 'id'>;
+
+export interface PotonganPayroll {
+  id: number;
+  pegawaiId: number;
+  periode: string;
+  jenisPotongan: string;
+  nominal: number;
+  keterangan: string;
+  tanggalInput: string;
+  petugasKeuangan: string;
+}
+
+export type PotonganPayrollInput = Omit<PotonganPayroll, 'id' | 'tanggalInput'>;
+
+export interface LogKomunikasiWali {
+  id: number;
+  petugasKeuangan: string;
+  santriId: number;
+  waliNama: string;
+  noHpWali: string;
+  jenisPesan: 'Tagihan' | 'Bukti SPP' | 'Lainnya';
+  referensiTransaksi?: string;
+  tanggalWaktu: string;
+  statusDelivery: 'WA PROTOCOL INVOKED' | 'DELIVERED';
+  isiPesan: string;
+}
 
 export interface PresensiSantri {
   id: number;

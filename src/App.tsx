@@ -501,7 +501,7 @@ function RuteStaff({
         )}
 
         {(isYayasan || isKepsek || isGuru || isMusyrif || isKesantrian || isKetuaYayasan) && activeTab === 'santri' && (
-          <ModulSantri isReadOnly={!isYayasan} />
+          <ModulSantri isReadOnly={!isYayasan && !isKepsek} />
         )}
 
         {(isYayasan || isKepsek || isKesantrian || isKetuaYayasan) && activeTab === 'pegawai' && <ModulPegawai />}

@@ -427,6 +427,7 @@ export function ModulPegawai() {
               <th className="p-4 text-left">Jabatan</th>
               <th className="p-4 text-left">No HP</th>
               <th className="p-4 text-left">Email Login</th>
+              <th className="p-4 text-left">Gaji &amp; Tunjangan</th>
               <th className="p-4 text-left">Status</th>
               <th className="p-4 text-left">Kelas Diajar</th>
               <th className="p-4 text-left">Santri Diampu</th>
@@ -437,7 +438,7 @@ export function ModulPegawai() {
           <tbody>
             {pegawaiList.length === 0 ? (
               <tr>
-                <td colSpan={9} className="p-8 text-center text-gray-500">
+                <td colSpan={10} className="p-8 text-center text-gray-500">
                   Belum ada data pegawai
                 </td>
               </tr>
@@ -448,11 +449,19 @@ export function ModulPegawai() {
 
                 return (
                   <tr key={pegawai.id} className="border-t">
-                    <td className="p-4">{pegawai.nama}</td>
-                    <td className="p-4">{pegawai.nip || '-'}</td>
+                    <td className="p-4 font-semibold">{pegawai.nama}</td>
+                    <td className="p-4 font-mono text-xs">{pegawai.nip || '-'}</td>
                     <td className="p-4">{pegawai.jabatan}</td>
                     <td className="p-4">{pegawai.hp}</td>
-                    <td className="p-4">{pegawai.email || '-'}</td>
+                    <td className="p-4 text-xs">{pegawai.email || '-'}</td>
+                    <td className="p-4 text-xs">
+                      <div className="font-bold text-slate-800">
+                        Pokok: Rp{(pegawai.gajiPokok ?? 3500000).toLocaleString('id-ID')}
+                      </div>
+                      <div className="text-emerald-600">
+                        Tunjangan: Rp{(pegawai.tunjanganTetap ?? 1000000).toLocaleString('id-ID')}
+                      </div>
+                    </td>
                     <td className="p-4">{pegawai.status}</td>
                     <td className="p-4">
                       {jabatanGuru
