@@ -181,14 +181,18 @@ export default function App() {
     );
   }
 
-  if (!profil || !yayasan) {
+  if (!profil) {
     return <Memuat />;
   }
 
-  if (peran === 'wali') {
+  if (peran === 'wali' || profil.peran === 'wali') {
     return (
       <RuteWali santriId={profil.santri_id} onKeluar={keluar} />
     );
+  }
+
+  if (!yayasan) {
+    return <Memuat />;
   }
 
   return (
