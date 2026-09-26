@@ -1,7 +1,11 @@
-import React from 'react';
-import { Pegawai, PresensiPegawai, PresensiSantri, Santri, NilaiAkhlak, IzinPulang } from '../../types';
+import React, { useState } from 'react';
+import { Pegawai, PresensiPegawai, PresensiSantri, Santri, NilaiAkhlak, IzinPulang, StatusPresensi } from '../../types';
 import { PresensiSaya } from '../../PresensiSaya';
 import { tanggalLokal } from '../../tanggal';
+import { useCatatPresensiSantri } from '../../hooks/usePresensi';
+import { useTambahRiwayatTahfidz } from '../../hooks/useSantri';
+import { useTambahNilaiAkhlak } from '../../hooks/useAkhlak';
+import { useTambahPelanggaran, useTambahReward } from '../../hooks/useRewardPelanggaran';
 
 interface Props {
   namaAktif: string;
@@ -15,6 +19,8 @@ interface Props {
   setActiveTab: (tab: string) => void;
 }
 
+const STATUS_OPTIONS: StatusPresensi[] = ['Hadir', 'Sakit', 'Izin', 'Alfa'];
+
 export function DashboardGuru({
   namaAktif,
   pegawaiAktif,
@@ -27,6 +33,39 @@ export function DashboardGuru({
   setActiveTab,
 }: Props) {
   const hariIni = tanggalLokal();
+
+  // Mutations
+  const { mutate: catatPresensiSantri } = useCatatPresensiSantri();
+  const { mutateAsync: tambahRiwayatTahfidz } = useTambahRiwayatTahfidz();
+  const { mutateAsync: tambahNilaiAkhlak } = useTambahNilaiAkhlak();
+  const { mutateAsync: tambahPelanggaran } = useTambahPelanggaran();
+  const { mutateAsync: tambahReward } = useTambahReward();
+
+  // Modals state
+  const [showModalTahfidz, setShowModalTahfidz] = useState(false);
+  const [showModalAkhlak, setShowModalAkhlak] = useState(false);
+  const [showModalReward, setShowModalReward] = useState(false);
+
+  // Form states Tahfidz
+  const [tahfidzSantriId, setTahfidzSantriId] = useState('');
+  const [tahfidzJuz, setTahfidzJuz] = useState('');
+  const [tahfidzSurat, setTahfidzSurat] = useState('');
+  const [tahfidzAyat, setTahfidzAyat] = useState('');
+  const [tahfidzNilai, setTahfidzNilai] = useState('Mumtaz');
+  const [sedangSimpanTahfidz, setSedangSimpanTahfidz] = useState(false);
+
+  // Form states Akhlak
+  const [akhlakSantriId, setAkhlakSantriId] = useState('');
+  const [akhlakNilai, setAkhlakNilai] = useState('Baik');
+  const [akhlakCatatan, setAkhlakCatatan] = useState('');
+  const [sedangSimpanAkhlak, setSedangSimpanAkhlak] = useState(false);
+
+  // Form states Reward/Pelanggaran
+  const [rpSantriId, setRpSantriId] = useState('');
+  const [rpJenis, setRpJenis] = useState<'reward' | 'pelanggaran'>('reward');
+  const [rpKategori, setRpKategori] = useState('');
+  const [rpCatatan, setRpCatatan] = useState('');
+  const [sedangSimpanRp, setSedangSimpanRp] = useState(false);
 
   // Filter santri for Guru's class scope
   const kelasArray = pegawaiAktif?.kelasDiajar || [];
@@ -58,9 +97,7 @@ export function DashboardGuru({
     else if (st === 'Alfa') countAlfa++;
   });
 
-  const countBelum = totalSantriKelas - (countHadir + countSakit + countIzin + countAlfa);
-
-  // Flatten riwayat tahfidz from santri in class
+  // Flatten all riwayat tahfidz from santri in class
   const listTahfidzKelas: Array<{
     santriNama: string;
     kelas: string;
@@ -87,7 +124,6 @@ export function DashboardGuru({
     });
   });
 
-  // Sort latest first
   listTahfidzKelas.sort((a, b) => (b.tanggal || '').localeCompare(a.tanggal || ''));
   const tahfidzTerbaru = listTahfidzKelas.slice(0, 5);
 
@@ -96,26 +132,136 @@ export function DashboardGuru({
   const akhlakKelas = nilaiAkhlakList.filter((a) => santriIdsKelasSet.has(a.santriId));
   const akhlakTerbaru = akhlakKelas.slice(0, 5);
 
+  // Handlers for Direct Presensi
+  const handlePresensiStatus = (santriId: number, status: StatusPresensi) => {
+    catatPresensiSantri(
+      { santriId, status, dicatatOleh: namaAktif },
+      {
+        onError: (err: any) => {
+          alert(`Gagal mencatat presensi: ${err?.message || err}`);
+        },
+      }
+    );
+  };
+
+  // Handler for Submitting Setoran Tahfidz
+  const handleSimpanTahfidz = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tahfidzSantriId || !tahfidzJuz) {
+      alert('Pilih santri dan masukkan Juz!');
+      return;
+    }
+
+    setSedangSimpanTahfidz(true);
+    try {
+      await tambahRiwayatTahfidz({
+        santriId: Number(tahfidzSantriId),
+        riwayat: {
+          juz: tahfidzJuz,
+          surat: tahfidzSurat || '-',
+          ayat: tahfidzAyat || '-',
+          hadits: '',
+          kitab: '',
+          nilai: tahfidzNilai || 'Mumtaz',
+          dicatatOleh: namaAktif,
+        },
+      });
+      setShowModalTahfidz(false);
+      setTahfidzSantriId('');
+      setTahfidzJuz('');
+      setTahfidzSurat('');
+      setTahfidzAyat('');
+    } catch (err: any) {
+      alert(`Gagal menyimpan setoran: ${err?.message || err}`);
+    } finally {
+      setSedangSimpanTahfidz(false);
+    }
+  };
+
+  // Handler for Submitting Akhlak Rating
+  const handleSimpanAkhlak = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!akhlakSantriId || !akhlakNilai) {
+      alert('Pilih santri dan nilai akhlak!');
+      return;
+    }
+
+    setSedangSimpanAkhlak(true);
+    try {
+      await tambahNilaiAkhlak({
+        santriId: Number(akhlakSantriId),
+        nilai: akhlakNilai,
+        catatan: akhlakCatatan,
+        dicatatOleh: namaAktif,
+        status: 'Disetujui',
+      });
+      setShowModalAkhlak(false);
+      setAkhlakSantriId('');
+      setAkhlakCatatan('');
+    } catch (err: any) {
+      alert(`Gagal menyimpan nilai akhlak: ${err?.message || err}`);
+    } finally {
+      setSedangSimpanAkhlak(false);
+    }
+  };
+
+  // Handler for Submitting Reward / Pelanggaran
+  const handleSimpanReward = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rpSantriId || !rpKategori) {
+      alert('Pilih santri dan kategori!');
+      return;
+    }
+
+    setSedangSimpanRp(true);
+    try {
+      if (rpJenis === 'pelanggaran') {
+        await tambahPelanggaran({
+          santriId: Number(rpSantriId),
+          kategori: rpKategori,
+          catatan: rpCatatan,
+          dicatatOleh: namaAktif,
+          status: 'Disetujui',
+        });
+      } else {
+        await tambahReward({
+          santriId: Number(rpSantriId),
+          kategori: rpKategori,
+          catatan: rpCatatan,
+          dicatatOleh: namaAktif,
+        });
+      }
+      setShowModalReward(false);
+      setRpSantriId('');
+      setRpKategori('');
+      setRpCatatan('');
+    } catch (err: any) {
+      alert(`Gagal menyimpan catatan: ${err?.message || err}`);
+    } finally {
+      setSedangSimpanRp(false);
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Welcome Card Guru */}
+      {/* Welcome Banner Guru */}
       <div className="relative overflow-hidden bg-gradient-to-r from-emerald-800 via-teal-800 to-slate-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-emerald-950/20 border border-emerald-600/30">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-72 h-72 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="bg-emerald-400/20 text-emerald-200 text-xs px-3 py-1 rounded-full font-bold border border-emerald-300/30 uppercase tracking-wider">
-                👨‍🏫 Dashboard Guru Pengajar
+                👨‍🏫 Dashboard Operational Guru
               </span>
               <span className="bg-white/10 text-emerald-100 text-xs px-3 py-1 rounded-full font-medium border border-white/20">
-                Kelas: {kelasDiajarAktif}
+                Kelas: {kelasDiajarAktif || 'Semua Kelas'}
               </span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
               Selamat datang kembali, {namaAktif}!
             </h1>
             <p className="text-emerald-100/90 text-xs sm:text-sm mt-1.5 font-normal max-w-2xl">
-              Kelola presensi harian, setoran hafalan Al-Qur'an, dan evaluasi karakter/adab santri kelas Anda ({tanggalLokal()}).
+              Lakukan presensi harian langsung, catat setoran hafalan, dan berikan penilaian karakter santri kelas Anda ({tanggalLokal()}).
             </p>
           </div>
 
@@ -133,7 +279,7 @@ export function DashboardGuru({
 
       {/* Stat Summary Cards */}
       <div>
-        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Ikhtisar Kelas & Perkembangan Santri</h2>
+        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Ikhtisar Kelas &amp; Perkembangan Santri</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition-all flex items-center justify-between">
             <div>
@@ -150,7 +296,7 @@ export function DashboardGuru({
 
           <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition-all flex items-center justify-between">
             <div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Izin & Sakit</h3>
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Izin &amp; Sakit</h3>
               <p className="text-3xl font-black text-amber-600 mt-1">{countIzin + countSakit}</p>
               <span className="text-[11px] font-semibold text-amber-600 inline-flex items-center gap-1 mt-1">
                 <span>ℹ️</span> {countIzin} Izin, {countSakit} Sakit
@@ -189,20 +335,20 @@ export function DashboardGuru({
         </div>
       </div>
 
-      {/* Quick Action Shortcuts Bar */}
+      {/* Quick Action Interactive Workflows Bar */}
       <div>
-        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Aksi Cepat & Alur Kerja Utama Guru</h2>
+        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Aksi Cepat &amp; Alur Kerja Langsung Guru</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
           <button
-            onClick={() => setActiveTab('tahfidz')}
-            className="bg-white hover:bg-indigo-50/50 p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow hover:border-indigo-300 transition-all text-left flex flex-col items-start gap-2 group"
+            onClick={() => setShowModalTahfidz(true)}
+            className="bg-gradient-to-br from-indigo-500 to-indigo-700 hover:from-indigo-600 hover:to-indigo-800 text-white p-4 rounded-2xl shadow-md hover:shadow-lg transition-all text-left flex flex-col items-start gap-2 group border border-indigo-400/30"
           >
-            <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform">
               📖
             </div>
             <div>
-              <div className="text-xs font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">Setor Hafalan</div>
-              <div className="text-[10px] text-slate-400">Tahfidz Al-Qur'an</div>
+              <div className="text-xs font-bold text-white">+ Input Setoran</div>
+              <div className="text-[10px] text-indigo-100">Tahfidz Al-Qur'an</div>
             </div>
           </button>
 
@@ -215,33 +361,33 @@ export function DashboardGuru({
             </div>
             <div>
               <div className="text-xs font-bold text-slate-800 group-hover:text-emerald-700 transition-colors">Presensi Santri</div>
-              <div className="text-[10px] text-slate-400">Absensi Harian</div>
+              <div className="text-[10px] text-slate-400">Absensi Kelas</div>
             </div>
           </button>
 
           <button
-            onClick={() => setActiveTab('akhlak')}
-            className="bg-white hover:bg-teal-50/50 p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow hover:border-teal-300 transition-all text-left flex flex-col items-start gap-2 group"
+            onClick={() => setShowModalAkhlak(true)}
+            className="bg-gradient-to-br from-teal-500 to-teal-700 hover:from-teal-600 hover:to-teal-800 text-white p-4 rounded-2xl shadow-md hover:shadow-lg transition-all text-left flex flex-col items-start gap-2 group border border-teal-400/30"
           >
-            <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform">
               🌱
             </div>
             <div>
-              <div className="text-xs font-bold text-slate-800 group-hover:text-teal-700 transition-colors">Nilai Akhlak</div>
-              <div className="text-[10px] text-slate-400">Evaluasi Karakter</div>
+              <div className="text-xs font-bold text-white">+ Catat Akhlak</div>
+              <div className="text-[10px] text-teal-100">Evaluasi Karakter</div>
             </div>
           </button>
 
           <button
-            onClick={() => setActiveTab('reward-pelanggaran')}
-            className="bg-white hover:bg-rose-50/50 p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow hover:border-rose-300 transition-all text-left flex flex-col items-start gap-2 group"
+            onClick={() => setShowModalReward(true)}
+            className="bg-gradient-to-br from-rose-500 to-rose-700 hover:from-rose-600 hover:to-rose-800 text-white p-4 rounded-2xl shadow-md hover:shadow-lg transition-all text-left flex flex-col items-start gap-2 group border border-rose-400/30"
           >
-            <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform">
               🏅
             </div>
             <div>
-              <div className="text-xs font-bold text-slate-800 group-hover:text-rose-700 transition-colors">Prestasi & Warning</div>
-              <div className="text-[10px] text-slate-400">Reward / Catatan</div>
+              <div className="text-xs font-bold text-white">+ Catat Reward / Pelanggaran</div>
+              <div className="text-[10px] text-rose-100">Prestasi &amp; Catatan</div>
             </div>
           </button>
 
@@ -254,7 +400,7 @@ export function DashboardGuru({
             </div>
             <div>
               <div className="text-xs font-bold text-slate-800 group-hover:text-cyan-700 transition-colors">Data Santri</div>
-              <div className="text-[10px] text-slate-400">Daftar Santri Kelas</div>
+              <div className="text-[10px] text-slate-400">Read-Only View</div>
             </div>
           </button>
 
@@ -273,9 +419,9 @@ export function DashboardGuru({
         </div>
       </div>
 
-      {/* Main Workspace Tables */}
+      {/* Main Workspace Tables & Feeds */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Setoran Hafalan Terbaru */}
+        {/* Setoran Hafalan Terbaru Feed */}
         <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
@@ -284,10 +430,10 @@ export function DashboardGuru({
                 <p className="text-xs text-slate-400">Aktivitas hafalan Al-Qur'an santri kelas ini</p>
               </div>
               <button
-                onClick={() => setActiveTab('tahfidz')}
-                className="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-100 transition"
+                onClick={() => setShowModalTahfidz(true)}
+                className="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3.5 py-1.5 rounded-xl shadow transition flex items-center gap-1"
               >
-                Lihat Semua ➔
+                <span>➕</span> Input Setoran
               </button>
             </div>
 
@@ -296,10 +442,10 @@ export function DashboardGuru({
                 <span className="text-3xl">📖</span>
                 <p className="text-xs text-slate-500 font-medium mt-2">Belum ada setoran hafalan terbaru untuk kelas ini.</p>
                 <button
-                  onClick={() => setActiveTab('tahfidz')}
+                  onClick={() => setShowModalTahfidz(true)}
                   className="mt-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow transition"
                 >
-                  + Tambah Setoran Hafalan
+                  + Tambah Setoran Hafalan Sekarang
                 </button>
               </div>
             ) : (
@@ -325,19 +471,19 @@ export function DashboardGuru({
           </div>
         </div>
 
-        {/* Catatan Karakter & Akhlak Terbaru */}
+        {/* Evaluasi Adab & Karakter Feed */}
         <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="font-bold text-slate-800 text-base">Evaluasi Adab & Karakter</h3>
+                <h3 className="font-bold text-slate-800 text-base">Evaluasi Adab &amp; Karakter</h3>
                 <p className="text-xs text-slate-400">Catatan perkembangan akhlak harian</p>
               </div>
               <button
-                onClick={() => setActiveTab('akhlak')}
-                className="text-xs font-bold text-teal-600 hover:text-teal-800 bg-teal-50 px-3 py-1.5 rounded-xl border border-teal-100 transition"
+                onClick={() => setShowModalAkhlak(true)}
+                className="text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 px-3.5 py-1.5 rounded-xl shadow transition flex items-center gap-1"
               >
-                Lihat Semua ➔
+                <span>🌱</span> Catat Akhlak
               </button>
             </div>
 
@@ -346,10 +492,10 @@ export function DashboardGuru({
                 <span className="text-3xl">🌱</span>
                 <p className="text-xs text-slate-500 font-medium mt-2">Belum ada catatan evaluasi akhlak terdaftar.</p>
                 <button
-                  onClick={() => setActiveTab('akhlak')}
+                  onClick={() => setShowModalAkhlak(true)}
                   className="mt-3 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow transition"
                 >
-                  + Catat Evaluasi Akhlak
+                  + Catat Evaluasi Akhlak Sekarang
                 </button>
               </div>
             ) : (
@@ -377,18 +523,18 @@ export function DashboardGuru({
         </div>
       </div>
 
-      {/* Presensi Santri Kelas Table */}
+      {/* OPERATIONAL ATTENDANCE TABLE — Single-Click Attendance Direct on Dashboard */}
       <div className="bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm">
         <div className="p-5 border-b border-slate-100 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h3 className="font-bold text-slate-800 text-base">Monitoring Kehadiran Santri Kelas Hari Ini</h3>
-            <p className="text-xs text-slate-400">Daftar santri di kelas {kelasDiajarAktif} ({tanggalLokal()})</p>
+            <h3 className="font-bold text-slate-800 text-base">Presensi Santri Kelas Hari Ini (Operasional Langsung)</h3>
+            <p className="text-xs text-slate-400">Klik tombol status di bawah untuk langsung menyimpan presensi ke database ({tanggalLokal()})</p>
           </div>
           <button
             onClick={() => setActiveTab('presensi')}
             className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow transition self-start sm:self-auto"
           >
-            Input Presensi Harian ➔
+            Modul Presensi Lengkap ➔
           </button>
         </div>
 
@@ -399,7 +545,7 @@ export function DashboardGuru({
                 <th className="p-4 px-6">Nama Santri</th>
                 <th className="p-4 px-6">NIS</th>
                 <th className="p-4 px-6">Kelas</th>
-                <th className="p-4 px-6">Status Kehadiran Hari Ini</th>
+                <th className="p-4 px-6">Input Presensi Hari Ini</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
@@ -411,7 +557,7 @@ export function DashboardGuru({
                 </tr>
               ) : (
                 santriKelas.map((s) => {
-                  const status = presensiHariIniMap.get(s.id);
+                  const statusSaatIni = presensiHariIniMap.get(s.id);
                   return (
                     <tr key={s.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="p-4 px-6 font-semibold text-slate-800 flex items-center gap-3">
@@ -423,27 +569,29 @@ export function DashboardGuru({
                       <td className="p-4 px-6 text-slate-600 text-xs font-mono">{s.nis || '-'}</td>
                       <td className="p-4 px-6 text-slate-600 font-medium text-xs">{s.kelas}</td>
                       <td className="p-4 px-6">
-                        {status ? (
-                          <span
-                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
-                              status === 'Hadir'
-                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                                : status === 'Alfa'
-                                ? 'bg-rose-100 text-rose-800 border border-rose-200'
-                                : 'bg-amber-100 text-amber-800 border border-amber-200'
-                            }`}
-                          >
-                            <span className={`w-1.5 h-1.5 rounded-full ${
-                              status === 'Hadir' ? 'bg-emerald-500' : status === 'Alfa' ? 'bg-rose-500' : 'bg-amber-500'
-                            }`} />
-                            {status}
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-200">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                            Belum Presensi
-                          </span>
-                        )}
+                        <div className="flex flex-wrap gap-1.5">
+                          {STATUS_OPTIONS.map((st) => {
+                            const isSelected = statusSaatIni === st;
+                            return (
+                              <button
+                                key={st}
+                                onClick={() => handlePresensiStatus(s.id, st)}
+                                className={`px-3 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1 ${
+                                  isSelected
+                                    ? st === 'Hadir'
+                                      ? 'bg-emerald-600 text-white shadow'
+                                      : st === 'Alfa'
+                                      ? 'bg-rose-600 text-white shadow'
+                                      : 'bg-amber-500 text-white shadow'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
+                                }`}
+                              >
+                                {isSelected && <span>✓</span>}
+                                {st}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -453,6 +601,322 @@ export function DashboardGuru({
           </table>
         </div>
       </div>
+
+      {/* MODAL 1: INPUT SETORAN HAFALAN */}
+      {showModalTahfidz && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between mb-4 border-b pb-3">
+              <h3 className="font-black text-slate-900 text-lg flex items-center gap-2">
+                <span>📖</span> Input Setoran Hafalan Al-Qur'an
+              </h3>
+              <button
+                onClick={() => setShowModalTahfidz(false)}
+                className="text-slate-400 hover:text-slate-600 text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSimpanTahfidz} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                  Pilih Santri
+                </label>
+                <select
+                  value={tahfidzSantriId}
+                  onChange={(e) => setTahfidzSantriId(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                  required
+                >
+                  <option value="">-- Pilih Santri --</option>
+                  {santriKelas.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.nama} ({s.kelas})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                    Juz *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: 30"
+                    value={tahfidzJuz}
+                    onChange={(e) => setTahfidzJuz(e.target.value)}
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                    Surat
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="An-Naba"
+                    value={tahfidzSurat}
+                    onChange={(e) => setTahfidzSurat(e.target.value)}
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                    Ayat
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="1-40"
+                    value={tahfidzAyat}
+                    onChange={(e) => setTahfidzAyat(e.target.value)}
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                  Nilai Evaluasi
+                </label>
+                <select
+                  value={tahfidzNilai}
+                  onChange={(e) => setTahfidzNilai(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="Mumtaz (Sangat Baik)">Mumtaz (Sangat Baik)</option>
+                  <option value="Jayyid Jiddan (Baik Sekali)">Jayyid Jiddan (Baik Sekali)</option>
+                  <option value="Jayyid (Baik)">Jayyid (Baik)</option>
+                  <option value="Maqbul (Cukup)">Maqbul (Cukup)</option>
+                  <option value="Murojaah Ulang">Murojaah Ulang</option>
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowModalTahfidz(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 border border-slate-200"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={sedangSimpanTahfidz}
+                  className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow disabled:opacity-50"
+                >
+                  {sedangSimpanTahfidz ? 'Simpan Database...' : 'Simpan Setoran'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: INPUT NILAI AKHLAK */}
+      {showModalAkhlak && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between mb-4 border-b pb-3">
+              <h3 className="font-black text-slate-900 text-lg flex items-center gap-2">
+                <span>🌱</span> Catat Evaluasi Karakter &amp; Akhlak
+              </h3>
+              <button
+                onClick={() => setShowModalAkhlak(false)}
+                className="text-slate-400 hover:text-slate-600 text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSimpanAkhlak} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                  Pilih Santri
+                </label>
+                <select
+                  value={akhlakSantriId}
+                  onChange={(e) => setAkhlakSantriId(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500"
+                  required
+                >
+                  <option value="">-- Pilih Santri --</option>
+                  {santriKelas.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.nama} ({s.kelas})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                  Nilai Karakter / Adab
+                </label>
+                <select
+                  value={akhlakNilai}
+                  onChange={(e) => setAkhlakNilai(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500"
+                >
+                  <option value="Sangat Baik">Sangat Baik (A)</option>
+                  <option value="Baik">Baik (B)</option>
+                  <option value="Cukup">Cukup (C)</option>
+                  <option value="Perlu Bimbingan">Perlu Bimbingan (D)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                  Catatan Evaluasi / Catatan Guru
+                </label>
+                <textarea
+                  placeholder="Contoh: Disiplin shalat berjamaah & khusyuk membaca Al-Qur'an."
+                  value={akhlakCatatan}
+                  onChange={(e) => setAkhlakCatatan(e.target.value)}
+                  rows={3}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowModalAkhlak(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 border border-slate-200"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={sedangSimpanAkhlak}
+                  className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 shadow disabled:opacity-50"
+                >
+                  {sedangSimpanAkhlak ? 'Simpan Database...' : 'Simpan Evaluasi'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: INPUT REWARD / PELANGGARAN */}
+      {showModalReward && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between mb-4 border-b pb-3">
+              <h3 className="font-black text-slate-900 text-lg flex items-center gap-2">
+                <span>🏅</span> Catat Prestasi / Pelanggaran Santri
+              </h3>
+              <button
+                onClick={() => setShowModalReward(false)}
+                className="text-slate-400 hover:text-slate-600 text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSimpanReward} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                  Jenis Record
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setRpJenis('reward')}
+                    className={`py-2 rounded-xl text-xs font-bold transition border ${
+                      rpJenis === 'reward'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200'
+                    }`}
+                  >
+                    🏆 Reward / Prestasi
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRpJenis('pelanggaran')}
+                    className={`py-2 rounded-xl text-xs font-bold transition border ${
+                      rpJenis === 'pelanggaran'
+                        ? 'bg-rose-600 text-white border-rose-600 shadow'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200'
+                    }`}
+                  >
+                    ⚠️ Pelanggaran / Warning
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                  Pilih Santri
+                </label>
+                <select
+                  value={rpSantriId}
+                  onChange={(e) => setRpSantriId(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-rose-500"
+                  required
+                >
+                  <option value="">-- Pilih Santri --</option>
+                  {santriKelas.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.nama} ({s.kelas})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                  Kategori
+                </label>
+                <input
+                  type="text"
+                  placeholder={rpJenis === 'reward' ? 'Juara Lomba Tahfidz / Organisasi' : 'Kerapihan Tempat Tidur / Jam Malam / Kebersihan'}
+                  value={rpKategori}
+                  onChange={(e) => setRpKategori(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-rose-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                  Keterangan Catatan
+                </label>
+                <textarea
+                  placeholder="Detail catatan prestasi atau pelanggaran santri..."
+                  value={rpCatatan}
+                  onChange={(e) => setRpCatatan(e.target.value)}
+                  rows={2}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-rose-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowModalReward(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 border border-slate-200"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={sedangSimpanRp}
+                  className={`px-5 py-2 rounded-xl text-xs font-bold text-white shadow disabled:opacity-50 ${
+                    rpJenis === 'reward' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'
+                  }`}
+                >
+                  {sedangSimpanRp ? 'Simpan Database...' : 'Simpan Record'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
