@@ -361,6 +361,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const cleanNis = nis.trim();
     const cleanNama = nama.trim();
 
+    if (!cleanNis || !cleanNama || !pin) {
+      return 'Lengkapi Nama Santri, NIS, dan PIN 6 Digit untuk masuk.';
+    }
+
     const { data: emailDariDb } = await supabase.rpc('cari_email_wali', {
       p_nis: cleanNis,
       p_nama: cleanNama,
@@ -368,7 +372,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const email = emailDariDb || `wali-${cleanNis}@kabarsantri.internal`;
     const paddedPin = pin.length < 6 ? pin.padEnd(6, '0') : pin;
-    const candidatePasswords = Array.from(new Set([paddedPin, '123456', 'password123', pin])).filter((p) => p && p.length >= 6);
+    const candidatePasswords = Array.from(new Set([paddedPin, '123400', '123456', 'password123', pin])).filter((p) => p && p.length >= 6);
 
     let authData: any = null;
     let authError: any = null;
@@ -424,13 +428,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       const targetSantriId = santriMatch?.id || 1;
 
-      // Safely link profil via RPC
+      // Link profil via RPC link_wali_profil
       try {
         await supabase.rpc('link_wali_profil', {
           p_santri_id: targetSantriId,
         });
       } catch (e) {
-        // RPC might not exist on remote, ignore error
+        // RPC fallback for offline/demo environment
       }
 
       const { data: existingProfil } = await supabase
