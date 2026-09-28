@@ -365,101 +365,66 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return 'Lengkapi Nama Santri, NIS, dan PIN 6 Digit untuk masuk.';
     }
 
+    // 1. Identity Resolution & Santri Chain (Nama + NIS -> exactly 1 Santri record)
+    const { data: santriMatch, error: santriErr } = await supabase
+      .from('santri')
+      .select('id, yayasan_id, nis, nama')
+      .eq('nis', cleanNis)
+      .ilike('nama', cleanNama)
+      .maybeSingle();
+
+    if (santriErr || !santriMatch) {
+      return 'Data Santri dengan Nama dan NIS tersebut tidak ditemukan.';
+    }
+
+    const targetSantriId = santriMatch.id;
+
+    // 2. Technical Auth Identifier derived strictly from resolved santri.id
     const { data: emailDariDb } = await supabase.rpc('cari_email_wali', {
       p_nis: cleanNis,
       p_nama: cleanNama,
     });
 
-    const email = emailDariDb || `wali-${cleanNis}@kabarsantri.internal`;
-    const paddedPin = pin.length < 6 ? pin.padEnd(6, '0') : pin;
-    const candidatePasswords = Array.from(new Set([paddedPin, '123400', '123456', 'password123', pin])).filter((p) => p && p.length >= 6);
+    const email = emailDariDb || `wali-${targetSantriId}@kabarsantri.internal`;
+    const userPassword = pin.length < 6 ? pin.padEnd(6, '0') : pin;
 
-    let authData: any = null;
-    let authError: any = null;
+    // 3. Authentication: ONLY signInWithPassword (NO password fallbacks, NO auto-signUp)
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password: userPassword,
+    });
 
-    for (const pwd of candidatePasswords) {
-      const res = await supabase.auth.signInWithPassword({
-        email,
-        password: pwd,
+    if (authError || !authData?.session?.user) {
+      return 'PIN yang Anda masukkan salah atau akun Wali belum terdaftar.';
+    }
+
+    const userId = authData.session.user.id;
+
+    // 4. Link Profil via RPC using the EXACT resolved targetSantriId
+    try {
+      await supabase.rpc('link_wali_profil', {
+        p_santri_id: targetSantriId,
       });
-      if (res.data?.session) {
-        authData = res.data;
-        authError = null;
-        break;
-      } else {
-        authError = res.error;
-      }
+    } catch (e) {
+      // Offline / fallback handling
     }
 
-    if (!authData?.session) {
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password: paddedPin,
-      });
+    const { data: existingProfil } = await supabase
+      .from('profil')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
 
-      if (signUpData?.session) {
-        authData = signUpData as any;
-        authError = null;
-      } else if (signUpData?.user) {
-        for (const pwd of candidatePasswords) {
-          const retryRes = await supabase.auth.signInWithPassword({
-            email,
-            password: pwd,
-          });
-          if (retryRes.data?.session) {
-            authData = retryRes.data as any;
-            authError = null;
-            break;
-          }
-        }
-      } else if (signUpError) {
-        authError = signUpError;
-      }
-    }
+    const waliProfil: ProfilBaris = existingProfil ? (existingProfil as ProfilBaris) : {
+      id: userId,
+      yayasan_id: santriMatch.yayasan_id || 'demo-yayasan-01',
+      peran: 'wali',
+      pegawai_id: null,
+      santri_id: targetSantriId,
+    };
 
-    if (authData?.session?.user) {
-      const userId = authData.session.user.id;
-
-      const { data: santriMatch } = await supabase
-        .from('santri')
-        .select('id, yayasan_id')
-        .eq('nis', cleanNis)
-        .maybeSingle();
-
-      const targetSantriId = santriMatch?.id || 1;
-
-      // Link profil via RPC link_wali_profil
-      try {
-        await supabase.rpc('link_wali_profil', {
-          p_santri_id: targetSantriId,
-        });
-      } catch (e) {
-        // RPC fallback for offline/demo environment
-      }
-
-      const { data: existingProfil } = await supabase
-        .from('profil')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-
-      const waliProfil: ProfilBaris = existingProfil ? (existingProfil as ProfilBaris) : {
-        id: userId,
-        yayasan_id: santriMatch?.yayasan_id || 'demo-yayasan-01',
-        peran: 'wali',
-        pegawai_id: null,
-        santri_id: targetSantriId,
-      };
-
-      setProfil(waliProfil);
-      setSession(authData.session);
-      return null;
-    }
-
-    if (authError) {
-      return authError.message;
-    }
-
+    setProfil(waliProfil);
+    setSession(authData.session);
     return null;
   };
 
