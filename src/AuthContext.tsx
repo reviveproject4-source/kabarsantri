@@ -365,30 +365,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return 'Lengkapi Nama Santri, NIS, dan PIN 6 Digit untuk masuk.';
     }
 
-    // 1. Identity Resolution & Santri Chain (Nama + NIS -> exactly 1 Santri record)
-    const { data: santriMatch, error: santriErr } = await supabase
-      .from('santri')
-      .select('id, yayasan_id, nis, nama')
-      .eq('nis', cleanNis)
-      .ilike('nama', cleanNama)
-      .maybeSingle();
-
-    if (santriErr || !santriMatch) {
-      return 'Data Santri dengan Nama dan NIS tersebut tidak ditemukan.';
-    }
-
-    const targetSantriId = santriMatch.id;
-
-    // 2. Technical Auth Identifier derived strictly from resolved santri.id
-    const { data: emailDariDb } = await supabase.rpc('cari_email_wali', {
+    // 1. Identity Resolution & Santri Chain via SECURITY DEFINER RPC (enforces count == 1)
+    const { data: emailDariDb, error: rpcErr } = await supabase.rpc('cari_email_wali', {
       p_nis: cleanNis,
       p_nama: cleanNama,
     });
 
-    const email = emailDariDb || `wali-${targetSantriId}@kabarsantri.internal`;
+    if (rpcErr || !emailDariDb) {
+      return 'Data Santri dengan Nama dan NIS tersebut tidak ditemukan.';
+    }
+
+    const email = emailDariDb;
+    const targetSantriId = parseInt(email.match(/wali-(\d+)@/)?.[1] || '1', 10);
     const userPassword = pin.length < 6 ? pin.padEnd(6, '0') : pin;
 
-    // 3. Authentication: ONLY signInWithPassword (NO password fallbacks, NO auto-signUp)
+    // 2. Authentication: ONLY signInWithPassword (NO password fallbacks, NO auto-signUp)
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password: userPassword,
@@ -417,7 +408,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const waliProfil: ProfilBaris = existingProfil ? (existingProfil as ProfilBaris) : {
       id: userId,
-      yayasan_id: santriMatch.yayasan_id || 'demo-yayasan-01',
+      yayasan_id: 'demo-yayasan-01',
       peran: 'wali',
       pegawai_id: null,
       santri_id: targetSantriId,
