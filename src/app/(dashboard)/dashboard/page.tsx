@@ -41,7 +41,9 @@ import {
   LogOut,
   Scan,
   Search,
-  PhoneCall
+  PhoneCall,
+  X,
+  ChevronDown
 } from 'lucide-react';
 import { 
   getActiveActor, 
@@ -76,6 +78,7 @@ export default function UnifiedRoleDashboardPage() {
   const [notif, setNotif] = useState('');
   const [modalCuti, setModalCuti] = useState(false);
   const [modalStok, setModalStok] = useState(false);
+  const [rolePickerModalOpen, setRolePickerModalOpen] = useState(false);
   const [sessions, setSessions] = useState<any[]>([]);
 
   // State Perizinan Gerbang & Scanner Satpam
@@ -154,7 +157,8 @@ export default function UnifiedRoleDashboardPage() {
   const handleSwitchRole = (roleKey: string) => {
     const updated = setActiveActorByRole(roleKey);
     setCurrentActor(updated);
-    setNotif(`Peran aktif beralih ke: ${updated.name} (${updated.title})`);
+    setRolePickerModalOpen(false);
+    setNotif(`Peran beralih ke: ${updated.name} (${updated.title})`);
     setTimeout(() => setNotif(''), 4000);
   };
 
@@ -315,73 +319,73 @@ export default function UnifiedRoleDashboardPage() {
   return (
     <div className="space-y-6">
       {/* ========================================================================= */}
+      {/* ========================================================================= */}
       {/* HEADER BANNER: TENANT RESMI (PRODUKSI) VS SIMULATOR 12 PERAN (DEMO)      */}
       {/* ========================================================================= */}
       {isTenant ? (
-        <div className="bg-white p-5 rounded-2xl border border-emerald-200 shadow-sm space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-emerald-100 pb-3">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-blue-200 dark:border-blue-900 shadow-sm space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-blue-100 dark:border-slate-800 pb-3">
             <div className="flex items-center space-x-3">
-              <div className="w-11 h-11 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-black text-base shadow-sm">
+              <div className="w-11 h-11 rounded-xl bg-blue-700 text-white flex items-center justify-center font-black text-base shadow-sm">
                 NH
               </div>
               <div>
                 <div className="flex items-center space-x-2">
-                  <h2 className="text-base font-bold text-slate-900">{tenant.name}</h2>
-                  <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200">
-                    Tier 1 Starter (Free Kuota 50 Santri)
+                  <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">{tenant.name}</h2>
+                  <span className="bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
+                    Tier 1 Starter (Free 50 Santri)
                   </span>
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {tenant.city} • Pimpinan: <strong>Ust. H. Fauzan Mansur, Lc.</strong>
                 </p>
               </div>
             </div>
 
             <div className="flex items-center space-x-2">
-              <span className="text-xs bg-emerald-50 text-emerald-800 px-3 py-1.5 rounded-lg border border-emerald-200 font-semibold">
-                ● Status Akun: <strong>Aktif Siap Onboarding (Rabu)</strong>
+              <span className="text-xs bg-blue-50 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-800 font-semibold">
+                ● Status: <strong>Aktif Siap Onboarding</strong>
               </span>
             </div>
           </div>
 
           {/* Meteran Kuota & Akses Fitur Tier 1 */}
           <div className="grid md:grid-cols-3 gap-3 text-xs">
-            <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 space-y-1.5">
-              <div className="flex justify-between text-slate-700 font-medium">
-                <span>Penggunaan Kuota Santri:</span>
-                <strong className="text-emerald-800 font-bold">42 / 50 Santri</strong>
+            <div className="p-3 bg-blue-50/70 dark:bg-blue-950/40 rounded-xl border border-blue-100 dark:border-blue-900 space-y-1.5">
+              <div className="flex justify-between text-slate-700 dark:text-slate-300 font-medium">
+                <span>Penggunaan Kuota:</span>
+                <strong className="text-blue-900 dark:text-blue-200 font-bold">42 / 50 Santri</strong>
               </div>
-              <div className="w-full bg-emerald-200 rounded-full h-2">
-                <div className="bg-emerald-600 h-2 rounded-full" style={{ width: '84%' }}></div>
+              <div className="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-2">
+                <div className="bg-blue-600 h-2 rounded-full" style={{ width: '84%' }}></div>
               </div>
-              <div className="flex justify-between items-center text-[10px] text-emerald-700 font-semibold">
+              <div className="flex justify-between items-center text-[10px] text-blue-700 dark:text-blue-300 font-semibold">
                 <span>Tersisa 8 slot santri</span>
-                <Link href="/santri/create" className="text-emerald-800 underline font-bold hover:text-emerald-950">
+                <Link href="/santri/create" className="text-blue-800 dark:text-blue-200 underline font-bold hover:text-blue-950">
                   + Tambah Santri
                 </Link>
               </div>
             </div>
 
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-              <span className="text-slate-500 block">Fitur Utama Aktif:</span>
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+              <span className="text-slate-500 dark:text-slate-400 block">Fitur Utama Aktif:</span>
               <div className="flex flex-wrap gap-1 text-[10px]">
-                <span className="bg-white px-2 py-0.5 rounded border border-slate-200 font-medium text-slate-700">Tahfidz</span>
-                <span className="bg-white px-2 py-0.5 rounded border border-slate-200 font-medium text-slate-700">Adab Harian</span>
-                <span className="bg-white px-2 py-0.5 rounded border border-slate-200 font-medium text-slate-700">Reward</span>
-                <span className="bg-white px-2 py-0.5 rounded border border-slate-200 font-medium text-slate-700">Pelanggaran</span>
-                <span className="bg-emerald-100 px-2 py-0.5 rounded font-bold text-emerald-800">Portal Wali</span>
+                <span className="bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-medium text-slate-700 dark:text-slate-200">Tahfidz</span>
+                <span className="bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-medium text-slate-700 dark:text-slate-200">Adab</span>
+                <span className="bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-medium text-slate-700 dark:text-slate-200">Reward</span>
+                <span className="bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-medium text-slate-700 dark:text-slate-200">Pelanggaran</span>
+                <span className="bg-blue-100 dark:bg-blue-950 px-2 py-0.5 rounded font-bold text-blue-800 dark:text-blue-200">Portal Wali</span>
               </div>
-              <span className="text-[10px] text-slate-400 block pt-0.5">Payroll BSI &amp; RT Sarpras di Tier 2 Pro</span>
             </div>
 
-            <div className="p-3 bg-indigo-50 rounded-xl border border-indigo-100 flex items-center justify-between">
+            <div className="p-3 bg-blue-50 dark:bg-blue-950/50 rounded-xl border border-blue-200 dark:border-blue-900 flex items-center justify-between">
               <div>
-                <span className="text-indigo-900 font-bold block">Portal Wali Santri:</span>
-                <span className="text-[11px] text-indigo-700">Akses real-time orang tua santri</span>
+                <span className="text-blue-900 dark:text-blue-200 font-bold block">Portal Wali:</span>
+                <span className="text-[11px] text-blue-700 dark:text-blue-300">Akses wali santri</span>
               </div>
               <Link
                 href="/portal-wali"
-                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold text-xs shadow-xs transition"
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs shadow-xs transition"
               >
                 Cek Portal
               </Link>
@@ -389,35 +393,44 @@ export default function UnifiedRoleDashboardPage() {
           </div>
         </div>
       ) : (
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs border-b border-slate-100 pb-3">
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs border-b border-slate-100 dark:border-slate-800 pb-3">
             <div className="flex items-center space-x-2">
-              <span className="font-extrabold text-slate-500 uppercase tracking-wider text-[11px]">Akun Uji Coba Aktif:</span>
-              <span className={`px-2.5 py-1 rounded-lg font-bold text-xs ${
-                isPimpinan ? 'bg-indigo-100 text-indigo-900 border border-indigo-200' : 'bg-emerald-100 text-emerald-900 border border-emerald-200'
-              }`}>
-                {isPimpinan ? '🏛️ Level Pimpinan (6 Pilar)' : '👷 Level Tim Pegawai / Staf Pelaksana'}
+              <span className="font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[11px]">Akun Uji Coba:</span>
+              <span className="px-2.5 py-1 rounded-lg font-bold text-xs bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
+                {isPimpinan ? '🏛️ Level Pimpinan' : '👷 Level Pegawai / Staf'}
               </span>
-              <span className="font-bold text-slate-800 text-sm">{currentActor.name}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-100 text-sm">{currentActor.name}</span>
               <span className="text-slate-400">({currentActor.title})</span>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                currentActor.gender === 'akhwat' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700'
-              }`}>
-                {currentActor.gender === 'akhwat' ? '🧕 Syar\'i Akhwat' : '🕌 Syar\'i Ikhwan'}
-              </span>
-              <span className="text-[11px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
                 NIP: {currentActor.nip}
               </span>
             </div>
           </div>
 
-          {/* Quick Role Switcher Buttons */}
-          <div className="space-y-1.5 text-xs">
+          {/* Mobile Clickable Role Trigger */}
+          <div className="sm:hidden">
+            <button
+              onClick={() => setRolePickerModalOpen(true)}
+              className="w-full py-2.5 px-3 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 rounded-xl flex items-center justify-between text-blue-900 dark:text-blue-200 font-bold text-xs transition"
+            >
+              <div className="flex items-center space-x-2 truncate">
+                <Users className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                <span className="truncate">Peran: {currentActor.name} ({currentActor.title})</span>
+              </div>
+              <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ml-1">
+                Ganti Peran ▼
+              </span>
+            </button>
+          </div>
+
+          {/* Desktop Role Switcher Buttons */}
+          <div className="hidden sm:block space-y-1.5 text-xs">
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-              <span className="text-[10px] font-bold text-indigo-700 shrink-0 uppercase tracking-wider">Pimpinan:</span>
+              <span className="text-[10px] font-bold text-blue-900 dark:text-blue-300 shrink-0 uppercase tracking-wider">Pimpinan:</span>
               {[
                 { id: 'yayasan', label: '1. Ketua Yayasan' },
                 { id: 'wakil_yayasan', label: '2. Wk. Yayasan' },
@@ -431,8 +444,8 @@ export default function UnifiedRoleDashboardPage() {
                   onClick={() => handleSwitchRole(r.id)}
                   className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold shrink-0 transition ${
                     currentActor.role_key === r.id
-                      ? 'bg-indigo-600 text-white shadow-xs font-bold'
-                      : 'bg-indigo-50/70 text-indigo-800 hover:bg-indigo-100 border border-indigo-100'
+                      ? 'bg-blue-600 text-white shadow-xs font-bold'
+                      : 'bg-blue-50/70 dark:bg-slate-800 text-blue-900 dark:text-slate-300 hover:bg-blue-100 border border-blue-100 dark:border-slate-700'
                   }`}
                 >
                   {r.label}
@@ -441,7 +454,7 @@ export default function UnifiedRoleDashboardPage() {
             </div>
 
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-              <span className="text-[10px] font-bold text-emerald-700 shrink-0 uppercase tracking-wider">Tim Pegawai:</span>
+              <span className="text-[10px] font-bold text-blue-800 dark:text-blue-400 shrink-0 uppercase tracking-wider">Tim Pegawai:</span>
               {[
                 { id: 'guru', label: '7a. Guru Putra' },
                 { id: 'guru_akhwat', label: '7b. Guru Putri' },
@@ -458,8 +471,8 @@ export default function UnifiedRoleDashboardPage() {
                   onClick={() => handleSwitchRole(r.id)}
                   className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold shrink-0 transition ${
                     currentActor.role_key === r.id
-                      ? 'bg-emerald-600 text-white shadow-xs font-bold'
-                      : 'bg-emerald-50/70 text-emerald-800 hover:bg-emerald-100 border border-emerald-100'
+                      ? 'bg-blue-600 text-white shadow-xs font-bold'
+                      : 'bg-blue-50/70 dark:bg-slate-800 text-blue-900 dark:text-slate-300 hover:bg-blue-100 border border-blue-100 dark:border-slate-700'
                   }`}
                 >
                   {r.label}
@@ -470,9 +483,98 @@ export default function UnifiedRoleDashboardPage() {
         </div>
       )}
 
+      {/* MODAL PILIH PERAN MOBILE (CLICKABLE) */}
+      {rolePickerModalOpen && (
+        <div className="fixed inset-0 z-50 sm:hidden bg-slate-950/70 backdrop-blur-xs flex items-end">
+          <div className="w-full bg-white dark:bg-slate-900 rounded-t-3xl max-h-[85vh] p-4 flex flex-col shadow-2xl border-t border-slate-200 dark:border-slate-800 animate-in slide-in-from-bottom duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center space-x-2">
+                <Users className="w-5 h-5 text-blue-600" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Pilih Peran Demo</h3>
+              </div>
+              <button 
+                onClick={() => setRolePickerModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto space-y-3 py-3 text-xs">
+              <div>
+                <span className="text-[10px] font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider block mb-1">
+                  🏛️ PIMPINAN (6 PILAR)
+                </span>
+                <div className="space-y-1">
+                  {[
+                    { id: 'yayasan', label: '1. Ketua Yayasan', name: 'KH. Abdullah Faqih, Lc.' },
+                    { id: 'wakil_yayasan', label: '2. Wakil Ketua Yayasan', name: 'Drs. H. M. Mansyur, M.Pd.' },
+                    { id: 'kepala_kepegawaian', label: '3. Ka. HRD', name: 'Ust. Ir. Faisal Rahman, M.M.' },
+                    { id: 'keuangan', label: '4. Ka. Keuangan', name: 'Ust. Ahmad Dahlan, S.E.' },
+                    { id: 'mudir', label: '5. Mudir', name: 'Dr. KH. Mahmud Ridwan, M.A.' },
+                    { id: 'kepala_rumah_tangga', label: '6. Ka. RT & Sarpras', name: 'Pak Subandi, S.T.' },
+                  ].map(r => (
+                    <button
+                      key={r.id}
+                      onClick={() => handleSwitchRole(r.id)}
+                      className={`w-full text-left p-2.5 rounded-xl border flex items-center justify-between transition ${
+                        currentActor.role_key === r.id
+                          ? 'bg-blue-600 text-white border-blue-600 font-bold shadow-xs'
+                          : 'bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700'
+                      }`}
+                    >
+                      <div>
+                        <div>{r.label}</div>
+                        <div className={`text-[10px] ${currentActor.role_key === r.id ? 'text-blue-100' : 'text-slate-400'}`}>{r.name}</div>
+                      </div>
+                      {currentActor.role_key === r.id && <Check className="w-4 h-4 text-white" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider block mb-1">
+                  👷 TIM PEGAWAI / STAF
+                </span>
+                <div className="space-y-1">
+                  {[
+                    { id: 'guru', label: '7a. Guru Putra (Ikhwan)', name: 'Ust. Lukman Hakim, M.Kom.' },
+                    { id: 'guru_akhwat', label: '7b. Guru Putri (Akhwat)', name: 'Usth. Fatimah Az-Zahra, S.Pd.' },
+                    { id: 'musyrif', label: '8a. Musyrif Asrama Putra', name: 'Ust. Hamzah al-Bantani' },
+                    { id: 'musyrifah', label: '8b. Musyrifah Asrama Putri', name: 'Usth. Siti Khadijah, S.Pd.I.' },
+                    { id: 'laundry', label: '9a. Staf Laundry', name: 'Ibu Sumiati' },
+                    { id: 'dapur', label: '9b. Staf Dapur', name: 'Pak Slamet' },
+                    { id: 'satpam', label: '9c. Satpam Pos Gerbang', name: 'Pak Subandi' },
+                    { id: 'kasir', label: '10. Staf Kasir SPP', name: 'Mbak Anisa, A.Md.' },
+                    { id: 'staf_hrd', label: '11. Staf Admin HRD', name: 'Ust. Wildan Pratama' },
+                  ].map(r => (
+                    <button
+                      key={r.id}
+                      onClick={() => handleSwitchRole(r.id)}
+                      className={`w-full text-left p-2.5 rounded-xl border flex items-center justify-between transition ${
+                        currentActor.role_key === r.id
+                          ? 'bg-blue-600 text-white border-blue-600 font-bold shadow-xs'
+                          : 'bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700'
+                      }`}
+                    >
+                      <div>
+                        <div>{r.label}</div>
+                        <div className={`text-[10px] ${currentActor.role_key === r.id ? 'text-blue-100' : 'text-slate-400'}`}>{r.name}</div>
+                      </div>
+                      {currentActor.role_key === r.id && <Check className="w-4 h-4 text-white" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {notif && (
-        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center space-x-2 shadow-xs">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+        <div className="p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-200 text-xs flex items-center space-x-2 shadow-xs">
+          <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
           <span className="font-semibold">{notif}</span>
         </div>
       )}
@@ -485,74 +587,74 @@ export default function UnifiedRoleDashboardPage() {
           {/* Card Profil & Presensi Cepat */}
           <div className="grid md:grid-cols-3 gap-4">
             {/* Box 1: Status Khidmah & Unit Penempatan */}
-            <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-5 shadow-sm space-y-3">
+            <div className="bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 text-white rounded-2xl p-5 shadow-sm space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-slate-800/80 px-2 py-0.5 rounded">
-                  Portal Khidmat Staf
+                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-300 bg-blue-900/60 px-2 py-0.5 rounded">
+                  Portal Khidmah Staf
                 </span>
-                <span className="text-[11px] text-slate-300">Tahun Ajaran 2026/2027</span>
+                <span className="text-[11px] text-blue-200">2026/2027</span>
               </div>
               <div>
                 <h3 className="text-lg font-bold text-white">{currentActor.name}</h3>
-                <p className="text-xs text-slate-300 font-medium">{currentActor.title}</p>
-                <p className="text-[11px] text-slate-400 mt-1">{currentActor.dept}</p>
+                <p className="text-xs text-blue-200 font-medium">{currentActor.title}</p>
+                <p className="text-[11px] text-blue-300/80 mt-1">{currentActor.dept}</p>
               </div>
-              <div className="pt-2 border-t border-slate-700/60 flex items-center justify-between text-[11px] text-slate-300">
+              <div className="pt-2 border-t border-blue-800/60 flex items-center justify-between text-[11px] text-blue-200">
                 <span>Unit: <strong>{currentActor.unit_name || 'Operasional Kampus'}</strong></span>
-                <span className="text-emerald-400 font-semibold">● Status: Aktif Khidmah</span>
+                <span className="text-blue-300 font-semibold">● Aktif Khidmah</span>
               </div>
             </div>
 
             {/* Box 2: Presensi Mandiri Harian (Interactive Geofencing GPS) */}
-            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 flex items-center justify-center">
                     <UserCheck className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-800 text-xs">Presensi Diri Hari Ini</h4>
-                    <span className="text-[10px] text-slate-500">Jam Masuk: 07:00 • Jam Pulang: 16:00</span>
+                    <h4 className="font-bold text-slate-800 dark:text-slate-100 text-xs">Presensi Diri Hari Ini</h4>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">Jam Masuk: 07:00 • Pulang: 16:00</span>
                   </div>
                 </div>
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                  absenDiriStatus ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                  absenDiriStatus ? 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                 }`}>
                   {absenDiriStatus ? 'Sudah Absen' : 'Belum Hadir'}
                 </span>
               </div>
 
-              <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+              <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-700 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500 text-[11px]">Geofence Pesantren:</span>
-                  <span className="text-emerald-700 font-bold text-[11px] flex items-center gap-1">
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">Geofence Pesantren:</span>
+                  <span className="text-blue-700 dark:text-blue-300 font-bold text-[11px] flex items-center gap-1">
                     <MapPin className="w-3 h-3" /> Valid (Radius 15m)
                   </span>
                 </div>
-                <div className="text-slate-700 font-bold text-xs mt-1">
-                  {absenDiriStatus ? absenDiriStatus : 'Silakan klik tombol di bawah untuk mencatat jam hadir Anda'}
+                <div className="text-slate-700 dark:text-slate-200 font-bold text-xs mt-1">
+                  {absenDiriStatus ? absenDiriStatus : 'Klik tombol di bawah untuk mencatat kehadiran.'}
                 </div>
               </div>
 
               <div className="flex items-center gap-2 pt-1">
                 <button
                   onClick={handleKlikAbsenDiri}
-                  className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center space-x-1"
+                  className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center space-x-1"
                 >
                   <UserCheck className="w-3.5 h-3.5" />
                   <span>{absenDiriStatus ? 'Perbarui Absen' : 'Klik Hadir Sekarang'}</span>
                 </button>
                 <Link
                   href="/presensi/diri"
-                  className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition text-center"
+                  className="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-semibold text-xs rounded-xl transition text-center"
                 >
-                  Buka GPS
+                  GPS
                 </Link>
               </div>
             </div>
 
             {/* Box 3: Pengajuan Cuti Mandiri Staf (Ke KaBid HRD) */}
-            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
@@ -588,42 +690,42 @@ export default function UnifiedRoleDashboardPage() {
 
           {/* 1. MEJA KERJA GURU KBM (PUTRA / PUTRI) */}
           {isGuru && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div>
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full uppercase">
+                  <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full uppercase">
                     Meja Kerja Pengajar • KBM Syar'i
                   </span>
-                  <h3 className="text-base font-bold text-slate-900 mt-1">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mt-1">
                     Jadwal Mengajar &amp; Pengisian Nilai ({currentActor.name})
                   </h3>
                 </div>
                 <Link
                   href="/akademik/nilai"
-                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center space-x-1"
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center space-x-1"
                 >
-                  <span>Buka Modul Nilai &amp; KBM</span>
+                  <span>Buka Nilai &amp; KBM</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
 
               <div className="grid md:grid-cols-3 gap-4 text-xs">
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-slate-500 block">Jadwal Sesi Mengajar Hari Ini</span>
-                  <span className="text-2xl font-bold text-slate-800">{mySessions.length} Sesi Aktif</span>
-                  <span className="text-emerald-700 font-semibold block text-[11px]">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400 block">Jadwal Sesi Mengajar Hari Ini</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">{mySessions.length} Sesi Aktif</span>
+                  <span className="text-blue-700 dark:text-blue-300 font-semibold block text-[11px]">
                     {currentActor.gender === 'akhwat' ? 'Kampus Putri • Gedung Khadijah' : 'Kampus Putra • Gedung Ibnu Khaldun'}
                   </span>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-slate-500 block">Ketuntasan Nilai KKM &amp; Tugas</span>
-                  <span className="text-2xl font-bold text-emerald-700">92.5%</span>
-                  <span className="text-slate-500 text-[11px]">Terkoneksi langsung ke Rapor Santri</span>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400 block">Ketuntasan Nilai KKM &amp; Tugas</span>
+                  <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">92.5%</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">Terkoneksi ke Rapor Santri</span>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-slate-500 block">Siswa Butuh Remedial KBM</span>
-                  <span className="text-2xl font-bold text-amber-700">2 Santri</span>
-                  <span className="text-slate-500 text-[11px]">Di bawah KKM Standar (75.0)</span>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400 block">Remedial KBM</span>
+                  <span className="text-2xl font-bold text-slate-700 dark:text-slate-300">2 Santri</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">Di bawah standar KKM</span>
                 </div>
               </div>
 
@@ -631,35 +733,35 @@ export default function UnifiedRoleDashboardPage() {
               <div className="grid sm:grid-cols-4 gap-3 pt-2">
                 <Link
                   href="/akademik/nilai"
-                  className="p-3 bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/30 rounded-xl transition text-center"
+                  className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl transition text-center"
                 >
-                  <GraduationCap className="w-5 h-5 text-emerald-600 mx-auto mb-1" />
-                  <span className="font-bold text-xs text-slate-800 block">Input Nilai KKM</span>
+                  <GraduationCap className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+                  <span className="font-bold text-xs text-slate-800 dark:text-slate-200 block">Input Nilai</span>
                   <span className="text-[10px] text-slate-400">Tugas, UTS &amp; UAS</span>
                 </Link>
                 <Link
                   href="/akademik/tahfidz"
-                  className="p-3 bg-white border border-slate-200 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl transition text-center"
+                  className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl transition text-center"
                 >
-                  <BookOpen className="w-5 h-5 text-blue-600 mx-auto mb-1" />
-                  <span className="font-bold text-xs text-slate-800 block">Simak Hafalan</span>
+                  <BookOpen className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+                  <span className="font-bold text-xs text-slate-800 dark:text-slate-200 block">Simak Hafalan</span>
                   <span className="text-[10px] text-slate-400">Ziyadah &amp; Muraja'ah</span>
                 </Link>
                 <Link
                   href="/akademik/disiplin?tab=adab"
-                  className="p-3 bg-white border border-slate-200 hover:border-teal-500 hover:bg-teal-50/30 rounded-xl transition text-center"
+                  className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl transition text-center"
                 >
-                  <Sparkles className="w-5 h-5 text-teal-600 mx-auto mb-1" />
-                  <span className="font-bold text-xs text-slate-800 block">Catat Adab Mulia</span>
-                  <span className="text-[10px] text-slate-400">Karakter &amp; Sunnah</span>
+                  <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+                  <span className="font-bold text-xs text-slate-800 dark:text-slate-200 block">Catat Adab</span>
+                  <span className="text-[10px] text-slate-400">Karakter Santri</span>
                 </Link>
                 <Link
                   href="/akademik/disiplin?tab=pelanggaran"
-                  className="p-3 bg-white border border-slate-200 hover:border-rose-500 hover:bg-rose-50/30 rounded-xl transition text-center"
+                  className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl transition text-center"
                 >
                   <AlertTriangle className="w-5 h-5 text-rose-600 mx-auto mb-1" />
-                  <span className="font-bold text-xs text-slate-800 block">Catat Pelanggaran</span>
-                  <span className="text-[10px] text-slate-400">Iqob Tarbawi KBM</span>
+                  <span className="font-bold text-xs text-slate-800 dark:text-slate-200 block">Pelanggaran</span>
+                  <span className="text-[10px] text-slate-400">Poin Kedisiplinan</span>
                 </Link>
               </div>
             </div>
@@ -667,13 +769,13 @@ export default function UnifiedRoleDashboardPage() {
 
           {/* 2. MEJA KERJA MUSYRIF / MUSYRIFAH ASRAMA */}
           {isMusyrif && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div>
-                  <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full uppercase">
-                    Meja Kerja Pengasuhan • Asrama &amp; Kesantrian
+                  <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full uppercase">
+                    Meja Kerja Pengasuhan • Asrama
                   </span>
-                  <h3 className="text-base font-bold text-slate-900 mt-1">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mt-1">
                     Binaan Asrama &amp; Halaqah ({currentActor.name})
                   </h3>
                 </div>
@@ -681,28 +783,28 @@ export default function UnifiedRoleDashboardPage() {
                   href="/presensi/santri"
                   className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center space-x-1"
                 >
-                  <span>Presensi Sholat Subuh &amp; Apel</span>
+                  <span>Presensi Sholat</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
 
               <div className="grid md:grid-cols-3 gap-4 text-xs">
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-slate-500 block">Santri Binaan Asrama</span>
-                  <span className="text-2xl font-bold text-slate-800">22 Santri</span>
-                  <span className="text-blue-700 font-semibold block text-[11px]">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400 block">Santri Binaan Asrama</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">22 Santri</span>
+                  <span className="text-blue-700 dark:text-blue-300 font-semibold block text-[11px]">
                     {currentActor.gender === 'akhwat' ? 'Gedung Khadijah Putri' : 'Gedung Abu Bakar & Utsman Putra'}
                   </span>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-slate-500 block">Setoran Tahfidz Pekan Ini</span>
-                  <span className="text-2xl font-bold text-emerald-700">18 / 22 Tuntas</span>
-                  <span className="text-slate-500 text-[11px]">Halaqah Ba'da Subuh &amp; Ashar</span>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400 block">Setoran Tahfidz Pekan Ini</span>
+                  <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">18 / 22 Tuntas</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">Halaqah Asrama</span>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-slate-500 block">Izin Keluar / Sakit di Poskestren</span>
-                  <span className="text-2xl font-bold text-amber-700">1 Santri Izin</span>
-                  <span className="text-slate-500 text-[11px]">QR Gate Pass aktif terverifikasi</span>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400 block">Santri Izin Keluar</span>
+                  <span className="text-2xl font-bold text-slate-700 dark:text-slate-300">1 Santri</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">Gate Pass aktif</span>
                 </div>
               </div>
 
@@ -710,35 +812,35 @@ export default function UnifiedRoleDashboardPage() {
               <div className="grid sm:grid-cols-4 gap-3 pt-2">
                 <Link
                   href="/akademik/tahfidz"
-                  className="p-3 bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/30 rounded-xl transition text-center"
+                  className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl transition text-center"
                 >
-                  <BookOpen className="w-5 h-5 text-emerald-600 mx-auto mb-1" />
-                  <span className="font-bold text-xs text-slate-800 block">Simak Setoran Tahfidz</span>
-                  <span className="text-[10px] text-slate-400">Ziyadah &amp; Murajaah</span>
+                  <BookOpen className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+                  <span className="font-bold text-xs text-slate-800 dark:text-slate-200 block">Setoran Tahfidz</span>
+                  <span className="text-[10px] text-slate-400">Ziyadah &amp; Muraja'ah</span>
                 </Link>
                 <Link
                   href="/presensi/santri"
-                  className="p-3 bg-white border border-slate-200 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl transition text-center"
+                  className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl transition text-center"
                 >
-                  <School className="w-5 h-5 text-blue-600 mx-auto mb-1" />
-                  <span className="font-bold text-xs text-slate-800 block">Absen Sholat Berjamaah</span>
+                  <School className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+                  <span className="font-bold text-xs text-slate-800 dark:text-slate-200 block">Sholat Berjamaah</span>
                   <span className="text-[10px] text-slate-400">Subuh, Ashar, Maghrib</span>
                 </Link>
                 <Link
                   href="/akademik/disiplin?tab=adab"
-                  className="p-3 bg-white border border-slate-200 hover:border-teal-500 hover:bg-teal-50/30 rounded-xl transition text-center"
+                  className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl transition text-center"
                 >
-                  <Sparkles className="w-5 h-5 text-teal-600 mx-auto mb-1" />
-                  <span className="font-bold text-xs text-slate-800 block">Adab Santri Asrama</span>
-                  <span className="text-[10px] text-slate-400">Kerapihan Kamar &amp; Dzikir</span>
+                  <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+                  <span className="font-bold text-xs text-slate-800 dark:text-slate-200 block">Adab Santri</span>
+                  <span className="text-[10px] text-slate-400">Kerapihan &amp; Dzikir</span>
                 </Link>
                 <Link
                   href="/akademik/perizinan"
-                  className="p-3 bg-white border border-slate-200 hover:border-amber-500 hover:bg-amber-50/30 rounded-xl transition text-center"
+                  className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl transition text-center"
                 >
-                  <Clock className="w-5 h-5 text-amber-600 mx-auto mb-1" />
-                  <span className="font-bold text-xs text-slate-800 block">Verifikasi Izin Santri</span>
-                  <span className="text-[10px] text-slate-400">Persetujuan Kamar Asrama</span>
+                  <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+                  <span className="font-bold text-xs text-slate-800 dark:text-slate-200 block">Izin Santri</span>
+                  <span className="text-[10px] text-slate-400">Persetujuan Asrama</span>
                 </Link>
               </div>
             </div>
@@ -746,14 +848,14 @@ export default function UnifiedRoleDashboardPage() {
 
           {/* 3. MEJA KERJA PEGAWAI LAUNDRY PESANTREN */}
           {isLaundry && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div>
-                  <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2.5 py-1 rounded-full uppercase">
-                    Operasional Rumah Tangga • Unit Laundry Sentral
+                  <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full uppercase">
+                    Operasional RT • Laundry Sentral
                   </span>
-                  <h3 className="text-base font-bold text-slate-900 mt-1">
-                    Antrean Cuci &amp; Layanan Pakaian Santri ({currentActor.name})
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mt-1">
+                    Layanan Cucian Santri ({currentActor.name})
                   </h3>
                 </div>
                 <button
@@ -765,55 +867,49 @@ export default function UnifiedRoleDashboardPage() {
                     });
                     setModalStok(true);
                   }}
-                  className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center space-x-1"
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center space-x-1"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Ajukan Sabun &amp; Kebutuhan Laundry</span>
+                  <span>Ajukan Kebutuhan</span>
                 </button>
               </div>
 
-              {/* Status Antrean Cuci (Non-Monetary) */}
+              {/* Status Antrean Cuci */}
               <div className="grid md:grid-cols-4 gap-4 text-xs">
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-slate-500 block">Pakaian Masuk Hari Ini</span>
-                  <span className="text-2xl font-bold text-slate-800">42 Kantong</span>
-                  <span className="text-teal-700 font-semibold block text-[11px]">Asrama Putra &amp; Putri</span>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400 block">Pakaian Masuk Hari Ini</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">42 Kantong</span>
+                  <span className="text-blue-700 dark:text-blue-300 font-semibold block text-[11px]">Asrama Santri</span>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-slate-500 block">Sedang Dicuci &amp; Kering</span>
-                  <span className="text-2xl font-bold text-blue-700">28 Kantong</span>
-                  <span className="text-slate-500 text-[11px]">Mesin 1 s.d 4 beroperasi</span>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400 block">Sedang Dicuci &amp; Kering</span>
+                  <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">28 Kantong</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">4 Mesin aktif</span>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-slate-500 block">Selesai Disetrika (Siap Ambil)</span>
-                  <span className="text-2xl font-bold text-emerald-700">14 Kantong</span>
-                  <span className="text-slate-500 text-[11px]">Rapi &amp; harum di loker</span>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400 block">Selesai (Siap Ambil)</span>
+                  <span className="text-2xl font-bold text-blue-700 dark:text-blue-300">14 Kantong</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">Di rak loker</span>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-slate-500 block">Stok Deterjen &amp; Pewangi</span>
-                  <span className="text-2xl font-bold text-amber-700">Cukup 5 Hari</span>
-                  <span className="text-slate-500 text-[11px]">Perlu pengajuan tambahan</span>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400 block">Stok Deterjen &amp; Pewangi</span>
+                  <span className="text-2xl font-bold text-slate-700 dark:text-slate-300">Cukup 5 Hari</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">Perlu pengajuan</span>
                 </div>
-              </div>
-
-              {/* Notice Privasi Keuangan */}
-              <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-emerald-800 flex items-center justify-between">
-                <span>🛡️ <strong>Kerahasiaan Anggaran Terjaga:</strong> Pegawai Laundry mencatat daftar kebutuhan fisik tanpa dibebani sisa anggaran pondok. Sisa anggaran hanya dikelola oleh KaBid RT.</span>
-                <Link href="/rumah-tangga" className="font-bold underline ml-2 shrink-0">Lihat Modul RT</Link>
               </div>
             </div>
           )}
 
           {/* 4. MEJA KERJA PEGAWAI DAPUR & KONSUMSI SANTRI */}
           {isDapur && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div>
-                  <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full uppercase">
-                    Operasional Rumah Tangga • Dapur Sentral Santri
+                  <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full uppercase">
+                    Operasional RT • Dapur Sentral
                   </span>
-                  <h3 className="text-base font-bold text-slate-900 mt-1">
-                    Jadwal Masak &amp; Logistik Konsumsi ({currentActor.name})
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mt-1">
+                    Logistik Konsumsi ({currentActor.name})
                   </h3>
                 </div>
                 <button
@@ -825,94 +921,86 @@ export default function UnifiedRoleDashboardPage() {
                     });
                     setModalStok(true);
                   }}
-                  className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center space-x-1"
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center space-x-1"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Ajukan Belanja Beras &amp; Gas Dapur</span>
+                  <span>Ajukan Belanja Dapur</span>
                 </button>
               </div>
 
               <div className="grid md:grid-cols-4 gap-4 text-xs">
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-slate-500 block">Porsi Makan Siang Hari Ini</span>
-                  <span className="text-2xl font-bold text-slate-800">120 Porsi</span>
-                  <span className="text-emerald-700 font-semibold block text-[11px]">Santri Putra, Putri &amp; Asatidz</span>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400 block">Porsi Makan Siang</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">120 Porsi</span>
+                  <span className="text-blue-700 dark:text-blue-300 font-semibold block text-[11px]">Santri &amp; Asatidz</span>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-slate-500 block">Menu Masak Siang Ini</span>
-                  <span className="text-sm font-bold text-slate-800 block">Ayam Goreng Lengkuas, Sayur Asem, Tahu Tempe</span>
-                  <span className="text-slate-400 text-[10px]">Jadwal makan: 12:30 WIB</span>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400 block">Menu Masak Hari Ini</span>
+                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 block">Ayam Goreng Lengkuas &amp; Sayur</span>
+                  <span className="text-slate-400 text-[10px]">Pk 12:30 WIB</span>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-slate-500 block">Stok Beras Tersedia</span>
-                  <span className="text-2xl font-bold text-emerald-700">8 Karung</span>
-                  <span className="text-slate-500 text-[11px]">Cukup untuk 6 hari ke depan</span>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400 block">Stok Beras</span>
+                  <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">8 Karung</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">Cukup 6 hari</span>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-slate-500 block">Stok Tabung Gas LPG</span>
-                  <span className="text-2xl font-bold text-amber-700">2 Tabung Aktif</span>
-                  <span className="text-slate-500 text-[11px]">Cadangan 1 tabung</span>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400 block">Stok Tabung Gas</span>
+                  <span className="text-2xl font-bold text-slate-700 dark:text-slate-300">2 Aktif</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">Cadangan 1</span>
                 </div>
-              </div>
-
-              <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-center justify-between">
-                <span>🛡️ <strong>Kerahasiaan Anggaran Terjaga:</strong> Juru masak hanya mengajukan daftar belanja fisik barang konsumsi. Urusan harga dan anggaran disahkan oleh KaBid RT &amp; Keuangan.</span>
-                <Link href="/rumah-tangga" className="font-bold underline ml-2 shrink-0">Buka Modul RT</Link>
               </div>
             </div>
           )}
 
           {/* 5. MEJA KERJA SATPAM POS GERBANG (INTERACTIVE GATE SCANNER & MOVEMENT) */}
           {isSatpam && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
-                  <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full uppercase border border-rose-200">
-                    Pos Keamanan &amp; Ketertiban • Gerbang Utama Pesantren
+                  <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full uppercase border border-blue-200 dark:border-blue-900">
+                    Pos Keamanan • Gerbang Utama
                   </span>
-                  <h3 className="text-base font-bold text-slate-900 mt-1">
-                    Kendali Gate Movement &amp; Scanner Santri ({currentActor.name})
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mt-1">
+                    Kendali Gerbang &amp; Scanner ({currentActor.name})
                   </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Mencatat santri keluar pondok, batas jam kembali, evaluasi otomatis kedatangan &amp; deteksi keterlambatan
-                  </p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     onClick={() => setModalIzinPos(true)}
-                    className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center space-x-1.5"
+                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center space-x-1.5"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>+ Catat Izin Keluar di Pos</span>
+                    <span>Catat Izin Keluar</span>
                   </button>
 
                   <Link
                     href="/akademik/perizinan"
-                    className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition flex items-center space-x-1.5"
+                    className="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-bold text-xs rounded-xl transition flex items-center space-x-1.5"
                   >
-                    <Scan className="w-3.5 h-3.5 text-rose-600" />
-                    <span>Scanner QR Kamera</span>
+                    <Scan className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                    <span>Scanner QR</span>
                   </Link>
                 </div>
               </div>
 
               {/* 3 KARTU STATISTIK POS GERBANG */}
               <div className="grid sm:grid-cols-3 gap-4 text-xs">
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Santri Sedang di Luar</span>
-                    <LogOut className="w-4 h-4 text-blue-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Santri di Luar</span>
+                    <LogOut className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-blue-700 font-mono">
+                  <span className="text-2xl font-bold text-blue-700 dark:text-blue-300 font-mono">
                     {permRequests.filter(r => r.status === 'SANTRI_OUTSIDE' || r.status === 'CHECKED_OUT' || r.status === 'OVERDUE').length} Santri
                   </span>
-                  <span className="text-slate-500 text-[11px] block">Terdata check-out resmi di gerbang</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px] block">Check-out gerbang</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Keterlambatan (Overdue)</span>
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Terlambat (Overdue)</span>
                     <AlertTriangle className="w-4 h-4 text-rose-600" />
                   </div>
                   <span className="text-2xl font-bold text-rose-700 font-mono">
@@ -921,106 +1009,101 @@ export default function UnifiedRoleDashboardPage() {
                   <span className="text-rose-600 font-semibold text-[11px] block">Melewati batas jam kembali</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Siap Keluar (Gate Pass)</span>
-                    <QrCode className="w-4 h-4 text-emerald-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Gate Pass Siap</span>
+                    <QrCode className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-emerald-700 font-mono">
+                  <span className="text-2xl font-bold text-blue-600 dark:text-blue-400 font-mono">
                     {permRequests.filter(r => r.status === 'GATE_PASS' || r.status === 'APPROVED').length} Santri
                   </span>
-                  <span className="text-emerald-700 font-semibold text-[11px] block">Surat jalan aktif disetujui</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold text-[11px] block">Izin disetujui</span>
                 </div>
               </div>
 
-              {/* PANEL 1: DAFTAR SANTRI SEDANG DI LUAR KAMPUS & TOMBOL CHECK-IN (JAM BERAPA KEMBALI) */}
-              <div className="p-5 bg-blue-50/50 rounded-2xl border border-blue-200 space-y-3 text-xs">
+              {/* PANEL 1: DAFTAR SANTRI SEDANG DI LUAR */}
+              <div className="p-5 bg-blue-50/50 dark:bg-blue-950/30 rounded-2xl border border-blue-200 dark:border-blue-900 space-y-3 text-xs">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <LogIn className="w-4 h-4 text-blue-700" />
-                    <h4 className="font-bold text-blue-950 text-sm">
-                      Daftar Santri Sedang di Luar Pondok (Pencatatan Jam Kembali / Check-In)
+                    <LogIn className="w-4 h-4 text-blue-700 dark:text-blue-300" />
+                    <h4 className="font-bold text-blue-950 dark:text-blue-100 text-sm">
+                      Santri di Luar Pondok (Pencatatan Check-In)
                     </h4>
                   </div>
-                  <span className="text-[11px] text-blue-800 font-semibold bg-blue-100 px-2.5 py-0.5 rounded-full">
-                    Pos Gerbang Utama
+                  <span className="text-[11px] text-blue-800 dark:text-blue-300 font-semibold bg-blue-100 dark:bg-blue-900/60 px-2.5 py-0.5 rounded-full">
+                    Gerbang Utama
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-600">
-                  Saat santri tiba di gerbang, klik tombol <strong>"Check-In Masuk"</strong>. Sistem otomatis mencatat waktu kedatangan riil, mengevaluasi apakah tepat waktu atau terlambat, dan menutup sesi izin.
-                </p>
 
                 {(() => {
                   const outsideList = permRequests.filter(r => r.status === 'SANTRI_OUTSIDE' || r.status === 'CHECKED_OUT' || r.status === 'OVERDUE');
                   if (outsideList.length === 0) {
                     return (
-                      <div className="p-4 bg-white rounded-xl border border-blue-100 text-center text-slate-500">
-                        ✓ Seluruh santri saat ini berada di dalam kampus. Tidak ada santri yang berstatus di luar.
+                      <div className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-blue-100 dark:border-slate-700 text-center text-slate-500 dark:text-slate-400">
+                        ✓ Seluruh santri berada di dalam kampus.
                       </div>
                     );
                   }
 
                   return (
-                    <div className="overflow-x-auto bg-white rounded-xl border border-blue-100 shadow-xs">
+                    <div className="overflow-x-auto bg-white dark:bg-slate-800 rounded-xl border border-blue-100 dark:border-slate-700 shadow-xs">
                       <table className="w-full text-left">
-                        <thead className="bg-slate-50 text-slate-600 text-[11px] font-bold border-b border-slate-100">
+                        <thead className="bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-[11px] font-bold border-b border-slate-100 dark:border-slate-700">
                           <tr>
                             <th className="p-3">Santri &amp; Kamar</th>
-                            <th className="p-3">Penjemput &amp; Keperluan</th>
-                            <th className="p-3">Jam Keluar Aktual</th>
-                            <th className="p-3">Batas Jam Kembali</th>
-                            <th className="p-3">Status / Sisa Waktu</th>
-                            <th className="p-3 text-right">Aksi Gerbang</th>
+                            <th className="p-3">Penjemput</th>
+                            <th className="p-3">Jam Keluar</th>
+                            <th className="p-3">Batas Kembali</th>
+                            <th className="p-3">Status</th>
+                            <th className="p-3 text-right">Aksi</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 text-xs">
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700 text-xs">
                           {outsideList.map(req => {
                             const batasDate = new Date(req.rencana_kembali.replace(' ', 'T'));
                             const isLate = !isNaN(batasDate.getTime()) && Date.now() > batasDate.getTime();
                             const lastMovement = req.gate_movements?.filter(m => m.type === 'CHECK_OUT').slice(-1)[0];
 
                             return (
-                              <tr key={req.id} className="hover:bg-slate-50/70 transition">
+                              <tr key={req.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-700/50 transition">
                                 <td className="p-3">
-                                  <div className="font-bold text-slate-800">{req.nama}</div>
-                                  <div className="text-[11px] text-slate-500 font-mono">NIS: {req.nis} • {req.kamar}</div>
+                                  <div className="font-bold text-slate-800 dark:text-slate-100">{req.nama}</div>
+                                  <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">NIS: {req.nis}</div>
                                 </td>
                                 <td className="p-3">
-                                  <div className="font-medium text-slate-800">{req.nama_penjemput} ({req.hubungan_penjemput})</div>
-                                  <div className="text-[11px] text-slate-500">{req.alasan}</div>
+                                  <div className="font-medium text-slate-800 dark:text-slate-200">{req.nama_penjemput}</div>
+                                  <div className="text-[11px] text-slate-500 dark:text-slate-400">{req.alasan}</div>
                                 </td>
                                 <td className="p-3">
-                                  <div className="font-semibold text-slate-700">
+                                  <div className="font-semibold text-slate-700 dark:text-slate-300">
                                     {lastMovement?.timestamp || req.rencana_keluar.slice(11) + ' WIB'}
                                   </div>
-                                  <div className="text-[10px] text-slate-400">Petugas: {lastMovement?.officer_name || 'Satpam Pos'}</div>
                                 </td>
                                 <td className="p-3">
-                                  <div className="font-bold text-slate-900 font-mono">
+                                  <div className="font-bold text-slate-900 dark:text-slate-100 font-mono">
                                     {req.rencana_kembali.slice(11)} WIB
                                   </div>
-                                  <div className="text-[10px] text-slate-400">{req.rencana_kembali.slice(0, 10)}</div>
                                 </td>
                                 <td className="p-3">
                                   {isLate ? (
-                                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1 w-fit">
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 flex items-center gap-1 w-fit">
                                       <AlertTriangle className="w-3 h-3 text-rose-600" />
-                                      Terlambat {req.menit_terlambat || 15} Menit
+                                      Terlambat
                                     </span>
                                   ) : (
-                                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1 w-fit">
-                                      <Clock className="w-3 h-3 text-emerald-600" />
-                                      Dalam Batas Waktu
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 flex items-center gap-1 w-fit">
+                                      <Clock className="w-3 h-3 text-blue-600" />
+                                      Batas Waktu
                                     </span>
                                   )}
                                 </td>
                                 <td className="p-3 text-right">
                                   <button
                                     onClick={() => handleCheckInSantri(req.id)}
-                                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center space-x-1"
+                                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center space-x-1"
                                   >
                                     <LogIn className="w-3.5 h-3.5" />
-                                    <span>Check-In Masuk</span>
+                                    <span>Check-In</span>
                                   </button>
                                 </td>
                               </tr>
@@ -1033,18 +1116,15 @@ export default function UnifiedRoleDashboardPage() {
                 })()}
               </div>
 
-              {/* PANEL 2: CHECK-OUT SANTRI KELUAR PONDOK (SIAPA YANG KELUAR) */}
-              <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 text-xs">
+              {/* PANEL 2: CHECK-OUT SANTRI KELUAR PONDOK */}
+              <div className="p-5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3 text-xs">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <LogOut className="w-4 h-4 text-rose-600" />
-                    <h4 className="font-bold text-slate-800 text-sm">
-                      Pencatatan Santri Keluar Gerbang (Check-Out Gerbang)
+                    <LogOut className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm">
+                      Check-Out Santri Keluar Gerbang
                     </h4>
                   </div>
-                  <span className="text-[11px] text-slate-500 font-medium">
-                    Pilih Santri yang Memiliki Gate Pass Resmi
-                  </span>
                 </div>
 
                 <div className="grid sm:grid-cols-4 gap-3">
@@ -1052,14 +1132,14 @@ export default function UnifiedRoleDashboardPage() {
                     <select
                       value={selectedGateOutId}
                       onChange={(e) => setSelectedGateOutId(e.target.value)}
-                      className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500 text-xs"
+                      className="w-full p-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
                     >
-                      <option value="">-- Pilih Santri Berizin yang Akan Keluar Gerbang --</option>
+                      <option value="">-- Pilih Santri Berizin --</option>
                       {permRequests
                         .filter(r => r.status === 'GATE_PASS' || r.status === 'APPROVED')
                         .map(r => (
                           <option key={r.id} value={r.id}>
-                            [{r.status}] {r.nama} (NIS: {r.nis}) • Penjemput: {r.nama_penjemput} • Batas Kembali: {r.rencana_kembali.slice(11)} WIB
+                            [{r.status}] {r.nama} (NIS: {r.nis}) • Batas: {r.rencana_kembali.slice(11)} WIB
                           </option>
                         ))}
                     </select>
@@ -1068,72 +1148,53 @@ export default function UnifiedRoleDashboardPage() {
                     <button
                       disabled={!selectedGateOutId}
                       onClick={() => handleCheckOutSantri(selectedGateOutId)}
-                      className="w-full py-2.5 bg-rose-600 hover:bg-rose-700 disabled:bg-slate-300 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center space-x-1.5"
+                      className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center space-x-1.5"
                     >
                       <LogOut className="w-3.5 h-3.5" />
-                      <span>Catat Keluar (Check-Out)</span>
+                      <span>Catat Keluar</span>
                     </button>
                   </div>
                 </div>
-
-                {selectedGateOutId && (() => {
-                  const targetReq = permRequests.find(r => r.id === selectedGateOutId);
-                  if (!targetReq) return null;
-                  return (
-                    <div className="p-3 bg-white rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-slate-700">
-                      <div>
-                        <strong>{targetReq.nama}</strong> ({targetReq.kelas})
-                        <div className="text-[11px] text-slate-500">
-                          Keperluan: {targetReq.alasan} • Penjemput: {targetReq.nama_penjemput} ({targetReq.kontak_wali})
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-[11px] text-slate-500 block">Target Jam Kembali:</span>
-                        <strong className="text-rose-700 font-mono text-sm">{targetReq.rencana_kembali} WIB</strong>
-                      </div>
-                    </div>
-                  );
-                })()}
               </div>
             </div>
           )}
 
           {/* 6. MEJA KERJA STAF KASIR & LOKET SPP (KEUANGAN) */}
           {isKasir && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div>
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full uppercase">
-                    Divisi Keuangan • Loket Pembayaran SPP &amp; Uang Jajan
+                  <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full uppercase">
+                    Divisi Keuangan • Loket Pembayaran SPP
                   </span>
-                  <h3 className="text-base font-bold text-slate-900 mt-1">
-                    Loket Kasir &amp; Pengiriman Kwitansi WA Wali ({currentActor.name})
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mt-1">
+                    Loket Kasir &amp; Kwitansi WA ({currentActor.name})
                   </h3>
                 </div>
                 <Link
                   href="/finance/spp"
-                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center space-x-1"
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center space-x-1"
                 >
                   <Receipt className="w-3.5 h-3.5" />
-                  <span>Buka Loket SPP &amp; Kirim WA</span>
+                  <span>Buka Loket SPP</span>
                 </Link>
               </div>
 
               <div className="grid md:grid-cols-3 gap-4 text-xs">
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-slate-500 block">Penerimaan Loket Hari Ini</span>
-                  <span className="text-2xl font-bold text-emerald-700">Rp 12.850.000</span>
-                  <span className="text-slate-500 text-[11px]">8 Transaksi tunai &amp; transfer wali</span>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400 block">Penerimaan Loket Hari Ini</span>
+                  <span className="text-2xl font-bold text-blue-700 dark:text-blue-300">Rp 12.850.000</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">8 Transaksi loker</span>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-slate-500 block">Struk Terkirim ke WhatsApp Wali</span>
-                  <span className="text-2xl font-bold text-slate-800">8 / 8 Sukses</span>
-                  <span className="text-emerald-700 text-[11px]">Tanpa pindah layar (WhatsApp Web direct)</span>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400 block">Struk Terkirim ke WA Wali</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">8 / 8 Sukses</span>
+                  <span className="text-blue-600 dark:text-blue-400 text-[11px]">WhatsApp Gateway aktif</span>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-slate-500 block">Hak Batas Anggaran Pengeluaran</span>
-                  <span className="text-sm font-bold text-amber-700 block mt-1">Read-Only (Terkunci)</span>
-                  <span className="text-slate-400 text-[10px]">Wewenang eksklusif Wakil Ketua Yayasan</span>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400 block">Batas Anggaran Pengeluaran</span>
+                  <span className="text-sm font-bold text-slate-700 dark:text-slate-300 block mt-1">Read-Only</span>
+                  <span className="text-slate-400 text-[10px]">Otoritas Wakil Ketua Yayasan</span>
                 </div>
               </div>
             </div>
@@ -1141,45 +1202,45 @@ export default function UnifiedRoleDashboardPage() {
 
           {/* 7. MEJA KERJA STAF ADMIN HRD & PRESENSI PEGAWAI */}
           {isStafHrd && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div>
-                  <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full uppercase">
-                    Divisi Kepegawaian • Monitoring Presensi 50–150 Pegawai
+                  <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full uppercase">
+                    Divisi Kepegawaian • Presensi
                   </span>
-                  <h3 className="text-base font-bold text-slate-900 mt-1">
-                    Rekap Presensi Harian Mesin &amp; GPS SDM ({currentActor.name})
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mt-1">
+                    Rekap Presensi SDM ({currentActor.name})
                   </h3>
                 </div>
                 <Link
                   href="/kepegawaian"
-                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center space-x-1"
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center space-x-1"
                 >
                   <Users className="w-3.5 h-3.5" />
-                  <span>Buka Direktori Pegawai</span>
+                  <span>Direktori Pegawai</span>
                 </Link>
               </div>
 
               <div className="grid md:grid-cols-4 gap-4 text-xs">
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-slate-500 block">Total Pegawai Pesantren</span>
-                  <span className="text-2xl font-bold text-slate-800">84 Pegawai</span>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400 block">Total Pegawai</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">84 Pegawai</span>
                   <span className="text-slate-400 text-[11px]">Guru, Musyrif, RT &amp; Staf</span>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-slate-500 block">Hadir Tepat Waktu Hari Ini</span>
-                  <span className="text-2xl font-bold text-emerald-700">79 Hadir</span>
-                  <span className="text-emerald-700 text-[11px]">94% Kehadiran mesin &amp; GPS</span>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400 block">Hadir Hari Ini</span>
+                  <span className="text-2xl font-bold text-blue-700 dark:text-blue-300">79 Hadir</span>
+                  <span className="text-blue-600 dark:text-blue-400 text-[11px]">94% Kehadiran GPS</span>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-slate-500 block">Izin / Sakit Terkonfirmasi</span>
-                  <span className="text-2xl font-bold text-blue-700">3 Pegawai</span>
-                  <span className="text-slate-400 text-[11px]">Telah di-ACC oleh KaBid HRD</span>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400 block">Izin / Sakit</span>
+                  <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">3 Pegawai</span>
+                  <span className="text-slate-400 text-[11px]">Disetujui HRD</span>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-slate-500 block">Belum Presensi (Alpa)</span>
-                  <span className="text-2xl font-bold text-rose-700">2 Pegawai</span>
-                  <span className="text-rose-600 text-[11px]">Perlu konfirmasi WhatsApp</span>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-slate-500 dark:text-slate-400 block">Belum Presensi</span>
+                  <span className="text-2xl font-bold text-slate-600 dark:text-slate-400">2 Pegawai</span>
+                  <span className="text-slate-400 text-[11px]">Konfirmasi staf</span>
                 </div>
               </div>
             </div>
@@ -1192,23 +1253,23 @@ export default function UnifiedRoleDashboardPage() {
       {/* ========================================================================= */}
       {isPimpinan && (
         <div className="space-y-6">
-          {/* Card Presensi Cepat Pimpinan (Pimpinan juga berkhidmah & dapat absen mandiri) */}
-          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          {/* Card Presensi Cepat Pimpinan */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
             <div className="flex items-center space-x-3">
-              <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 flex items-center justify-center shrink-0">
                 <UserCheck className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h4 className="font-bold text-slate-800 text-sm">Presensi Kehadiran Pimpinan</h4>
+                  <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm">Presensi Kehadiran Pimpinan</h4>
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                    absenDiriStatus ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                    absenDiriStatus ? 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                   }`}>
                     {absenDiriStatus ? 'Sudah Presensi' : 'Belum Presensi'}
                   </span>
                 </div>
-                <p className="text-slate-500 text-[11px] mt-0.5">
-                  {absenDiriStatus ? absenDiriStatus : 'Radius GPS Pesantren Valid (15m) • Klik tombol untuk mencatat log khidmah pimpinan'}
+                <p className="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">
+                  {absenDiriStatus ? absenDiriStatus : 'Radius GPS Pesantren Valid (15m)'}
                 </p>
               </div>
             </div>
@@ -1216,121 +1277,100 @@ export default function UnifiedRoleDashboardPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={handleKlikAbsenDiri}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center space-x-1.5"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center space-x-1.5"
               >
                 <UserCheck className="w-3.5 h-3.5" />
-                <span>{absenDiriStatus ? 'Perbarui Jam Hadir' : 'Catat Hadir Sekarang'}</span>
+                <span>{absenDiriStatus ? 'Perbarui Jam Hadir' : 'Catat Hadir'}</span>
               </button>
             </div>
           </div>
 
-          {/* ------------------------------------------------------------------------- */}
-          {/* PILAR 6: KEPALA BAGIAN RUMAH TANGGA & SARPRAS (PAK SUBANDI)               */}
-          {/* ------------------------------------------------------------------------- */}
+          {/* PILAR 6: KEPALA BAGIAN RUMAH TANGGA & SARPRAS */}
           {currentActor.role_key === 'kepala_rumah_tangga' && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
-                  <span className="text-[10px] font-bold text-teal-800 bg-teal-50 px-2.5 py-1 rounded-full uppercase border border-teal-200">
-                    🏛️ PILAR 6: KEPALA BAGIAN RUMAH TANGGA &amp; SARPRAS
+                  <span className="text-[10px] font-bold text-blue-800 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full uppercase border border-blue-200 dark:border-blue-900">
+                    🏛️ PILAR 6: RUMAH TANGGA &amp; SARPRAS
                   </span>
-                  <h2 className="text-lg font-bold text-slate-900 mt-1">
-                    Console Operasional KaBid RT: {currentActor.name}
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-1">
+                    Operasional RT: {currentActor.name}
                   </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Komando Dapur Sentral, Unit Laundry, Satpam Gerbang &amp; Pemeliharaan Gedung
-                  </p>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <Link
                     href="/rumah-tangga"
-                    className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center space-x-1.5"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center space-x-1.5"
                   >
                     <Building2 className="w-4 h-4" />
-                    <span>Buka Hub Rumah Tangga</span>
+                    <span>Hub Rumah Tangga</span>
                   </Link>
                   <Link
                     href="/rumah-tangga/pengajuan"
-                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition inline-flex items-center space-x-1.5"
+                    className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-bold text-xs rounded-xl transition inline-flex items-center space-x-1.5"
                   >
                     <Package className="w-4 h-4" />
-                    <span>Pengajuan Logistik RT</span>
+                    <span>Pengajuan Logistik</span>
                   </Link>
                 </div>
               </div>
 
-              {/* KARTU EKSKLUSIF: SISA ANGGARAN OPERASIONAL RT (HANYA PADA KABID RT) */}
-              <div className="bg-gradient-to-br from-teal-900 via-teal-800 to-slate-900 text-white p-5 rounded-2xl shadow-md border border-teal-700/50">
+              {/* SISA ANGGARAN OPERASIONAL RT */}
+              <div className="bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 text-white p-5 rounded-2xl shadow-md border border-blue-800/50">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
-                    <div className="flex items-center space-x-2">
-                      <span className="px-2 py-0.5 bg-teal-500/30 text-teal-200 rounded text-[10px] font-bold uppercase tracking-wider">
-                        Khusus KaBid RT • Dilindungi Hak Akses
-                      </span>
-                      <span className="text-xs text-teal-200/80">Tahun Anggaran 2026/2027</span>
-                    </div>
-                    <h3 className="text-xl font-black text-white mt-1.5">Sisa Plafon Anggaran Operasional RT</h3>
-                    <p className="text-xs text-teal-100/80 mt-0.5">
-                      Dikelola mandiri oleh KaBid RT untuk logistik konsumsi dapur, sabun laundry &amp; pemeliharaan fasilitas pondok
-                    </p>
+                    <span className="px-2 py-0.5 bg-blue-500/30 text-blue-200 rounded text-[10px] font-bold uppercase tracking-wider">
+                      KaBid RT • Plafon Anggaran
+                    </span>
+                    <h3 className="text-xl font-black text-white mt-1.5">Sisa Plafon Anggaran Operasional</h3>
                   </div>
-                  <div className="text-left md:text-right bg-white/10 p-4 rounded-xl backdrop-blur-xs border border-white/10">
-                    <span className="text-[11px] text-teal-200 block font-semibold uppercase">Sisa Saldo Tersedia</span>
+                  <div className="text-left md:text-right bg-white/10 p-4 rounded-xl border border-white/10">
+                    <span className="text-[11px] text-blue-200 block font-semibold uppercase">Saldo Tersedia</span>
                     <div className="text-3xl font-black text-white">Rp 14.250.000</div>
-                    <div className="text-xs text-teal-200 mt-1">
-                      Pagu Bulanan: <strong>Rp 25.000.000</strong> (Terserap 43%)
+                    <div className="text-xs text-blue-200 mt-1">
+                      Pagu Bulanan: <strong>Rp 25.000.000</strong>
                     </div>
                   </div>
-                </div>
-
-                <div className="mt-4 pt-3 border-t border-teal-700/50 flex flex-wrap items-center justify-between gap-3 text-xs text-teal-100">
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    Plafon Mandiri: Pengajuan &lt; Rp 1 Jt langsung diproses Keuangan tanpa perlu ACC Yayasan
-                  </span>
-                  <span className="bg-teal-950/60 px-3 py-1 rounded-lg text-emerald-300 font-bold text-[11px]">
-                    Status Anggaran: Sangat Sehat (57% Tersedia)
-                  </span>
                 </div>
               </div>
 
               {/* METRIK 4 UNIT OPERASIONAL RT */}
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Logistik Dapur Santri</span>
-                    <Utensils className="w-4 h-4 text-amber-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Logistik Dapur</span>
+                    <Utensils className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-slate-800">8 Karung Beras</span>
-                  <span className="text-emerald-700 font-semibold block text-[11px]">Aman 6 Hari (120 Porsi/Sesi)</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">8 Karung Beras</span>
+                  <span className="text-blue-700 dark:text-blue-300 font-semibold block text-[11px]">Aman 6 Hari</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Unit Laundry Sentral</span>
-                    <Package className="w-4 h-4 text-teal-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Laundry</span>
+                    <Package className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-slate-800">42 Kantong Cuci</span>
-                  <span className="text-teal-700 font-semibold block text-[11px]">4 Mesin Cuci Beroperasi Penuh</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">42 Kantong Cuci</span>
+                  <span className="text-blue-700 dark:text-blue-300 font-semibold block text-[11px]">4 Mesin aktif</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Keamanan &amp; Gerbang</span>
-                    <ShieldCheck className="w-4 h-4 text-rose-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Keamanan</span>
+                    <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-slate-800">3 Santri Izin QR</span>
-                  <span className="text-rose-600 font-semibold block text-[11px]">1 Kasus Overdue Sidang Santri</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">3 Izin QR</span>
+                  <span className="text-blue-700 dark:text-blue-300 font-semibold block text-[11px]">Pos Gerbang</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Tiket Sarpras / Rusak</span>
-                    <Wrench className="w-4 h-4 text-blue-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Tiket Sarpras</span>
+                    <Wrench className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-slate-800">3 Tiket Aktif</span>
-                  <span className="text-blue-700 font-semibold block text-[11px]">Butuh Disposisi Teknisi Listrik/AC</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">3 Tiket Aktif</span>
+                  <span className="text-blue-700 dark:text-blue-300 font-semibold block text-[11px]">Teknisi perbaikan</span>
                 </div>
               </div>
 
@@ -1338,47 +1378,47 @@ export default function UnifiedRoleDashboardPage() {
               <div className="grid sm:grid-cols-3 gap-3 pt-1 text-xs">
                 <Link
                   href="/rumah-tangga"
-                  className="p-3 bg-white border border-slate-200 hover:border-teal-500 hover:bg-teal-50/30 rounded-xl transition text-center"
+                  className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl transition text-center"
                 >
-                  <Building2 className="w-5 h-5 text-teal-600 mx-auto mb-1" />
-                  <span className="font-bold text-slate-800 block">Hub Operasional Sarpras</span>
-                  <span className="text-[10px] text-slate-400">Monitoring Aset &amp; Pemeliharaan</span>
+                  <Building2 className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+                  <span className="font-bold text-slate-800 dark:text-slate-200 block">Hub Sarpras</span>
+                  <span className="text-[10px] text-slate-400">Monitoring Fasilitas</span>
                 </Link>
                 <Link
                   href="/rumah-tangga/pengajuan"
-                  className="p-3 bg-white border border-slate-200 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl transition text-center"
+                  className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl transition text-center"
                 >
-                  <Package className="w-5 h-5 text-blue-600 mx-auto mb-1" />
-                  <span className="font-bold text-slate-800 block">Pengajuan Logistik Sarpras</span>
-                  <span className="text-[10px] text-slate-400">Belanja Dapur, Laundry &amp; Pos Satpam</span>
+                  <Package className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+                  <span className="font-bold text-slate-800 dark:text-slate-200 block">Pengajuan Sarpras</span>
+                  <span className="text-[10px] text-slate-400">Logistik &amp; Belanja</span>
                 </Link>
                 <Link
                   href="/akademik/perizinan"
-                  className="p-3 bg-white border border-slate-200 hover:border-rose-500 hover:bg-rose-50/30 rounded-xl transition text-center"
+                  className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl transition text-center"
                 >
-                  <QrCode className="w-5 h-5 text-rose-600 mx-auto mb-1" />
-                  <span className="font-bold text-xs text-slate-800 block">Pantau Scanner Gate Pass</span>
-                  <span className="text-[10px] text-slate-400">Arus Keluar-Masuk Gerbang</span>
+                  <QrCode className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+                  <span className="font-bold text-xs text-slate-800 dark:text-slate-200 block">Scanner Gerbang</span>
+                  <span className="text-[10px] text-slate-400">Arus Keluar-Masuk</span>
                 </Link>
               </div>
             </div>
           )}
 
           {/* ------------------------------------------------------------------------- */}
-          {/* PILAR 3: KEPALA BAGIAN KEPEGAWAIAN / HRD (UST. IR. FAISAL RAHMAN, M.M.)   */}
+          {/* PILAR 3: KEPALA BAGIAN KEPEGAWAIAN / HRD                                  */}
           {/* ------------------------------------------------------------------------- */}
           {currentActor.role_key === 'kepala_kepegawaian' && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
-                  <span className="text-[10px] font-bold text-blue-800 bg-blue-50 px-2.5 py-1 rounded-full uppercase border border-blue-200">
-                    🏛️ PILAR 3: KEPALA BAGIAN KEPEGAWAIAN (HRD)
+                  <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full uppercase border border-blue-200 dark:border-blue-800">
+                    PILAR 3: KEPEGAWAIAN (HRD)
                   </span>
-                  <h2 className="text-lg font-bold text-slate-900 mt-1">
-                    Tata Kelola SDM Pesantren: {currentActor.name}
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-1">
+                    Tata Kelola SDM: {currentActor.name}
                   </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Otoritas Absensi, Disiplin Khidmah &amp; Persetujuan Cuti 50–150 Pegawai Pesantren
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Otoritas Absensi, Disiplin &amp; Persetujuan Cuti Pegawai Pesantren
                   </p>
                 </div>
 
@@ -1388,82 +1428,82 @@ export default function UnifiedRoleDashboardPage() {
                     className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center space-x-1.5"
                   >
                     <Users className="w-4 h-4" />
-                    <span>Buka Hub SDM &amp; Cuti</span>
+                    <span>Hub SDM &amp; Cuti</span>
                   </Link>
                   <Link
                     href="/presensi"
-                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition inline-flex items-center space-x-1.5"
+                    className="px-4 py-2 bg-blue-50 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-slate-700 text-blue-800 dark:text-blue-300 font-bold text-xs rounded-xl transition inline-flex items-center space-x-1.5 border border-blue-200 dark:border-slate-700"
                   >
                     <UserCheck className="w-4 h-4" />
-                    <span>Rekap Log Presensi</span>
+                    <span>Rekap Presensi</span>
                   </Link>
                 </div>
               </div>
 
-              {/* METRIK SDM (50-150 PEGAWAI) */}
+              {/* METRIK SDM */}
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Total Pegawai Pesantren</span>
-                    <Users className="w-4 h-4 text-blue-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Total Pegawai</span>
+                    <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-slate-800">84 Pegawai</span>
-                  <span className="text-slate-500 font-semibold block text-[11px]">Pendidik, Musyrif, RT &amp; Kasir</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">84 Pegawai</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-semibold block text-[11px]">Pendidik &amp; Staf Support</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Hadir Tepat Waktu</span>
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Hadir Tepat Waktu</span>
+                    <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-emerald-700">79 Hadir (94%)</span>
-                  <span className="text-emerald-700 font-semibold block text-[11px]">Radius Geofence 15m Terpenuhi</span>
+                  <span className="text-2xl font-bold text-blue-700 dark:text-blue-300">79 Hadir (94%)</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold block text-[11px]">Geofence Valid</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Antrean Approval Cuti</span>
-                    <Calendar className="w-4 h-4 text-amber-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Approval Cuti</span>
+                    <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-amber-700">2 Pengajuan</span>
-                  <span className="text-amber-700 font-semibold block text-[11px]">Menunggu ACC KaBid HRD</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">2 Pengajuan</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold block text-[11px]">Menunggu Review</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Belum Presensi (Alpa)</span>
-                    <AlertCircle className="w-4 h-4 text-rose-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Belum Hadir</span>
+                    <AlertCircle className="w-4 h-4 text-blue-500 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-rose-700">2 Pegawai</span>
-                  <span className="text-rose-600 font-semibold block text-[11px]">Perlu Konfirmasi Staf HRD</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">2 Pegawai</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-semibold block text-[11px]">Konfirmasi Staf</span>
                 </div>
               </div>
 
-              {/* ANTREAN CEPAT CUTI MANDIRI DARI PEGAWAI */}
-              <div className="p-4 bg-amber-50/70 rounded-2xl border border-amber-200 text-xs space-y-2">
+              {/* ANTREAN CEPAT CUTI */}
+              <div className="p-4 bg-blue-50/50 dark:bg-blue-950/30 rounded-2xl border border-blue-200 dark:border-blue-900/50 text-xs space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-amber-900 flex items-center gap-1.5">
-                    <Clock className="w-4 h-4 text-amber-700" />
-                    Pengajuan Cuti / Izin Masuk Hari Ini (Memerlukan Persetujuan KaBid HRD):
+                  <span className="font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
+                    <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    Pengajuan Cuti / Izin Masuk Hari Ini:
                   </span>
-                  <Link href="/kepegawaian" className="text-amber-800 font-bold underline text-[11px]">
-                    Proses di Modul Cuti &rarr;
+                  <Link href="/kepegawaian" className="text-blue-700 dark:text-blue-300 font-bold underline text-[11px]">
+                    Proses &rarr;
                   </Link>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-3 pt-1">
-                  <div className="p-3 bg-white rounded-xl border border-amber-200 text-slate-800 space-y-1">
+                  <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-blue-100 dark:border-slate-700 text-slate-800 dark:text-slate-200 space-y-1">
                     <div className="flex justify-between font-bold text-xs">
-                      <span>Ibu Sumiati (Koordinator Laundry)</span>
-                      <span className="text-amber-700">Cuti Tahunan (2 Hari)</span>
+                      <span>Ibu Sumiati (Laundry)</span>
+                      <span className="text-blue-600 dark:text-blue-400">Cuti 2 Hari</span>
                     </div>
-                    <p className="text-[11px] text-slate-500">Alasan: Keperluan keluarga penting di kampung</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Keperluan keluarga penting</p>
                   </div>
-                  <div className="p-3 bg-white rounded-xl border border-amber-200 text-slate-800 space-y-1">
+                  <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-blue-100 dark:border-slate-700 text-slate-800 dark:text-slate-200 space-y-1">
                     <div className="flex justify-between font-bold text-xs">
-                      <span>Pak Slamet (Juru Masak Dapur)</span>
-                      <span className="text-blue-700">Izin Sakit (1 Hari)</span>
+                      <span>Pak Slamet (Dapur)</span>
+                      <span className="text-blue-600 dark:text-blue-400">Izin Sakit 1 Hari</span>
                     </div>
-                    <p className="text-[11px] text-slate-500">Alasan: Demam &amp; istirahat di rumah dinas</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Demam &amp; istirahat</p>
                   </div>
                 </div>
               </div>
@@ -1471,77 +1511,77 @@ export default function UnifiedRoleDashboardPage() {
           )}
 
           {/* ------------------------------------------------------------------------- */}
-          {/* PILAR 4: KEPALA BAGIAN KEUANGAN (UST. AHMAD DAHLAN, S.E.)                 */}
+          {/* PILAR 4: KEPALA BAGIAN KEUANGAN                                          */}
           {/* ------------------------------------------------------------------------- */}
           {currentActor.role_key === 'keuangan' && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
-                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full uppercase border border-emerald-200">
-                    🏛️ PILAR 4: KEPALA BAGIAN KEUANGAN
+                  <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full uppercase border border-blue-200 dark:border-blue-800">
+                    PILAR 4: KEPALA BAGIAN KEUANGAN
                   </span>
-                  <h2 className="text-lg font-bold text-slate-900 mt-1">
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-1">
                     Pusat Pengendali Kas &amp; SPP: {currentActor.name}
                   </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Pengawasan Penerimaan SPP, Rekap Arus Kas &amp; Verifikasi Pencairan Anggaran RT &amp; KBM
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Pengawasan Penerimaan SPP, Rekap Arus Kas &amp; Verifikasi Pencairan Anggaran
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <Link
                     href="/finance/spp"
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center space-x-1.5"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center space-x-1.5"
                   >
                     <Receipt className="w-4 h-4" />
-                    <span>Loket SPP &amp; Kuitansi WA</span>
+                    <span>Loket SPP</span>
                   </Link>
                   <Link
                     href="/finance/validasi"
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center space-x-1.5"
+                    className="px-4 py-2 bg-blue-50 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-slate-700 text-blue-800 dark:text-blue-300 font-bold text-xs rounded-xl transition inline-flex items-center space-x-1.5 border border-blue-200 dark:border-slate-700"
                   >
                     <ShieldCheck className="w-4 h-4" />
-                    <span>Verifikasi Pencairan</span>
+                    <span>Verifikasi Dana</span>
                   </Link>
                 </div>
               </div>
 
               {/* METRIK KEUANGAN & KAS */}
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Penerimaan SPP Hari Ini</span>
-                    <Receipt className="w-4 h-4 text-emerald-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Penerimaan SPP Hari Ini</span>
+                    <Receipt className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-emerald-700">Rp 12.850.000</span>
-                  <span className="text-emerald-700 font-semibold block text-[11px]">8 Transaksi Lunas di Loket</span>
+                  <span className="text-2xl font-bold text-blue-700 dark:text-blue-300">Rp 12.850.000</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold block text-[11px]">8 Transaksi Lunas</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Total Kas Operasional</span>
-                    <Wallet className="w-4 h-4 text-blue-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Total Kas Operasional</span>
+                    <Wallet className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-slate-800">Rp 84.500.000</span>
-                  <span className="text-blue-700 font-semibold block text-[11px]">BSI Rekening SPP &amp; Operasional</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">Rp 84.500.000</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold block text-[11px]">BSI Rekening Pesantren</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Antrean Pencairan Dana</span>
-                    <Clock className="w-4 h-4 text-amber-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Antrean Pencairan</span>
+                    <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-amber-700">3 Pengajuan</span>
-                  <span className="text-amber-700 font-semibold block text-[11px]">Pengadaan Dapur, Laundry &amp; KBM</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">3 Pengajuan</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-semibold block text-[11px]">Dapur, Laundry &amp; KBM</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Batas Mandiri Keuangan</span>
-                    <Settings className="w-4 h-4 text-purple-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Batas Mandiri Keuangan</span>
+                    <Settings className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-slate-800">s.d Rp 5.000.000</span>
-                  <span className="text-slate-500 font-semibold block text-[11px]">Di atas batas wajib ACC Wk. Yayasan</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">s.d Rp 5.000.000</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-semibold block text-[11px]">Di atas batas wajib ACC Yayasan</span>
                 </div>
               </div>
 
@@ -1549,272 +1589,272 @@ export default function UnifiedRoleDashboardPage() {
               <div className="grid sm:grid-cols-4 gap-3 pt-1 text-xs">
                 <Link
                   href="/finance/spp"
-                  className="p-3 bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/30 rounded-xl transition text-center"
+                  className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl transition text-center"
                 >
-                  <Receipt className="w-5 h-5 text-emerald-600 mx-auto mb-1" />
-                  <span className="font-bold text-slate-800 block">Loket Kasir SPP</span>
-                  <span className="text-[10px] text-slate-400">Input Bayar &amp; Kirim Struk WA</span>
+                  <Receipt className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+                  <span className="font-bold text-slate-800 dark:text-slate-200 block">Loket Kasir SPP</span>
+                  <span className="text-[10px] text-slate-400">Input &amp; Kirim Struk</span>
                 </Link>
                 <Link
                   href="/finance/validasi"
-                  className="p-3 bg-white border border-slate-200 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl transition text-center"
+                  className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl transition text-center"
                 >
-                  <ShieldCheck className="w-5 h-5 text-blue-600 mx-auto mb-1" />
-                  <span className="font-bold text-slate-800 block">Verifikasi Pencairan</span>
-                  <span className="text-[10px] text-slate-400">Validasi Pengajuan Dana RT</span>
+                  <ShieldCheck className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+                  <span className="font-bold text-slate-800 dark:text-slate-200 block">Verifikasi Pencairan</span>
+                  <span className="text-[10px] text-slate-400">Validasi Anggaran RT</span>
                 </Link>
                 <Link
                   href="/finance/pengeluaran"
-                  className="p-3 bg-white border border-slate-200 hover:border-amber-500 hover:bg-amber-50/30 rounded-xl transition text-center"
+                  className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl transition text-center"
                 >
-                  <TrendingUp className="w-5 h-5 text-amber-600 mx-auto mb-1" />
-                  <span className="font-bold text-slate-800 block">Catat Pengeluaran</span>
-                  <span className="text-[10px] text-slate-400">Buku Kas Harian Pondok</span>
+                  <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+                  <span className="font-bold text-slate-800 dark:text-slate-200 block">Catat Pengeluaran</span>
+                  <span className="text-[10px] text-slate-400">Buku Kas Harian</span>
                 </Link>
                 <Link
                   href="/finance/pengaturan-threshold"
-                  className="p-3 bg-white border border-slate-200 hover:border-purple-500 hover:bg-purple-50/30 rounded-xl transition text-center"
+                  className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl transition text-center"
                 >
-                  <Settings className="w-5 h-5 text-purple-600 mx-auto mb-1" />
-                  <span className="font-bold text-slate-800 block">Batas Mandiri (SK)</span>
-                  <span className="text-[10px] text-slate-400">Read-Only Otoritas Yayasan</span>
+                  <Settings className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+                  <span className="font-bold text-slate-800 dark:text-slate-200 block">Batas Mandiri</span>
+                  <span className="text-[10px] text-slate-400">Otoritas Pengeluaran</span>
                 </Link>
               </div>
             </div>
           )}
 
           {/* ------------------------------------------------------------------------- */}
-          {/* PILAR 5: MUDIR PESANTREN / KEPALA SEKOLAH (UST. DR. K.H. MUKHLIS, M.A.)   */}
+          {/* PILAR 5: MUDIR PESANTREN / KEPALA SEKOLAH                                */}
           {/* ------------------------------------------------------------------------- */}
           {currentActor.role_key === 'mudir' && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
-                  <span className="text-[10px] font-bold text-indigo-800 bg-indigo-50 px-2.5 py-1 rounded-full uppercase border border-indigo-200">
-                    🏛️ PILAR 5: MUDIR PESANTREN (KEPALA SEKOLAH)
+                  <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full uppercase border border-blue-200 dark:border-blue-800">
+                    PILAR 5: MUDIR PESANTREN
                   </span>
-                  <h2 className="text-lg font-bold text-slate-900 mt-1">
-                    Pimpinan KBM &amp; Tarbiyah Syar'i: {currentActor.name}
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-1">
+                    Pimpinan KBM &amp; Tarbiyah: {currentActor.name}
                   </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Supervisi Rombel Syar'i (Ikhwan vs Akhwat), Guru Inval &amp; Ketuntasan Kurikulum Tahfidz
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Supervisi Rombel Syar'i, Guru Inval &amp; Ketuntasan Kurikulum Tahfidz
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <Link
                     href="/dashboard/mudir"
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center space-x-1.5"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center space-x-1.5"
                   >
                     <School className="w-4 h-4" />
-                    <span>Console Lengkap Mudir</span>
+                    <span>Console Mudir</span>
                   </Link>
                   <Link
                     href="/akademik/nilai"
-                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition inline-flex items-center space-x-1.5"
+                    className="px-4 py-2 bg-blue-50 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-slate-700 text-blue-800 dark:text-blue-300 font-bold text-xs rounded-xl transition inline-flex items-center space-x-1.5 border border-blue-200 dark:border-slate-700"
                   >
                     <GraduationCap className="w-4 h-4" />
-                    <span>Supervisi Nilai KKM</span>
+                    <span>Nilai KKM</span>
                   </Link>
                 </div>
               </div>
 
               {/* METRIK MUDIR */}
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Rombel Terjadwal Hari Ini</span>
-                    <School className="w-4 h-4 text-indigo-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Rombel Terjadwal</span>
+                    <School className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-slate-800">14 Rombel</span>
-                  <span className="text-indigo-700 font-semibold block text-[11px]">7 Putra (Ikhwan) &amp; 7 Putri (Akhwat)</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">14 Rombel</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold block text-[11px]">7 Putra &amp; 7 Putri</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Kehadiran Guru Pengajar</span>
-                    <UserCheck className="w-4 h-4 text-emerald-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Kehadiran Guru</span>
+                    <UserCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-emerald-700">18 / 19 Hadir</span>
-                  <span className="text-emerald-700 font-semibold block text-[11px]">1 Guru Di-Inval Pengganti</span>
+                  <span className="text-2xl font-bold text-blue-700 dark:text-blue-300">18 / 19 Hadir</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold block text-[11px]">1 Guru Inval</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Ketuntasan Tahfidz Pekanan</span>
-                    <BookOpen className="w-4 h-4 text-blue-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Tahfidz Pekanan</span>
+                    <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-blue-700">88.4% Tuntas</span>
-                  <span className="text-blue-700 font-semibold block text-[11px]">Target Ziyadah &amp; Muraja'ah</span>
+                  <span className="text-2xl font-bold text-blue-700 dark:text-blue-300">88.4% Tuntas</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold block text-[11px]">Target Ziyadah</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Catatan Adab &amp; Disiplin</span>
-                    <Sparkles className="w-4 h-4 text-amber-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Catatan Adab</span>
+                    <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-amber-700">12 Adab / 1 Iqob</span>
-                  <span className="text-slate-500 font-semibold block text-[11px]">Pembinaan Tarbawi Terkendali</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">12 Adab / 1 Iqob</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-semibold block text-[11px]">Pembinaan Terkendali</span>
                 </div>
               </div>
 
               {/* NOTICE SYAR'I SEGREGATION */}
-              <div className="p-3 bg-blue-50/80 rounded-xl border border-blue-200 text-xs text-blue-900 flex items-center justify-between">
-                <span>🕌 <strong>Pemisahan Syar'i Terkunci:</strong> Guru Ikhwan mengajar santri Ikhwan di Gedung Ibnu Khaldun. Guru Akhwat mengajar santri Akhwat di Gedung Khadijah. Sistem mencegah penugasan lintas lawan jenis secara otomatis.</span>
-                <Link href="/dashboard/mudir" className="font-bold underline ml-2 shrink-0">Buka Jadwal Rombel</Link>
+              <div className="p-3 bg-blue-50/70 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-900/50 text-xs text-blue-900 dark:text-blue-200 flex items-center justify-between">
+                <span>Pemisahan Syar'i Terkunci: Guru Ikhwan mengajar santri Ikhwan, Guru Akhwat mengajar santri Akhwat.</span>
+                <Link href="/dashboard/mudir" className="font-bold underline ml-2 shrink-0 text-blue-700 dark:text-blue-300">Jadwal Rombel</Link>
               </div>
             </div>
           )}
 
           {/* ------------------------------------------------------------------------- */}
-          {/* PILAR 2: WAKIL KETUA YAYASAN (DRS. H. M. MANSYUR, M.PD.)                 */}
+          {/* PILAR 2: WAKIL KETUA YAYASAN                                             */}
           {/* ------------------------------------------------------------------------- */}
           {currentActor.role_key === 'wakil_yayasan' && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
-                  <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full uppercase border border-amber-200">
-                    🏛️ PILAR 2: WAKIL KETUA YAYASAN (APPROVAL AUTHORITY)
+                  <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full uppercase border border-blue-200 dark:border-blue-800">
+                    PILAR 2: WAKIL KETUA YAYASAN
                   </span>
-                  <h2 className="text-lg font-bold text-slate-900 mt-1">
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-1">
                     Control Tower Persetujuan: {currentActor.name}
                   </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Otoritas Tunggal ACC Anggaran Besar, Pengesahan Rekening Bank &amp; Batas Mandiri Operasional
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Otoritas ACC Anggaran, Pengesahan Rekening &amp; Batas Mandiri
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <Link
                     href="/dashboard/wakil-yayasan"
-                    className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center space-x-1.5"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center space-x-1.5"
                   >
                     <ShieldCheck className="w-4 h-4" />
-                    <span>Control Tower Wakil Yayasan</span>
+                    <span>Control Tower</span>
                   </Link>
                   <Link
                     href="/finance/pengaturan-threshold"
-                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition inline-flex items-center space-x-1.5"
+                    className="px-4 py-2 bg-blue-50 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-slate-700 text-blue-800 dark:text-blue-300 font-bold text-xs rounded-xl transition inline-flex items-center space-x-1.5 border border-blue-200 dark:border-slate-700"
                   >
                     <Settings className="w-4 h-4" />
-                    <span>Atur Batas Mandiri</span>
+                    <span>Batas Mandiri</span>
                   </Link>
                 </div>
               </div>
 
               {/* METRIK WAKIL YAYASAN */}
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Antrean ACC Anggaran Besar</span>
-                    <ShieldCheck className="w-4 h-4 text-amber-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Antrean ACC Anggaran</span>
+                    <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-amber-700">2 Pengajuan</span>
-                  <span className="text-amber-700 font-semibold block text-[11px]">&gt; Batas Mandiri (Wajib ACC Wakil)</span>
+                  <span className="text-2xl font-bold text-blue-700 dark:text-blue-300">2 Pengajuan</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold block text-[11px]">&gt; Batas Mandiri</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Batas Mandiri KaBid RT</span>
-                    <Settings className="w-4 h-4 text-teal-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Batas Mandiri RT</span>
+                    <Settings className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-slate-800">Rp 1.000.000</span>
-                  <span className="text-teal-700 font-semibold block text-[11px]">Bebas ACC Yayasan bila di bawah batas</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">Rp 1.000.000</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-semibold block text-[11px]">Otoritas Mandiri RT</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Master Rekening Bank Resmi</span>
-                    <Building2 className="w-4 h-4 text-blue-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Rekening Bank Resmi</span>
+                    <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-slate-800">3 Rekening BSI</span>
-                  <span className="text-blue-700 font-semibold block text-[11px]">SPP, E-Pocket &amp; Wakaf Sosial</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">3 Rekening BSI</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold block text-[11px]">SPP, Tabungan, Wakaf</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Audit Pengadaan Sarpras</span>
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Audit Pengadaan</span>
+                    <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-emerald-700">100% Terverifikasi</span>
-                  <span className="text-emerald-700 font-semibold block text-[11px]">Sesuai SOP Tata Kelola Pesantren</span>
+                  <span className="text-2xl font-bold text-blue-700 dark:text-blue-300">100% Terverifikasi</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold block text-[11px]">Sesuai SOP Pesantren</span>
                 </div>
               </div>
             </div>
           )}
 
           {/* ------------------------------------------------------------------------- */}
-          {/* PILAR 1: KETUA YAYASAN (KH. ABDULLAH FAQIH, LC.)                         */}
+          {/* PILAR 1: KETUA YAYASAN                                                    */}
           {/* ------------------------------------------------------------------------- */}
           {currentActor.role_key === 'yayasan' && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
-                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full uppercase border border-emerald-200">
-                    🏛️ PILAR 1: KETUA YAYASAN (EXECUTIVE INFORMATION SYSTEM)
+                  <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full uppercase border border-blue-200 dark:border-blue-800">
+                    PILAR 1: KETUA YAYASAN (EIS)
                   </span>
-                  <h2 className="text-lg font-bold text-slate-900 mt-1">
-                    Executive EIS Yayasan: {currentActor.name}
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-1">
+                    Executive EIS: {currentActor.name}
                   </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Information Only &amp; Strategic Oversight — Pemantauan Makro Perkembangan Pesantren
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Pemantauan Makro &amp; Pengawasan Strategis Pesantren
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <Link
                     href="/dashboard/yayasan"
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center space-x-1.5"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center space-x-1.5"
                   >
                     <TrendingUp className="w-4 h-4" />
-                    <span>Executive Dashboard EIS</span>
+                    <span>Dashboard EIS</span>
                   </Link>
                   <Link
                     href="/laporan/ringkasan"
-                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition inline-flex items-center space-x-1.5"
+                    className="px-4 py-2 bg-blue-50 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-slate-700 text-blue-800 dark:text-blue-300 font-bold text-xs rounded-xl transition inline-flex items-center space-x-1.5 border border-blue-200 dark:border-slate-700"
                   >
                     <FileText className="w-4 h-4" />
-                    <span>Analitik AI &amp; Laporan</span>
+                    <span>Laporan Makro</span>
                   </Link>
                 </div>
               </div>
 
               {/* METRIK STRATEGIS YAYASAN */}
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Total Santri Terdaftar</span>
-                    <Users className="w-4 h-4 text-emerald-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Santri Terdaftar</span>
+                    <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-slate-800">450 Santri</span>
-                  <span className="text-emerald-700 font-semibold block text-[11px]">235 Putra (Ikhwan) • 215 Putri (Akhwat)</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">450 Santri</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold block text-[11px]">235 Putra • 215 Putri</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Disiplin Khidmah Pegawai</span>
-                    <UserCheck className="w-4 h-4 text-blue-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Disiplin Pegawai</span>
+                    <UserCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-blue-700">84 Pegawai</span>
-                  <span className="text-blue-700 font-semibold block text-[11px]">94% Tingkat Kehadiran Harian</span>
+                  <span className="text-2xl font-bold text-blue-700 dark:text-blue-300">84 Pegawai</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold block text-[11px]">94% Kehadiran</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Kepatuhan Syar'i</span>
-                    <ShieldCheck className="w-4 h-4 text-teal-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Kepatuhan Syar'i</span>
+                    <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-teal-700">100% Terkunci</span>
-                  <span className="text-teal-700 font-semibold block text-[11px]">Pemisahan Kampus &amp; Pengajar</span>
+                  <span className="text-2xl font-bold text-blue-700 dark:text-blue-300">100% Terkunci</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold block text-[11px]">Pemisahan Kampus</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Pertumbuhan Tahfidz</span>
-                    <Award className="w-4 h-4 text-amber-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Capaian Tahfidz</span>
+                    <Award className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-amber-700">32 Santri</span>
-                  <span className="text-slate-500 font-semibold block text-[11px]">Kandidat Wisuda Tahfidz 30 Juz</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">32 Santri</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-semibold block text-[11px]">Kandidat 30 Juz</span>
                 </div>
               </div>
             </div>
@@ -1824,67 +1864,67 @@ export default function UnifiedRoleDashboardPage() {
           {/* SUPER ADMINISTRATOR & MULTI-TENANT CONSOLE                                */}
           {/* ------------------------------------------------------------------------- */}
           {currentActor.role_key === 'super_admin' && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
-                  <span className="text-[10px] font-bold text-indigo-800 bg-indigo-50 px-2.5 py-1 rounded-full uppercase border border-indigo-200">
-                    ★ SUPER ADMINISTRATOR &amp; MULTI-TENANT CONSOLE
+                  <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full uppercase border border-blue-200 dark:border-blue-800">
+                    SUPER ADMINISTRATOR &amp; MULTI-TENANT
                   </span>
-                  <h2 className="text-lg font-bold text-slate-900 mt-1">
-                    Konsol Super Admin: Multi-Tenant &amp; Onboarding Pesantren
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-1">
+                    Konsol Super Admin
                   </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Pusat Kontrak Langganan Tier 1 (50 Santri Gratis), Registrasi Tenant Baru (Rabu Go-Live) &amp; Master WhatsApp Gateway
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Multi-Tenant, Kontrak Langganan Starter &amp; WhatsApp Gateway
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <Link
                     href="/super-admin"
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center space-x-1.5"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center space-x-1.5"
                   >
                     <ShieldCheck className="w-4 h-4" />
-                    <span>Buka Super Admin Console</span>
+                    <span>Konsol Super Admin</span>
                   </Link>
                 </div>
               </div>
 
               {/* METRIK SUPER ADMIN */}
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Tenant Pesantren Aktif</span>
-                    <Building2 className="w-4 h-4 text-indigo-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Tenant Aktif</span>
+                    <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-slate-800">1 Tenant Aktif</span>
-                  <span className="text-indigo-700 font-semibold block text-[11px]">Pondok Pesantren Al-Hikmah</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">1 Tenant Aktif</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold block text-[11px]">PP Al-Hikmah (Demo)</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Onboarding Tenant Baru</span>
-                    <Users className="w-4 h-4 text-emerald-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Onboarding Tenant</span>
+                    <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-emerald-700">Jadwal Rabu</span>
-                  <span className="text-emerald-700 font-semibold block text-[11px]">100% Siap Registrasi</span>
+                  <span className="text-2xl font-bold text-blue-700 dark:text-blue-300">Siap Live</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold block text-[11px]">Jalur Tenant Resmi</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">Paket Tier 1 Starter</span>
-                    <Award className="w-4 h-4 text-blue-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Paket Starter</span>
+                    <Award className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-blue-700">50 Kuota Santri</span>
-                  <span className="text-blue-700 font-semibold block text-[11px]">Hafalan, Adab, Reward &amp; Disiplin</span>
+                  <span className="text-2xl font-bold text-blue-700 dark:text-blue-300">50 Santri</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold block text-[11px]">Fitur Komplit</span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">WhatsApp Gateway</span>
-                    <Send className="w-4 h-4 text-emerald-600" />
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">WA Gateway</span>
+                    <Send className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-2xl font-bold text-emerald-700">Terhubung</span>
-                  <span className="text-emerald-700 font-semibold block text-[11px]">Multi-Tenant Direct Send</span>
+                  <span className="text-2xl font-bold text-blue-700 dark:text-blue-300">Terhubung</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold block text-[11px]">Notifikasi Otomatis</span>
                 </div>
               </div>
             </div>
@@ -1896,31 +1936,31 @@ export default function UnifiedRoleDashboardPage() {
       {/* MODAL 1: FORM PENGAJUAN CUTI / IZIN MANDIRI PEGAWAI                      */}
       {/* ========================================================================= */}
       {modalCuti && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="flex items-center space-x-2">
-                <Calendar className="w-5 h-5 text-blue-600" />
+                <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 <div>
-                  <h3 className="font-bold text-slate-800 text-sm">Form Pengajuan Cuti Mandiri Staf</h3>
-                  <p className="text-[11px] text-slate-500">Pemohon: {currentActor.name} ({currentActor.title})</p>
+                  <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">Form Pengajuan Cuti Staf</h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Pemohon: {currentActor.name} ({currentActor.title})</p>
                 </div>
               </div>
-              <button onClick={() => setModalCuti(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+              <button onClick={() => setModalCuti(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">✕</button>
             </div>
 
             <form onSubmit={handleSubmitCuti} className="space-y-3 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Jenis Cuti / Izin *</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Jenis Cuti / Izin *</label>
                 <select
                   value={formCuti.leave_type}
                   onChange={(e) => setFormCuti({ ...formCuti, leave_type: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="TAHUNAN">Cuti Tahunan (Hak 12 Hari)</option>
                   <option value="SAKIT">Izin Sakit (Surat Dokter / Medis)</option>
                   <option value="UMRAH_HAJI">Cuti Ibadah Umroh / Haji</option>
-                  <option value="MELAHIRKAN">Cuti Melahirkan (Akhwat)</option>
+                  <option value="MELAHIRKAN">Cuti Melahirkan</option>
                   <option value="KEMALANGAN">Izin Kemalangan / Duka</option>
                   <option value="LAINNYA">Izin Keperluan Mendesak</option>
                 </select>
@@ -1928,60 +1968,60 @@ export default function UnifiedRoleDashboardPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Tanggal Mulai *</label>
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Tanggal Mulai *</label>
                   <input
                     type="date"
                     required
                     value={formCuti.start_date}
                     onChange={(e) => setFormCuti({ ...formCuti, start_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Tanggal Selesai *</label>
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Tanggal Selesai *</label>
                   <input
                     type="date"
                     required
                     value={formCuti.end_date}
                     onChange={(e) => setFormCuti({ ...formCuti, end_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Alasan Cuti *</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Alasan Cuti *</label>
                 <textarea
                   rows={2}
                   required
                   value={formCuti.reason}
                   onChange={(e) => setFormCuti({ ...formCuti, reason: e.target.value })}
-                  placeholder="Contoh: Mengantar orang tua berobat ke RSUD..."
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Keterangan pengajuan..."
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">No. Kontak Darurat Selama Cuti *</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">No. Kontak Darurat *</label>
                 <input
                   type="text"
                   required
                   value={formCuti.emergency_contact}
                   onChange={(e) => setFormCuti({ ...formCuti, emergency_contact: e.target.value })}
                   placeholder="081234567890"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
-              <div className="p-2.5 bg-blue-50 rounded-xl text-[11px] text-blue-800">
-                📌 Sesuai SOP, pengajuan ini akan diverifikasi dan disetujui langsung oleh <strong>Ust. Ir. Faisal Rahman, M.M. (KaBid HRD)</strong>.
+              <div className="p-2.5 bg-blue-50 dark:bg-blue-950/40 rounded-xl text-[11px] text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-900/50">
+                Pengajuan akan diverifikasi oleh KaBid HRD.
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setModalCuti(false)}
-                  className="px-4 py-2 border border-slate-300 rounded-xl text-slate-700 font-semibold hover:bg-slate-50"
+                  className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                 >
                   Batal
                 </button>
@@ -1989,7 +2029,7 @@ export default function UnifiedRoleDashboardPage() {
                   type="submit"
                   className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-xs transition"
                 >
-                  Kirim Pengajuan Cuti
+                  Kirim Pengajuan
                 </button>
               </div>
             </form>
@@ -1998,71 +2038,74 @@ export default function UnifiedRoleDashboardPage() {
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL 2: FORM PENGAJUAN BARANG OPERASIONAL STAF RT (NON-MONETER)          */}
+      {/* MODAL 2: FORM PENGAJUAN BARANG OPERASIONAL STAF RT                        */}
       {/* ========================================================================= */}
       {modalStok && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="flex items-center space-x-2">
-                <Package className="w-5 h-5 text-teal-600" />
+                <Package className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 <div>
-                  <h3 className="font-bold text-slate-800 text-sm">Form Pengajuan Barang &amp; Logistik RT</h3>
-                  <p className="text-[11px] text-slate-500">Staf Pemohon: {currentActor.name} ({currentActor.title})</p>
+                  <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">Pengajuan Logistik RT</h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Pemohon: {currentActor.name} ({currentActor.title})</p>
                 </div>
               </div>
-              <button onClick={() => setModalStok(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+              <button onClick={() => setModalStok(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">✕</button>
             </div>
 
             <form onSubmit={handleSubmitKebutuhanRT} className="space-y-3 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Nama Barang / Logistik *</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Barang *</label>
                 <input
                   type="text"
                   required
                   value={formBarang.nama_barang}
                   onChange={(e) => setFormBarang({ ...formBarang, nama_barang: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  placeholder="Contoh: Deterjen laundry, Beras..."
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Jumlah / Volume Kebutuhan *</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Jumlah Kebutuhan *</label>
                 <input
                   type="text"
                   required
                   value={formBarang.jumlah}
                   onChange={(e) => setFormBarang({ ...formBarang, jumlah: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 font-bold"
+                  placeholder="Contoh: 10 Karung, 5 Liter"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Keperluan Penggunaan *</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Keperluan Penggunaan *</label>
                 <textarea
                   rows={2}
                   required
                   value={formBarang.keperluan}
                   onChange={(e) => setFormBarang({ ...formBarang, keperluan: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  placeholder="Keterangan kebutuhan..."
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
-              <div className="p-2.5 bg-emerald-50 rounded-xl text-[11px] text-emerald-800">
-                🛡️ <em>Prinsip Non-Moneter:</em> Pegawai operasional mencatat fisik barang yang diperlukan. Nominal rupiah dan sisa anggaran dihitung oleh KaBid RT &amp; Keuangan.
+              <div className="p-2.5 bg-blue-50 dark:bg-blue-950/40 rounded-xl text-[11px] text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-900/50">
+                Non-Moneter: Staf mencatat fisik kebutuhan, anggaran dihitung KaBid RT.
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setModalStok(false)}
-                  className="px-4 py-2 border border-slate-300 rounded-xl text-slate-700 font-semibold hover:bg-slate-50"
+                  className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shadow-xs transition"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-xs transition"
                 >
                   Ajukan ke KaBid RT
                 </button>
@@ -2076,30 +2119,30 @@ export default function UnifiedRoleDashboardPage() {
       {/* MODAL 3: FORM INPUT IZIN KELUAR DARURAT DI POS SATPAM                     */}
       {/* ========================================================================= */}
       {modalIzinPos && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="flex items-center space-x-2">
-                <ShieldCheck className="w-5 h-5 text-rose-600" />
+                <ShieldCheck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 <div>
-                  <h3 className="font-bold text-slate-800 text-sm">Input Izin Keluar di Pos Gerbang</h3>
-                  <p className="text-[11px] text-slate-500">Petugas Jaga: {currentActor.name} ({currentActor.title})</p>
+                  <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">Izin Keluar di Pos Gerbang</h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Petugas: {currentActor.name} ({currentActor.title})</p>
                 </div>
               </div>
-              <button onClick={() => setModalIzinPos(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+              <button onClick={() => setModalIzinPos(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">✕</button>
             </div>
 
             <form onSubmit={handleSubmitIzinPos} className="space-y-3 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Pilih Santri yang Dijemput *</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Pilih Santri *</label>
                 <select
                   value={formIzinPos.santriNis}
                   onChange={(e) => setFormIzinPos({ ...formIzinPos, santriNis: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {MASTER_SANTRI.map(s => (
                     <option key={s.nis} value={s.nis}>
-                      {s.nama} (NIS: {s.nis}) • {s.gender === 'akhwat' ? 'Santri Putri' : 'Santri Putra'}
+                      {s.nama} ({s.nis}) • {s.gender === 'akhwat' ? 'Santri Putri' : 'Santri Putra'}
                     </option>
                   ))}
                 </select>
@@ -2107,22 +2150,22 @@ export default function UnifiedRoleDashboardPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Nama Penjemput *</label>
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Penjemput *</label>
                   <input
                     type="text"
                     required
                     value={formIzinPos.namaPenjemput}
                     onChange={(e) => setFormIzinPos({ ...formIzinPos, namaPenjemput: e.target.value })}
-                    placeholder="Contoh: H. Ahmad Fauzi"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    placeholder="Nama penjemput"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Hubungan *</label>
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Hubungan *</label>
                   <select
                     value={formIzinPos.hubungan}
                     onChange={(e) => setFormIzinPos({ ...formIzinPos, hubungan: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="Ayah Kandung">Ayah Kandung</option>
                     <option value="Ibu Kandung">Ibu Kandung</option>
@@ -2134,55 +2177,55 @@ export default function UnifiedRoleDashboardPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">No. Kontak / WA Wali *</label>
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">No. WA Wali *</label>
                   <input
                     type="text"
                     required
                     value={formIzinPos.kontakWali}
                     onChange={(e) => setFormIzinPos({ ...formIzinPos, kontakWali: e.target.value })}
                     placeholder="081234567890"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Batas Jam Kembali *</label>
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Jam Kembali *</label>
                   <input
                     type="time"
                     required
                     value={formIzinPos.jamKembali}
                     onChange={(e) => setFormIzinPos({ ...formIzinPos, jamKembali: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 font-bold"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Keperluan / Alasan Izin *</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Alasan Izin *</label>
                 <input
                   type="text"
                   required
                   value={formIzinPos.alasan}
                   onChange={(e) => setFormIzinPos({ ...formIzinPos, alasan: e.target.value })}
-                  placeholder="Contoh: Berobat ke RSUD / Urusan Keluarga Mendesak"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  placeholder="Keperluan izin..."
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
-              <div className="p-2.5 bg-rose-50 rounded-xl text-[11px] text-rose-800">
-                🚪 <em>Check-Out Instan:</em> Saat disimpan, sistem langsung mencatat jam keluar santri dan menerbitkan ID Gate Pass gerbang.
+              <div className="p-2.5 bg-blue-50 dark:bg-blue-950/40 rounded-xl text-[11px] text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-900/50">
+                Sistem otomatis mencatat jam keluar dan menerbitkan Gate Pass.
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setModalIzinPos(false)}
-                  className="px-4 py-2 border border-slate-300 rounded-xl text-slate-700 font-semibold hover:bg-slate-50"
+                  className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-xs transition"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-xs transition"
                 >
                   Simpan &amp; Buka Gerbang
                 </button>
