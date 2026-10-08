@@ -52,6 +52,8 @@ export const DEFAULT_TENANT: TenantInfo = {
   ]
 };
 
+export const DEMO_TENANT = DEFAULT_TENANT;
+
 export const NURUL_HUDA_TENANT: TenantInfo = {
   id: 'tenant-rabu-001',
   name: 'Pesantren Tahfidz Nurul Huda',
@@ -316,6 +318,10 @@ const SESSION_EVENT_NAME = 'ks_session_actor_changed';
 export function getActiveActor(): ActiveActor {
   if (typeof window === 'undefined') return MASTER_PILLAR_ACTORS.yayasan;
   try {
+    const mode = getAppMode();
+    if (mode === 'tenant') {
+      return MASTER_PILLAR_ACTORS.tenant_admin_nh;
+    }
     const raw = localStorage.getItem(SESSION_ACTOR_STORAGE_KEY);
     if (!raw) {
       return MASTER_PILLAR_ACTORS.yayasan;
@@ -348,6 +354,16 @@ const TENANT_EVENT_NAME = 'ks_tenant_changed';
 export function getActiveTenant(): TenantInfo {
   if (typeof window === 'undefined') return DEFAULT_TENANT;
   try {
+    const mode = getAppMode();
+    if (mode === 'tenant') {
+      const raw = localStorage.getItem(TENANT_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.id === 'tenant-rabu-001') return parsed;
+      }
+      return NURUL_HUDA_TENANT;
+    }
+
     const activeTid = localStorage.getItem('ks_active_tenant_id');
     if (activeTid === 'tenant-rabu-001') {
       const raw = localStorage.getItem(TENANT_STORAGE_KEY);
@@ -466,6 +482,28 @@ const APP_MODE_EVENT = 'ks_app_mode_changed';
 export function getAppMode(): AppMode {
   if (typeof window === 'undefined') return 'demo';
   try {
+    // 1. Prioritize URL query parameter (?mode=tenant / ?mode=demo)
+    if (typeof window.location !== 'undefined' && window.location.search) {
+      if (window.location.search.includes('mode=tenant')) {
+        if (localStorage.getItem(APP_MODE_KEY) !== 'tenant') {
+          localStorage.setItem(APP_MODE_KEY, 'tenant');
+          localStorage.setItem('ks_active_tenant_id', 'tenant-rabu-001');
+          document.cookie = 'ks_app_mode=tenant; path=/; max-age=864000';
+          document.cookie = 'ks_active_tenant_id=tenant-rabu-001; path=/; max-age=864000';
+        }
+        return 'tenant';
+      }
+      if (window.location.search.includes('mode=demo')) {
+        if (localStorage.getItem(APP_MODE_KEY) !== 'demo') {
+          localStorage.setItem(APP_MODE_KEY, 'demo');
+          localStorage.setItem('ks_active_tenant_id', 'tenant-pesantren-001');
+          document.cookie = 'ks_app_mode=demo; path=/; max-age=864000';
+          document.cookie = 'ks_active_tenant_id=tenant-pesantren-001; path=/; max-age=864000';
+        }
+        return 'demo';
+      }
+    }
+
     const raw = localStorage.getItem(APP_MODE_KEY);
     if (raw === 'tenant' || raw === 'demo') return raw;
     if (document.cookie.includes('ks_app_mode=tenant')) return 'tenant';

@@ -7,6 +7,10 @@
 export function isTenantMode(): boolean {
   if (typeof window === 'undefined') return false;
   try {
+    if (typeof window.location !== 'undefined' && window.location.search) {
+      if (window.location.search.includes('mode=tenant')) return true;
+      if (window.location.search.includes('mode=demo')) return false;
+    }
     const mode = localStorage.getItem('ks_app_mode_v2');
     if (mode === 'tenant') return true;
     if (document.cookie.includes('ks_app_mode=tenant')) return true;
@@ -466,6 +470,14 @@ export const MASTER_KELAS: KelasItem[] = [
 ];
 
 export function getSharedMasterKelas(): KelasItem[] {
+  if (isTenantMode()) {
+    try {
+      const raw = localStorage.getItem('ks_tenant_master_kelas_v1');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
   if (typeof window === 'undefined') return MASTER_KELAS;
   try {
     const raw = localStorage.getItem('ks_master_kelas_v3');
@@ -487,7 +499,8 @@ export function addNewMasterKelas(kelas: Omit<KelasItem, 'id'>): KelasItem {
   };
   const updated = [...current, newKelas];
   if (typeof window !== 'undefined') {
-    localStorage.setItem('ks_master_kelas_v3', JSON.stringify(updated));
+    const key = isTenantMode() ? 'ks_tenant_master_kelas_v1' : 'ks_master_kelas_v3';
+    localStorage.setItem(key, JSON.stringify(updated));
     window.dispatchEvent(new CustomEvent('ks_master_kelas_updated', { detail: updated }));
   }
   return newKelas;
@@ -595,6 +608,103 @@ export function addSharedKategoriHafalan(item: Omit<KategoriHafalan, 'id'>): Kat
   return newItem;
 }
 
+export interface SetoranTahfidzRecord {
+  id: string;
+  santri: string;
+  nis: string;
+  kelas_id: string;
+  kelas_nama: string;
+  gender: 'ikhwan' | 'akhwat';
+  tipe_hafalan: 'quran' | 'hadis' | 'kitab' | 'custom_yayasan';
+  kategori_label: string;
+  nama_materi: string;
+  rincian_hafalan: string;
+  kelancaran: number;
+  tajwid: number;
+  makhraj: number;
+  is_lulus: boolean;
+  musyrif: string;
+  tanggal: string;
+  catatan?: string;
+}
+
+const DEFAULT_SETORAN_RECORDS: SetoranTahfidzRecord[] = [
+  {
+    id: 'st-1',
+    santri: 'Muhammad Al-Fatih',
+    nis: '202601001',
+    kelas_id: 'k-7a',
+    kelas_nama: 'Kelas 7A Tahfidz Putra',
+    gender: 'ikhwan',
+    tipe_hafalan: 'quran',
+    kategori_label: "Al-Qur'an",
+    nama_materi: "Juz 30 (Juz 'Amma)",
+    rincian_hafalan: 'Surah An-Naba: Ayat 1 - 40',
+    kelancaran: 95,
+    tajwid: 92,
+    makhraj: 94,
+    is_lulus: true,
+    musyrif: 'Ust. Ahmad Dahlan, S.Pd.I',
+    tanggal: '2026-10-04',
+    catatan: 'Tartil & mutqin, makharijul huruf fasih santri putra.',
+  },
+  {
+    id: 'st-2',
+    santri: 'Fathimah Az-Zahra',
+    nis: '202602004',
+    kelas_id: 'k-8b',
+    kelas_nama: 'Kelas 8B Putri (Akhwat)',
+    gender: 'akhwat',
+    tipe_hafalan: 'quran',
+    kategori_label: "Al-Qur'an",
+    nama_materi: 'Juz 29 (Tabarak)',
+    rincian_hafalan: 'Surah Al-Mulk: Ayat 1 - 30',
+    kelancaran: 98,
+    tajwid: 96,
+    makhraj: 97,
+    is_lulus: true,
+    musyrif: 'Usth. Maryam, S.Pd.',
+    tanggal: '2026-10-04',
+    catatan: 'Mumtazah, tajwid sempurna tanpa salah.',
+  },
+];
+
+export function getSharedTahfidzSetoran(): SetoranTahfidzRecord[] {
+  if (isTenantMode()) {
+    try {
+      const raw = localStorage.getItem('ks_tenant_tahfidz_records_v1');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+  if (typeof window === 'undefined') return DEFAULT_SETORAN_RECORDS;
+  try {
+    const raw = localStorage.getItem('ks_tahfidz_records_v1');
+    if (!raw) {
+      localStorage.setItem('ks_tahfidz_records_v1', JSON.stringify(DEFAULT_SETORAN_RECORDS));
+      return DEFAULT_SETORAN_RECORDS;
+    }
+    return JSON.parse(raw);
+  } catch {
+    return DEFAULT_SETORAN_RECORDS;
+  }
+}
+
+export function addSharedTahfidzSetoran(record: Omit<SetoranTahfidzRecord, 'id'>): SetoranTahfidzRecord {
+  const current = getSharedTahfidzSetoran();
+  const newRec: SetoranTahfidzRecord = {
+    ...record,
+    id: `st-${Date.now()}`
+  };
+  const updated = [newRec, ...current];
+  if (typeof window !== 'undefined') {
+    const key = isTenantMode() ? 'ks_tenant_tahfidz_records_v1' : 'ks_tahfidz_records_v1';
+    localStorage.setItem(key, JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('ks_tahfidz_setoran_updated', { detail: updated }));
+  }
+  return newRec;
+}
 
 // ============================================================================
 // 6. LEARNING SESSION & KBM ACADEMIC ENGINE (LIFECYCLE TERPADU GURU & MUDIR)

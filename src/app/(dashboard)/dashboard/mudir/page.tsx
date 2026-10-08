@@ -49,7 +49,9 @@ import {
   getSharedMasterKelas,
   syncSubstituteTeacherToSessions,
   saveSharedPresensi,
-  validateIslamicSegregation
+  validateIslamicSegregation,
+  isTenantMode,
+  getSharedSantriList
 } from '@/lib/sharedDataStore';
 import { 
   getLeaveRequests, 
@@ -348,14 +350,16 @@ export default function DashboardKepalaSekolahPage() {
   // State absen pribadi Mudir
   const [absenPribadiDone, setAbsenPribadiDone] = useState(false);
 
-  // Progres Hafalan per Kelas
-  const progresHafalanKelas = [
+  // Progres Hafalan per Kelas (Demo Data vs Tenant Data)
+  const DEMO_PROGRES_HAFALAN = [
     { kelas: '7A Tahfidz Sains', jumlah_santri: 30, target_juz: 2, capaian_rata: 2.4, status: 'Melampaui Target' },
     { kelas: '7B Tahfidz Sains', jumlah_santri: 30, target_juz: 2, capaian_rata: 2.1, status: 'Sesuai Target' },
     { kelas: '8A Unggulan', jumlah_santri: 28, target_juz: 5, capaian_rata: 4.8, status: 'Sesuai Target' },
     { kelas: '8B Unggulan', jumlah_santri: 28, target_juz: 5, capaian_rata: 3.4, status: 'Perlu Pendampingan' },
     { kelas: '9 Putra', jumlah_santri: 26, target_juz: 10, capaian_rata: 10.2, status: 'Selesai 30 Juz (7 Santri)' },
   ];
+
+  const progresHafalanKelas = (typeof window !== 'undefined' && isTenantMode()) ? [] : DEMO_PROGRES_HAFALAN;
 
   // =========================================================================
   // STATE ASSIGN KELAS & ROMBEL (PINDAH KE DASHBOARD MUDIR - REVISI 3)
@@ -365,7 +369,7 @@ export default function DashboardKepalaSekolahPage() {
   const [selectedKelasTarget, setSelectedKelasTarget] = useState('k-7a');
   const [filterStatusSantri, setFilterStatusSantri] = useState<'ALL' | 'BARU' | 'PINDAHAN' | 'ACARA_LUAR'>('ALL');
 
-  const [unassignedSantri, setUnassignedSantri] = useState([
+  const DEMO_UNASSIGNED_SANTRI = [
     { 
       id: 's-1', 
       nis: '202601015', 
@@ -432,7 +436,36 @@ export default function DashboardKepalaSekolahPage() {
       detail: 'Izin Khusus: Dampingi Orang Tua Tugas Khidmat Dakwah & Umroh di Tanah Suci (Kembali: 18 Okt 2026)',
       selected: false 
     },
-  ]);
+  ];
+
+  function loadUnassignedSantri() {
+    if (typeof window !== 'undefined' && isTenantMode()) {
+      const realSantri = getSharedSantriList();
+      return realSantri.filter(s => !s.kelas_id || s.kelas_id === '').map(s => ({
+        id: s.id || s.nis,
+        nis: s.nis,
+        nama: s.nama,
+        gender: s.gender === 'akhwat' ? 'P' : 'L',
+        asal: '-',
+        kategori: 'BARU' as const,
+        kategori_label: 'Santri Baru (PSB)',
+        detail: `Santri Terdaftar: ${s.nama} • NIS: ${s.nis}`,
+        selected: false,
+      }));
+    }
+    return DEMO_UNASSIGNED_SANTRI;
+  }
+
+  const [unassignedSantri, setUnassignedSantri] = useState<any[]>(() => loadUnassignedSantri());
+
+  useEffect(() => {
+    if (isTenantMode()) {
+      setUnassignedSantri(loadUnassignedSantri());
+      const handleSync = () => setUnassignedSantri(loadUnassignedSantri());
+      window.addEventListener('ks_tenant_santri_updated', handleSync);
+      return () => window.removeEventListener('ks_tenant_santri_updated', handleSync);
+    }
+  }, []);
 
   const toggleSelectSantri = (id: string) => {
     setUnassignedSantri(prev => prev.map(s => s.id === id ? { ...s, selected: !s.selected } : s));
@@ -1386,7 +1419,14 @@ export default function DashboardKepalaSekolahPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {progresHafalanKelas.map((item, idx) => (
+                {progresHafalanKelas.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-slate-500 text-xs">
+                      Belum ada data capaian hafalan per kelas.
+                    </td>
+                  </tr>
+                ) : (
+                  progresHafalanKelas.map((item, idx) => (
                   <tr key={idx} className="hover:bg-slate-50/70 transition">
                     <td className="p-3 font-bold text-slate-800">{item.kelas}</td>
                     <td className="p-3 text-center font-mono">{item.jumlah_santri}</td>
@@ -1406,7 +1446,7 @@ export default function DashboardKepalaSekolahPage() {
                       </span>
                     </td>
                   </tr>
-                ))}
+                )))}
               </tbody>
             </table>
           </div>
@@ -1521,11 +1561,15 @@ export default function DashboardKepalaSekolahPage() {
                   onChange={(e) => setSelectedKelasTarget(e.target.value)}
                   className="w-full p-2.5 bg-emerald-50/60 border border-emerald-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none font-bold text-emerald-900"
                 >
-                  {MASTER_KELAS.map((k) => (
-                    <option key={k.id} value={k.id}>
-                      {k.nama_kelas} (Wali: {k.wali_kelas})
-                    </option>
-                  ))}
+                  {((typeof window !== 'undefined' && isTenantMode()) ? getSharedMasterKelas() : (getSharedMasterKelas().length > 0 ? getSharedMasterKelas() : MASTER_KELAS)).length === 0 ? (
+                    <option value="">-- Belum ada rombel dibuka --</option>
+                  ) : (
+                    ((typeof window !== 'undefined' && isTenantMode()) ? getSharedMasterKelas() : (getSharedMasterKelas().length > 0 ? getSharedMasterKelas() : MASTER_KELAS)).map((k) => (
+                      <option key={k.id} value={k.id}>
+                        {k.nama_kelas} (Wali: {k.wali_kelas})
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
             </div>
@@ -1700,17 +1744,25 @@ export default function DashboardKepalaSekolahPage() {
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
             <h4 className="font-bold text-slate-800 text-sm">Daftar Rombel & Keterisian Kelas Terdaftar</h4>
             <div className="grid sm:grid-cols-3 gap-3 text-xs">
-              {MASTER_KELAS.map((k) => (
-                <div key={k.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-slate-800">{k.nama_kelas}</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">
-                      {k.jumlah_santri} Santri
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-slate-500">Wali Kelas: {k.wali_kelas}</div>
+              {((typeof window !== 'undefined' && isTenantMode()) ? getSharedMasterKelas() : (getSharedMasterKelas().length > 0 ? getSharedMasterKelas() : MASTER_KELAS)).length === 0 ? (
+                <div className="col-span-3 p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-slate-200">
+                  <GraduationCap className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                  <p className="font-semibold text-slate-600 text-xs">Belum ada rombel kelas terdaftar</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Klik "+ Buka Rombel Baru" di atas untuk menambahkan rombongan belajar.</p>
                 </div>
-              ))}
+              ) : (
+                ((typeof window !== 'undefined' && isTenantMode()) ? getSharedMasterKelas() : (getSharedMasterKelas().length > 0 ? getSharedMasterKelas() : MASTER_KELAS)).map((k) => (
+                  <div key={k.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-slate-800">{k.nama_kelas}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">
+                        {k.jumlah_santri} Santri
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-500">Wali Kelas: {k.wali_kelas}</div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

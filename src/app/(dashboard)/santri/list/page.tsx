@@ -15,31 +15,57 @@ import {
   UserPlus
 } from 'lucide-react';
 import { useAppMode, useActiveTenant } from '@/lib/sessionStore';
-import { getSharedSantriList } from '@/lib/sharedDataStore';
+import { getSharedSantriList, isTenantMode } from '@/lib/sharedDataStore';
 
 export default function DataIndukSantriPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterKelas, setFilterKelas] = useState('semua');
   const { isTenant } = useAppMode();
   const tenant = useActiveTenant();
-  const [tenantSantri, setTenantSantri] = useState<any[]>([]);
 
-  useEffect(() => {
-    if (isTenant) {
+  const isTenantActive = typeof window !== 'undefined' ? (isTenantMode() || isTenant) : isTenant;
+
+  const [tenantSantri, setTenantSantri] = useState<any[]>(() => {
+    if (typeof window !== 'undefined' && isTenantMode()) {
       const list = getSharedSantriList();
-      setTenantSantri(list.map((s, idx) => ({
+      return list.map((s, idx) => ({
         id: `ts-${idx + 1}`,
         nis: s.nis,
         nama: s.nama,
         gender: s.gender === 'akhwat' ? 'Perempuan' : 'Laki-laki',
-        kelas: s.kelas_id,
-        asrama: '-',
-        wali: '-',
-        no_hp_wali: '-',
-        status: 'Aktif',
+        kelas: s.kelas || s.kelas_id || '-',
+        asrama: s.kamar || '-',
+        wali: s.wali_nama || '-',
+        no_hp_wali: s.wali_kontak || '-',
+        status: s.status || 'Aktif',
         hafalan: '0 Juz'
-      })));
+      }));
     }
+    return [];
+  });
+
+  useEffect(() => {
+    const refreshTenant = () => {
+      if (isTenantMode() || isTenant) {
+        const list = getSharedSantriList();
+        setTenantSantri(list.map((s, idx) => ({
+          id: `ts-${idx + 1}`,
+          nis: s.nis,
+          nama: s.nama,
+          gender: s.gender === 'akhwat' ? 'Perempuan' : 'Laki-laki',
+          kelas: s.kelas || s.kelas_id || '-',
+          asrama: s.kamar || '-',
+          wali: s.wali_nama || '-',
+          no_hp_wali: s.wali_kontak || '-',
+          status: s.status || 'Aktif',
+          hafalan: '0 Juz'
+        })));
+      }
+    };
+
+    refreshTenant();
+    window.addEventListener('ks_tenant_santri_updated', refreshTenant);
+    return () => window.removeEventListener('ks_tenant_santri_updated', refreshTenant);
   }, [isTenant]);
 
   const demoSantriList = [
@@ -106,7 +132,7 @@ export default function DataIndukSantriPage() {
   ];
 
   // Jika Jalur Tenant, gunakan data tenant (kosong secara default). Jika Demo, gunakan demo santri.
-  const santriList = isTenant ? tenantSantri : demoSantriList;
+  const santriList = isTenantActive ? tenantSantri : demoSantriList;
 
   const filtered = santriList.filter(s => {
     const matchSearch = s.nama.toLowerCase().includes(searchTerm.toLowerCase()) || s.nis.includes(searchTerm);
@@ -180,7 +206,7 @@ export default function DataIndukSantriPage() {
         <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <h3 className="font-bold text-slate-800 dark:text-slate-100">Daftar Santri Terdaftar ({filtered.length} Santri)</h3>
           <span className="text-[11px] text-blue-700 dark:text-blue-300 font-semibold bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-900">
-            {isTenant ? 'Jalur Tenant Live (0 Dummy)' : 'Jalur Demo Simulasi'}
+            {isTenantActive ? 'Jalur Tenant Live (0 Dummy)' : 'Jalur Demo Simulasi'}
           </span>
         </div>
 

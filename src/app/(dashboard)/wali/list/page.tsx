@@ -11,8 +11,51 @@ import {
   ShieldCheck, 
   UserPlus, 
   Search,
-  CheckCircle2
+  CheckCircle2,
+  UserX
 } from 'lucide-react';
+import { isTenantMode, getSharedSantriList } from '@/lib/sharedDataStore';
+
+const DEFAULT_DEMO_WALI = [
+  {
+    id: 'w-1',
+    nama: 'H. Syamsul Bahri',
+    no_whatsapp: '081234567890',
+    santri: 'Muhammad Al-Fatih (NIS: 202601001)',
+    status_akun: 'Aktif',
+    has_pin: true,
+  },
+  {
+    id: 'w-2',
+    nama: 'Dr. Hendra Gunawan',
+    no_whatsapp: '085298765432',
+    santri: 'Ahmad Zaki Mubarak (NIS: 202601015)',
+    status_akun: 'Belum Aktif',
+    has_pin: false,
+  },
+  {
+    id: 'w-3',
+    nama: 'Hj. Siti Aminah',
+    no_whatsapp: '081398712345',
+    santri: 'Fathimah Az-Zahra (NIS: 202602004)',
+    status_akun: 'Aktif',
+    has_pin: true,
+  },
+];
+
+function loadTenantWali() {
+  const santriList = getSharedSantriList();
+  return santriList
+    .filter(s => s.wali_nama)
+    .map(s => ({
+      id: `w-${s.nis}`,
+      nama: s.wali_nama || '',
+      no_whatsapp: s.wali_kontak || '-',
+      santri: `${s.nama} (NIS: ${s.nis})`,
+      status_akun: 'Belum Aktif',
+      has_pin: false,
+    }));
+}
 
 export default function WaliSantriManagementPage() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -21,33 +64,23 @@ export default function WaliSantriManagementPage() {
   const [pinValue, setPinValue] = useState('123456');
   const [notifSuccess, setNotifSuccess] = useState('');
 
-  // Mock list wali santri
-  const [waliList, setWaliList] = useState([
-    {
-      id: 'w-1',
-      nama: 'H. Syamsul Bahri',
-      no_whatsapp: '081234567890',
-      santri: 'Muhammad Al-Fatih (NIS: 202601001)',
-      status_akun: 'Aktif',
-      has_pin: true,
-    },
-    {
-      id: 'w-2',
-      nama: 'Dr. Hendra Gunawan',
-      no_whatsapp: '085298765432',
-      santri: 'Ahmad Zaki Mubarak (NIS: 202601015)',
-      status_akun: 'Belum Aktif',
-      has_pin: false,
-    },
-    {
-      id: 'w-3',
-      nama: 'Hj. Siti Aminah',
-      no_whatsapp: '081398712345',
-      santri: 'Fathimah Az-Zahra (NIS: 202602004)',
-      status_akun: 'Aktif',
-      has_pin: true,
-    },
-  ]);
+  const [waliList, setWaliList] = useState<any[]>(() => {
+    if (typeof window !== 'undefined' && isTenantMode()) {
+      return loadTenantWali();
+    }
+    return DEFAULT_DEMO_WALI;
+  });
+
+  React.useEffect(() => {
+    if (isTenantMode()) {
+      setWaliList(loadTenantWali());
+      const handleTenantUpdate = () => {
+        setWaliList(loadTenantWali());
+      };
+      window.addEventListener('ks_tenant_santri_updated', handleTenantUpdate);
+      return () => window.removeEventListener('ks_tenant_santri_updated', handleTenantUpdate);
+    }
+  }, []);
 
   const handleOpenAction = (wali: any, type: 'create_pin' | 'reset_pin') => {
     setSelectedWali(wali);
@@ -120,7 +153,20 @@ export default function WaliSantriManagementPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {waliList.map((wali) => (
+              {waliList.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-12 text-center text-slate-500">
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <UserX className="w-8 h-8 text-blue-500" />
+                      <p className="font-semibold text-sm text-slate-700">Belum ada data wali santri</p>
+                      <p className="text-xs text-slate-400 max-w-sm">
+                        Data wali santri akan muncul otomatis setelah santri didaftarkan beserta nomor kontak wali di menu Data Santri.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                waliList.map((wali) => (
                 <tr key={wali.id} className="hover:bg-slate-50/60 transition">
                   <td className="py-3 px-4 font-semibold text-slate-800">{wali.nama}</td>
                   <td className="py-3 px-4 font-mono">{wali.no_whatsapp}</td>
@@ -158,7 +204,7 @@ export default function WaliSantriManagementPage() {
                     )}
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>

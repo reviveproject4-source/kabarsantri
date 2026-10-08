@@ -33,7 +33,8 @@ import {
   RekeningPesantren, 
   ThresholdSettings,
   DEFAULT_THRESHOLDS,
-  DEFAULT_REKENING
+  DEFAULT_REKENING,
+  isTenantMode
 } from '@/lib/sharedDataStore';
 import { supabase } from '@/lib/supabaseClient';
 import Laporan6BulanChart from '@/components/finance/Laporan6BulanChart';
@@ -63,8 +64,19 @@ export default function DashboardKetuaYayasanPage() {
   // 3. Tab Grafik
   const [activeGrafikTab, setActiveGrafikTab] = useState<'semua' | 'spp' | 'jajan' | 'tabungan' | 'donasi' | 'tunggakan'>('semua');
 
-  // Ringkasan Eksekutif Keuangan & Margin (Sesuai Permintaan Revisi 6)
-  const pendapatan = {
+  const [isTenant, setIsTenant] = useState(false);
+
+  useEffect(() => {
+    setIsTenant(isTenantMode());
+  }, []);
+
+  // Ringkasan Eksekutif Keuangan & Margin (Zero Dummy Data on Tenant Live)
+  const pendapatan = isTenant ? {
+    spp: 0,
+    daftar_ulang: 0,
+    pendaftaran: 0,
+    donasi: 0,
+  } : {
     spp: 154200000,
     daftar_ulang: 65000000,
     pendaftaran: 32500000,
@@ -72,13 +84,22 @@ export default function DashboardKetuaYayasanPage() {
   };
   const totalPendapatan = pendapatan.spp + pendapatan.daftar_ulang + pendapatan.pendaftaran + pendapatan.donasi;
 
-  const fixCost = {
+  const fixCost = isTenant ? {
+    gaji_pegawai: 0,
+    tunjangan_musyrif: 0,
+  } : {
     gaji_pegawai: 112000000,
     tunjangan_musyrif: 24500000,
   };
   const totalFixCost = fixCost.gaji_pegawai + fixCost.tunjangan_musyrif;
 
-  const variableCost = {
+  const variableCost = isTenant ? {
+    dapur_konsumsi: 0,
+    laundry: 0,
+    keamanan: 0,
+    kbm_modul: 0,
+    listrik_air_wifi: 0,
+  } : {
     dapur_konsumsi: 38400000,
     laundry: 8900000,
     keamanan: 6200000,
@@ -94,7 +115,7 @@ export default function DashboardKetuaYayasanPage() {
 
   const totalPengeluaran = totalFixCost + totalVariableCost;
   const netMargin = totalPendapatan - totalPengeluaran;
-  const marginPercentage = ((netMargin / totalPendapatan) * 100).toFixed(2);
+  const marginPercentage = totalPendapatan > 0 ? ((netMargin / totalPendapatan) * 100).toFixed(2) : '0.00';
 
   // Sinkronisasi Data
   useEffect(() => {
@@ -223,55 +244,65 @@ export default function DashboardKetuaYayasanPage() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-3 pt-1">
-          {/* Card 1: Margin & Surplus Operasional */}
-          <div className="p-3.5 bg-slate-900/80 rounded-xl border border-emerald-500/20 text-xs space-y-1.5">
-            <div className="flex items-center justify-between text-emerald-400 font-bold">
-              <span className="flex items-center space-x-1">
-                <TrendingUp className="w-4 h-4" />
-                <span>Margin Operasional Sehat</span>
-              </span>
-              <span className="text-xs bg-emerald-500/20 px-2 py-0.5 rounded font-mono text-emerald-300 font-bold">
-                +{marginPercentage}%
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-300 leading-snug">
-              Surplus bersih bulan ini mencapai <strong>Rp {netMargin.toLocaleString('id-ID')}</strong>. Rasio Gaji Pegawai (Fix Cost: 47.6%) berada dalam batas aman ideal yayasan (&lt; 55%).
+        {isTenant ? (
+          <div className="p-4 bg-slate-900/80 rounded-xl border border-emerald-500/20 text-xs text-center text-slate-300">
+            <Sparkles className="w-5 h-5 text-emerald-400 mx-auto mb-1.5" />
+            <p className="font-semibold text-slate-200">Belum Ada Transaksi Riil untuk Rekomendasi AI</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Rekomendasi optimasi keuangan dan deteksi anomali biaya akan otomatis muncul setelah ada pencatatan transaksi kas masuk atau pengeluaran operasional.
             </p>
           </div>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-3 pt-1">
+            {/* Card 1: Margin & Surplus Operasional */}
+            <div className="p-3.5 bg-slate-900/80 rounded-xl border border-emerald-500/20 text-xs space-y-1.5">
+              <div className="flex items-center justify-between text-emerald-400 font-bold">
+                <span className="flex items-center space-x-1">
+                  <TrendingUp className="w-4 h-4" />
+                  <span>Margin Operasional Sehat</span>
+                </span>
+                <span className="text-xs bg-emerald-500/20 px-2 py-0.5 rounded font-mono text-emerald-300 font-bold">
+                  +{marginPercentage}%
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-snug">
+                Surplus bersih bulan ini mencapai <strong>Rp {netMargin.toLocaleString('id-ID')}</strong>. Rasio Gaji Pegawai (Fix Cost: 47.6%) berada dalam batas aman ideal yayasan (&lt; 55%).
+              </p>
+            </div>
 
-          {/* Card 2: Anomali Variable Cost Dapur */}
-          <div className="p-3.5 bg-slate-900/80 rounded-xl border border-amber-500/30 text-xs space-y-1.5">
-            <div className="flex items-center justify-between text-amber-400 font-bold">
-              <span className="flex items-center space-x-1">
-                <AlertTriangle className="w-4 h-4" />
-                <span>Peringatan Variable Cost Dapur</span>
-              </span>
-              <span className="text-[10px] bg-amber-500/20 px-2 py-0.5 rounded text-amber-300">
-                +8.3% Pekanan
-              </span>
+            {/* Card 2: Anomali Variable Cost Dapur */}
+            <div className="p-3.5 bg-slate-900/80 rounded-xl border border-amber-500/30 text-xs space-y-1.5">
+              <div className="flex items-center justify-between text-amber-400 font-bold">
+                <span className="flex items-center space-x-1">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span>Peringatan Variable Cost Dapur</span>
+                </span>
+                <span className="text-[10px] bg-amber-500/20 px-2 py-0.5 rounded text-amber-300">
+                  +8.3% Pekanan
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-snug">
+                Belanja beras dan sembako dapur santri melonjak Rp 38.4 Juta. Rekomendasi AI: Bagian Keuangan disarankan membuat kontrak pasokan grosir bulanan dengan distributor.
+              </p>
             </div>
-            <p className="text-[11px] text-slate-300 leading-snug">
-              Belanja beras dan sembako dapur santri melonjak Rp 38.4 Juta. Rekomendasi AI: Bagian Keuangan disarankan membuat kontrak pasokan grosir bulanan dengan distributor.
-            </p>
-          </div>
 
-          {/* Card 3: Optimasi Piutang SPP & Daftar Ulang */}
-          <div className="p-3.5 bg-slate-900/80 rounded-xl border border-blue-500/30 text-xs space-y-1.5">
-            <div className="flex items-center justify-between text-blue-400 font-bold">
-              <span className="flex items-center space-x-1">
-                <Lightbulb className="w-4 h-4" />
-                <span>Peluang Tagihan Piutang</span>
-              </span>
-              <span className="text-[10px] bg-blue-500/20 px-2 py-0.5 rounded text-blue-300">
-                Rp 18.5 Juta
-              </span>
+            {/* Card 3: Optimasi Piutang SPP & Daftar Ulang */}
+            <div className="p-3.5 bg-slate-900/80 rounded-xl border border-blue-500/30 text-xs space-y-1.5">
+              <div className="flex items-center justify-between text-blue-400 font-bold">
+                <span className="flex items-center space-x-1">
+                  <Lightbulb className="w-4 h-4" />
+                  <span>Peluang Tagihan Piutang</span>
+                </span>
+                <span className="text-[10px] bg-blue-500/20 px-2 py-0.5 rounded text-blue-300">
+                  Rp 18.5 Juta
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-snug">
+                Terdapat tunggakan daftar ulang & SPP dari 14 santri. Kirimkan pesan pengingat sopan terotomasi via WhatsApp Gateway ke masing-masing wali santri.
+              </p>
             </div>
-            <p className="text-[11px] text-slate-300 leading-snug">
-              Terdapat tunggakan daftar ulang & SPP dari 14 santri. Kirimkan pesan pengingat sopan terotomasi via WhatsApp Gateway ke masing-masing wali santri.
-            </p>
           </div>
-        </div>
+        )}
       </div>
 
       {/* ========================================================================= */}

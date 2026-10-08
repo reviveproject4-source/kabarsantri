@@ -34,7 +34,8 @@ import {
   completeLearningSession,
   LearningSession,
   SantriPresensiSession,
-  validateIslamicSegregation
+  validateIslamicSegregation,
+  isTenantMode
 } from '@/lib/sharedDataStore';
 import { getActiveActor, MASTER_PILLAR_ACTORS, ActiveActor } from '@/lib/sessionStore';
 
@@ -192,7 +193,33 @@ export default function LearningSessionKBMPage() {
   };
 
   if (!currentSession) {
-    return <div className="p-8 text-center text-xs text-slate-500">Memuat Sesi Pembelajaran...</div>;
+    return (
+      <div className="space-y-6">
+        <div className="bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white p-6 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-700/80 border border-emerald-500/40 uppercase">
+              KBM Learning Session Engine
+            </span>
+            <h1 className="text-xl font-bold mt-2">Sesi Pembelajaran &amp; Penilaian Akademik Guru</h1>
+            <p className="text-xs text-emerald-200 mt-1">
+              {typeof window !== 'undefined' && isTenantMode() ? 'Jalur Tenant Live (0 Data Dummy)' : 'Jalur Demo Simulasi'}
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center">
+          <div className="max-w-md mx-auto space-y-3">
+            <div className="w-12 h-12 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mx-auto">
+              <BookOpen className="w-6 h-6 text-slate-500" />
+            </div>
+            <h3 className="font-bold text-slate-800 text-base">Belum Ada Sesi KBM Terjadwal</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Belum ada data sesi pembelajaran untuk tenant ini. Sesi pembelajaran dan jurnal nilai akan muncul otomatis saat guru atau bagian akademik membuat jadwal KBM.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Hitung metrik evaluasi assessment terkini

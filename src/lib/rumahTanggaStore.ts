@@ -25,7 +25,7 @@ import {
   RtDashboardMetrics
 } from '../types/rumahtangga';
 
-import { saveSharedPengajuan } from './sharedDataStore';
+import { saveSharedPengajuan, isTenantMode } from './sharedDataStore';
 
 // ============================================================================
 // DEFAULT SEED DATA
@@ -456,6 +456,24 @@ export const DEFAULT_AUDIT_LOGS: RtAuditEntry[] = [
 // ============================================================================
 
 const STORAGE_KEY = 'ks_rt_store_v1';
+const TENANT_STORAGE_KEY = 'ks_tenant_rt_store_v1';
+
+export const EMPTY_TENANT_RT_DATA: RtStoreData = {
+  buildings: [],
+  rooms: [],
+  assets: [],
+  inventory: [],
+  stock_movements: [],
+  service_requests: [],
+  maintenance: [],
+  cleaning_tasks: [],
+  facility_bookings: [],
+  equipment_loans: [],
+  safety_inspections: [],
+  vendors: [],
+  audit_logs: [],
+  total_budget_allocated: 0,
+};
 
 export interface RtStoreData {
   buildings: Building[];
@@ -477,7 +495,11 @@ export interface RtStoreData {
 let inMemoryData: RtStoreData | null = null;
 
 function getStoredData(): RtStoreData {
+  const isTenant = isTenantMode();
+  const key = isTenant ? TENANT_STORAGE_KEY : STORAGE_KEY;
+
   if (typeof window === 'undefined') {
+    if (isTenant) return EMPTY_TENANT_RT_DATA;
     if (!inMemoryData) {
       inMemoryData = {
         buildings: DEFAULT_BUILDINGS,
@@ -500,9 +522,9 @@ function getStoredData(): RtStoreData {
   }
 
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(key);
     if (!raw) {
-      const initial: RtStoreData = {
+      const initial: RtStoreData = isTenant ? EMPTY_TENANT_RT_DATA : {
         buildings: DEFAULT_BUILDINGS,
         rooms: DEFAULT_ROOMS,
         assets: DEFAULT_ASSETS,
@@ -518,7 +540,7 @@ function getStoredData(): RtStoreData {
         audit_logs: DEFAULT_AUDIT_LOGS,
         total_budget_allocated: 45000000,
       };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
+      localStorage.setItem(key, JSON.stringify(initial));
       inMemoryData = initial;
       return initial;
     }
@@ -526,32 +548,30 @@ function getStoredData(): RtStoreData {
     inMemoryData = parsed;
     return parsed;
   } catch {
-    if (!inMemoryData) {
-      inMemoryData = {
-        buildings: DEFAULT_BUILDINGS,
-        rooms: DEFAULT_ROOMS,
-        assets: DEFAULT_ASSETS,
-        inventory: DEFAULT_INVENTORY,
-        stock_movements: DEFAULT_STOCK_MOVEMENTS,
-        service_requests: DEFAULT_SERVICE_REQUESTS,
-        maintenance: DEFAULT_MAINTENANCE,
-        cleaning_tasks: DEFAULT_CLEANING_TASKS,
-        facility_bookings: DEFAULT_FACILITY_BOOKINGS,
-        equipment_loans: DEFAULT_EQUIPMENT_LOANS,
-        safety_inspections: DEFAULT_SAFETY_INSPECTIONS,
-        vendors: DEFAULT_VENDORS,
-        audit_logs: DEFAULT_AUDIT_LOGS,
-        total_budget_allocated: 45000000,
-      };
-    }
-    return inMemoryData;
+    return isTenant ? EMPTY_TENANT_RT_DATA : (inMemoryData || {
+      buildings: DEFAULT_BUILDINGS,
+      rooms: DEFAULT_ROOMS,
+      assets: DEFAULT_ASSETS,
+      inventory: DEFAULT_INVENTORY,
+      stock_movements: DEFAULT_STOCK_MOVEMENTS,
+      service_requests: DEFAULT_SERVICE_REQUESTS,
+      maintenance: DEFAULT_MAINTENANCE,
+      cleaning_tasks: DEFAULT_CLEANING_TASKS,
+      facility_bookings: DEFAULT_FACILITY_BOOKINGS,
+      equipment_loans: DEFAULT_EQUIPMENT_LOANS,
+      safety_inspections: DEFAULT_SAFETY_INSPECTIONS,
+      vendors: DEFAULT_VENDORS,
+      audit_logs: DEFAULT_AUDIT_LOGS,
+      total_budget_allocated: 45000000,
+    });
   }
 }
 
 function saveStoreData(data: RtStoreData) {
   inMemoryData = data;
   if (typeof window !== 'undefined') {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    const key = isTenantMode() ? TENANT_STORAGE_KEY : STORAGE_KEY;
+    localStorage.setItem(key, JSON.stringify(data));
     window.dispatchEvent(new CustomEvent('ks_rt_updated', { detail: data }));
   }
 }

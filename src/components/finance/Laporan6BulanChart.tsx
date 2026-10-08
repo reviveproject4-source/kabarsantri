@@ -12,6 +12,7 @@ import {
   Eye,
   CheckCircle2
 } from 'lucide-react';
+import { isTenantMode } from '@/lib/sharedDataStore';
 
 export interface DataBulanKeuangan {
   bulan: string; // "Mei 2026"
@@ -90,6 +91,23 @@ export const DATA_6_BULAN: DataBulanKeuangan[] = [
 export default function Laporan6BulanChart() {
   const [viewMode, setViewMode] = useState<'grafik' | 'tabel'>('grafik');
   const [selectedBulanIdx, setSelectedBulanIdx] = useState(5); // Default Oktober
+  const isTenant = typeof window !== 'undefined' && isTenantMode();
+
+  if (isTenant) {
+    return (
+      <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm text-center">
+        <div className="max-w-md mx-auto space-y-3">
+          <div className="w-12 h-12 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mx-auto">
+            <BarChart3 className="w-6 h-6 text-slate-500" />
+          </div>
+          <h3 className="font-bold text-slate-800 text-base">Belum Ada Data Historis Keuangan (Tenant Live)</h3>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Grafik komparasi pendapatan dan surplus 6 bulan akan terbentuk secara otomatis setelah tenant memiliki riwayat transaksi keuangan operasional riil.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const currentSelected = DATA_6_BULAN[selectedBulanIdx];
   const maxPendapatan = Math.max(...DATA_6_BULAN.map((d) => d.pendapatan));

@@ -53,7 +53,9 @@ import {
   CaseReviewRecord,
   AuditLogEntry,
   MASTER_SANTRI,
-  MASTER_KELAS
+  MASTER_KELAS,
+  isTenantMode,
+  getSharedSantriList
 } from '@/lib/sharedDataStore';
 
 export default function PerizinanSantriPage() {
@@ -72,7 +74,12 @@ export default function PerizinanSantriPage() {
   const [modalCaseReview, setModalCaseReview] = useState<PermissionRequest | null>(null);
 
   // Form State: Pengajuan Baru
-  const [formSantriNis, setFormSantriNis] = useState(MASTER_SANTRI[0]?.nis || '');
+  const [formSantriNis, setFormSantriNis] = useState(() => {
+    if (typeof window !== 'undefined' && isTenantMode()) {
+      return getSharedSantriList()[0]?.nis || '';
+    }
+    return MASTER_SANTRI[0]?.nis || '';
+  });
   const [formAlasan, setFormAlasan] = useState('Pemeriksaan Kesehatan Spesialis di Rumah Sakit');
   const [formTujuan, setFormTujuan] = useState('RSUD Dr. Saiful Anwar Malang');
   const [formRencanaKeluar, setFormRencanaKeluar] = useState(
@@ -1246,11 +1253,15 @@ export default function PerizinanSantriPage() {
                   onChange={(e) => setFormSantriNis(e.target.value)}
                   className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 font-semibold text-slate-800"
                 >
-                  {MASTER_SANTRI.map((s) => (
-                    <option key={s.nis} value={s.nis}>
-                      {s.nama} (NIS: {s.nis})
-                    </option>
-                  ))}
+                  {((isTenantMode() ? getSharedSantriList() : MASTER_SANTRI)).length === 0 ? (
+                    <option value="">-- Belum ada santri terdaftar --</option>
+                  ) : (
+                    (isTenantMode() ? getSharedSantriList() : MASTER_SANTRI).map((s) => (
+                      <option key={s.nis} value={s.nis}>
+                        {s.nama} (NIS: {s.nis})
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
 

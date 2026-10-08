@@ -226,7 +226,20 @@ export default function PengeluaranApprovalPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {pengajuanList.map((item) => {
+              {pengajuanList.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-slate-500">
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <Receipt className="w-8 h-8 text-slate-400" />
+                      <p className="font-semibold text-sm text-slate-700">Belum ada pengajuan dana</p>
+                      <p className="text-xs text-slate-400 max-w-sm">
+                        Pengajuan dana baru dari divisi operasional atau akademik akan langsung muncul di sini.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                pengajuanList.map((item) => {
                 const isMudir = item.divisi === 'Mudir KBM';
                 const maxDirectAcc = isMudir ? thresholds.max_keuangan_kbm_mudir : thresholds.max_keuangan_rumah_tangga;
                 const canDirectAcc = item.nominal <= maxDirectAcc;
@@ -309,7 +322,7 @@ export default function PengeluaranApprovalPage() {
                     </td>
                   </tr>
                 );
-              })}
+              }))}
             </tbody>
           </table>
         </div>

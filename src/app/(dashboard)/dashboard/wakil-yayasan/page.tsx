@@ -40,7 +40,9 @@ import {
   ThresholdSettings,
   PengajuanItem,
   DEFAULT_THRESHOLDS,
-  DEFAULT_REKENING
+  DEFAULT_REKENING,
+  isTenantMode,
+  getSharedPermissionRequests
 } from '@/lib/sharedDataStore';
 import { getHrMetrics } from '@/lib/kepegawaianStore';
 import { HrDashboardMetrics } from '@/types/kepegawaian';
@@ -75,8 +77,15 @@ export default function DashboardWakilYayasanPage() {
   // 3. Daftar Pengajuan yang Memerlukan ACC / Monitoring Wakil Ketua Yayasan (Live Shared Data)
   const [pengajuanList, setPengajuanList] = useState<PengajuanItem[]>([]);
 
-  // Ringkasan Eksekutif Keuangan & Margin (Sesuai Permintaan Revisi 6)
-  const pendapatan = {
+  const [isTenant, setIsTenant] = useState(false);
+
+  // Ringkasan Eksekutif Keuangan & Margin (Zero Dummy Data on Tenant Live)
+  const pendapatan = isTenant ? {
+    spp: 0,
+    daftar_ulang: 0,
+    pendaftaran: 0,
+    donasi: 0,
+  } : {
     spp: 154200000,
     daftar_ulang: 65000000,
     pendaftaran: 32500000,
@@ -84,13 +93,22 @@ export default function DashboardWakilYayasanPage() {
   };
   const totalPendapatan = pendapatan.spp + pendapatan.daftar_ulang + pendapatan.pendaftaran + pendapatan.donasi;
 
-  const fixCost = {
+  const fixCost = isTenant ? {
+    gaji_pegawai: 0,
+    tunjangan_musyrif: 0,
+  } : {
     gaji_pegawai: 112000000,
     tunjangan_musyrif: 24500000,
   };
   const totalFixCost = fixCost.gaji_pegawai + fixCost.tunjangan_musyrif;
 
-  const variableCost = {
+  const variableCost = isTenant ? {
+    dapur_konsumsi: 0,
+    laundry: 0,
+    keamanan: 0,
+    kbm_modul: 0,
+    listrik_air_wifi: 0,
+  } : {
     dapur_konsumsi: 38400000,
     laundry: 8900000,
     keamanan: 6200000,
@@ -106,10 +124,11 @@ export default function DashboardWakilYayasanPage() {
 
   const totalPengeluaran = totalFixCost + totalVariableCost;
   const netMargin = totalPendapatan - totalPengeluaran;
-  const marginPercentage = ((netMargin / totalPendapatan) * 100).toFixed(2);
+  const marginPercentage = totalPendapatan > 0 ? ((netMargin / totalPendapatan) * 100).toFixed(2) : '0.00';
 
   // Sinkronisasi Live Data
   useEffect(() => {
+    setIsTenant(isTenantMode());
     setThresholds(getSharedThresholds());
     setFormThresholds(getSharedThresholds());
     setRekeningList(getSharedRekeningList());
@@ -267,52 +286,62 @@ export default function DashboardWakilYayasanPage() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-3 pt-1">
-          <div className="p-3.5 bg-slate-900/80 rounded-xl border border-emerald-500/20 text-xs space-y-1.5">
-            <div className="flex items-center justify-between text-emerald-400 font-bold">
-              <span className="flex items-center space-x-1">
-                <TrendingUp className="w-4 h-4" />
-                <span>Margin Operasional Surplus</span>
-              </span>
-              <span className="text-xs bg-emerald-500/20 px-2 py-0.5 rounded font-mono text-emerald-300 font-bold">
-                +{marginPercentage}%
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-300 leading-snug">
-              Surplus bersih kas mencapai <strong>Rp {netMargin.toLocaleString('id-ID')}</strong>. Cadangan kas operasional mencukupi untuk 3.8 bulan ke depan.
+        {isTenant ? (
+          <div className="p-4 bg-slate-900/80 rounded-xl border border-teal-500/20 text-xs text-center text-slate-300">
+            <Sparkles className="w-5 h-5 text-teal-400 mx-auto mb-1.5" />
+            <p className="font-semibold text-slate-200">Belum Ada Aktivitas Riil untuk Analitik Operasional AI</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Monitoring efisiensi logistik, dapur, dan alokasi kas akan aktif otomatis saat ada kegiatan operasional riil dari tenant.
             </p>
           </div>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-3 pt-1">
+            <div className="p-3.5 bg-slate-900/80 rounded-xl border border-emerald-500/20 text-xs space-y-1.5">
+              <div className="flex items-center justify-between text-emerald-400 font-bold">
+                <span className="flex items-center space-x-1">
+                  <TrendingUp className="w-4 h-4" />
+                  <span>Margin Operasional Surplus</span>
+                </span>
+                <span className="text-xs bg-emerald-500/20 px-2 py-0.5 rounded font-mono text-emerald-300 font-bold">
+                  +{marginPercentage}%
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-snug">
+                Surplus bersih kas mencapai <strong>Rp {netMargin.toLocaleString('id-ID')}</strong>. Cadangan kas operasional mencukupi untuk 3.8 bulan ke depan.
+              </p>
+            </div>
 
-          <div className="p-3.5 bg-slate-900/80 rounded-xl border border-amber-500/30 text-xs space-y-1.5">
-            <div className="flex items-center justify-between text-amber-400 font-bold">
-              <span className="flex items-center space-x-1">
-                <AlertTriangle className="w-4 h-4" />
-                <span>Variable Cost Dapur & Logistik</span>
-              </span>
-              <span className="text-[10px] bg-amber-500/20 px-2 py-0.5 rounded text-amber-300">
-                Perlu Evaluasi
-              </span>
+            <div className="p-3.5 bg-slate-900/80 rounded-xl border border-amber-500/30 text-xs space-y-1.5">
+              <div className="flex items-center justify-between text-amber-400 font-bold">
+                <span className="flex items-center space-x-1">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span>Variable Cost Dapur & Logistik</span>
+                </span>
+                <span className="text-[10px] bg-amber-500/20 px-2 py-0.5 rounded text-amber-300">
+                  Perlu Evaluasi
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-snug">
+                Pengeluaran sembako dapur berada di angka Rp 38.4 Juta. Disarankan Wakil Ketua Yayasan mengecek faktur harga grosir dan stok beras di gudang logistik.
+              </p>
             </div>
-            <p className="text-[11px] text-slate-300 leading-snug">
-              Pengeluaran sembako dapur berada di angka Rp 38.4 Juta. Disarankan Wakil Ketua Yayasan mengecek faktur harga grosir dan stok beras di gudang logistik.
-            </p>
-          </div>
 
-          <div className="p-3.5 bg-slate-900/80 rounded-xl border border-blue-500/30 text-xs space-y-1.5">
-            <div className="flex items-center justify-between text-blue-400 font-bold">
-              <span className="flex items-center space-x-1">
-                <Landmark className="w-4 h-4" />
-                <span>Pemisahan Rekening Tertib</span>
-              </span>
-              <span className="text-[10px] bg-blue-500/20 px-2 py-0.5 rounded text-blue-300">
-                Sesuai SOP
-              </span>
+            <div className="p-3.5 bg-slate-900/80 rounded-xl border border-blue-500/30 text-xs space-y-1.5">
+              <div className="flex items-center justify-between text-blue-400 font-bold">
+                <span className="flex items-center space-x-1">
+                  <Landmark className="w-4 h-4" />
+                  <span>Pemisahan Rekening Tertib</span>
+                </span>
+                <span className="text-[10px] bg-blue-500/20 px-2 py-0.5 rounded text-blue-300">
+                  Sesuai SOP
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-snug">
+                Dana SPP/Pendidikan dikelola Bagian Keuangan, sedangkan Dana Uang Jajan & Tabungan dikelola Bagian Kesantrian secara transparan.
+              </p>
             </div>
-            <p className="text-[11px] text-slate-300 leading-snug">
-              Dana SPP/Pendidikan dikelola Bagian Keuangan, sedangkan Dana Uang Jajan & Tabungan dikelola Bagian Kesantrian secara transparan.
-            </p>
           </div>
-        </div>
+        )}
       </div>
 
       {/* ========================================================================= */}
@@ -346,21 +375,27 @@ export default function DashboardWakilYayasanPage() {
                   <Users className="w-4 h-4" /> Kepegawaian (HRD)
                 </span>
                 <span className="text-[10px] bg-slate-700 px-2 py-0.5 rounded text-slate-300 font-mono">
-                  {hrMetrics?.total_employees || 14} Staf
+                  {isTenant ? (hrMetrics?.total_employees ?? 0) : (hrMetrics?.total_employees || 14)} Staf
                 </span>
               </div>
               <div className="mt-2 space-y-1 text-xs">
                 <div className="flex justify-between text-slate-300">
                   <span className="text-slate-400">Pegawai Aktif:</span>
-                  <span className="font-bold text-emerald-400">{hrMetrics?.active_employees || 13}</span>
+                  <span className="font-bold text-emerald-400">
+                    {isTenant ? (hrMetrics?.active_employees ?? 0) : (hrMetrics?.active_employees || 13)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-slate-300">
                   <span className="text-slate-400">Cuti (Notif ke Atasan):</span>
-                  <span className="font-bold text-amber-400">{hrMetrics?.on_leave_today || 1} orang</span>
+                  <span className="font-bold text-amber-400">
+                    {isTenant ? (hrMetrics?.on_leave_today ?? 0) : (hrMetrics?.on_leave_today || 1)} orang
+                  </span>
                 </div>
                 <div className="flex justify-between text-slate-300">
                   <span className="text-slate-400">Kasus Disiplin Aktif:</span>
-                  <span className="font-bold text-rose-400">{hrMetrics?.active_disciplinary_cases || 1}</span>
+                  <span className="font-bold text-rose-400">
+                    {isTenant ? (hrMetrics?.active_disciplinary_cases ?? 0) : (hrMetrics?.active_disciplinary_cases || 1)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -387,15 +422,21 @@ export default function DashboardWakilYayasanPage() {
               <div className="mt-2 space-y-1 text-xs">
                 <div className="flex justify-between text-slate-300">
                   <span className="text-slate-400">Tiket Perbaikan Open:</span>
-                  <span className="font-bold text-sky-400">{rtMetrics?.total_active_requests || 1}</span>
+                  <span className="font-bold text-sky-400">
+                    {isTenant ? (rtMetrics?.total_active_requests ?? 0) : (rtMetrics?.total_active_requests || 1)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-slate-300">
                   <span className="text-slate-400">Aset Maintenance:</span>
-                  <span className="font-bold text-amber-400">{rtMetrics?.assets_under_maintenance_count || 1}</span>
+                  <span className="font-bold text-amber-400">
+                    {isTenant ? (rtMetrics?.assets_under_maintenance_count ?? 0) : (rtMetrics?.assets_under_maintenance_count || 1)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-slate-300">
                   <span className="text-slate-400">Stok Kritis:</span>
-                  <span className="font-bold text-rose-400">{rtMetrics?.low_stock_items_count || 1} item</span>
+                  <span className="font-bold text-rose-400">
+                    {isTenant ? (rtMetrics?.low_stock_items_count ?? 0) : (rtMetrics?.low_stock_items_count || 1)} item
+                  </span>
                 </div>
               </div>
             </div>
@@ -422,15 +463,21 @@ export default function DashboardWakilYayasanPage() {
               <div className="mt-2 space-y-1 text-xs">
                 <div className="flex justify-between text-slate-300">
                   <span className="text-slate-400">Santri di Luar Kampus:</span>
-                  <span className="font-bold text-purple-400">2 Santri</span>
+                  <span className="font-bold text-purple-400">
+                    {isTenant ? '0 Santri' : '2 Santri'}
+                  </span>
                 </div>
                 <div className="flex justify-between text-slate-300">
                   <span className="text-slate-400">Status Overdue Gerbang:</span>
-                  <span className="font-bold text-rose-400">1 Kasus Review</span>
+                  <span className="font-bold text-rose-400">
+                    {isTenant ? '0 Kasus Review' : '1 Kasus Review'}
+                  </span>
                 </div>
                 <div className="flex justify-between text-slate-300">
                   <span className="text-slate-400">QR Gate Pass:</span>
-                  <span className="font-bold text-emerald-400">Aktif</span>
+                  <span className="font-bold text-emerald-400">
+                    {isTenant ? 'Siap' : 'Aktif'}
+                  </span>
                 </div>
               </div>
             </div>

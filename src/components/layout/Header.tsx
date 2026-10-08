@@ -42,6 +42,7 @@ import {
   initCrossTabSyncListener
 } from '@/lib/syncEngine';
 import { useThemeMode } from '@/lib/themeStore';
+import { getSharedSantriList } from '@/lib/sharedDataStore';
 
 interface HeaderProps {
   onToggleMobileMenu?: () => void;
@@ -63,6 +64,18 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
   const [tenantSaveSuccess, setTenantSaveSuccess] = useState(false);
   const [syncMsg, setSyncMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isCloudLoading, setIsCloudLoading] = useState(false);
+  const [santriCount, setSantriCount] = useState(0);
+
+  React.useEffect(() => {
+    const updateCount = () => {
+      try {
+        setSantriCount(getSharedSantriList().length);
+      } catch {}
+    };
+    updateCount();
+    window.addEventListener('ks_tenant_santri_updated', updateCount);
+    return () => window.removeEventListener('ks_tenant_santri_updated', updateCount);
+  }, []);
 
   React.useEffect(() => {
     setActiveRole(getActiveActor().role_key);
@@ -253,10 +266,10 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
         <div className="bg-blue-950 dark:bg-slate-950 text-white px-3 sm:px-6 py-1.5 text-xs font-semibold flex items-center justify-between border-b border-blue-900 dark:border-slate-800 z-20">
           <div className="flex items-center space-x-2 truncate">
             <span className="bg-blue-600 text-white px-1.5 py-0.5 rounded text-[10px] font-black shrink-0 uppercase tracking-wide">
-              Jalur Tenant
+              Jalur Tenant Live
             </span>
             <span className="truncate text-blue-100 text-[11px] sm:text-xs">
-              {tenant.name} • Tier 1 Starter (Free 50 Santri)
+              {tenant.name} • Paket Zakat ({santriCount}/50 Santri · 0 Data Dummy)
             </span>
           </div>
           <button 
@@ -338,7 +351,7 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
               <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
               <div className="flex flex-col text-left">
                 <span className="text-[11px] font-extrabold leading-tight">Admin Lembaga</span>
-                <span className="text-[9px] text-blue-700 dark:text-blue-300 font-semibold leading-tight">42/50 Santri</span>
+                <span className="text-[9px] text-blue-700 dark:text-blue-300 font-semibold leading-tight">{santriCount}/50 Santri</span>
               </div>
             </div>
           ) : (

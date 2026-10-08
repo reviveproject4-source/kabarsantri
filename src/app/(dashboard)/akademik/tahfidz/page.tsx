@@ -19,7 +19,12 @@ import {
   getSharedKategoriHafalan, 
   addSharedKategoriHafalan, 
   KategoriHafalan,
-  validateIslamicSegregation
+  validateIslamicSegregation,
+  getSharedTahfidzSetoran,
+  addSharedTahfidzSetoran,
+  getSharedSantriList,
+  getSharedMasterKelas,
+  isTenantMode
 } from '@/lib/sharedDataStore';
 import { getActiveActor, MASTER_PILLAR_ACTORS, ActiveActor } from '@/lib/sessionStore';
 
@@ -57,108 +62,12 @@ export default function TahfidzManagementPage() {
   // Kategori Hafalan dari Shared Store
   const [kategoriList, setKategoriList] = useState<KategoriHafalan[]>([]);
 
-  // Daftar Riwayat Setoran Hafalan
-  const [setoranList, setSetoranList] = useState<SetoranRecord[]>([
-    {
-      id: 'st-1',
-      santri: 'Muhammad Al-Fatih',
-      nis: '202601001',
-      kelas_id: 'k-7a',
-      kelas_nama: 'Kelas 7A Tahfidz Putra',
-      gender: 'ikhwan',
-      tipe_hafalan: 'quran',
-      kategori_label: "Al-Qur'an",
-      nama_materi: "Juz 30 (Juz 'Amma)",
-      rincian_hafalan: 'Surah An-Naba: Ayat 1 - 40',
-      kelancaran: 95,
-      tajwid: 92,
-      makhraj: 94,
-      is_lulus: true,
-      musyrif: 'Ust. Ahmad Dahlan, S.Pd.I',
-      tanggal: '2026-10-04',
-      catatan: 'Tartil & mutqin, makharijul huruf fasih santri putra.',
-    },
-    {
-      id: 'st-2',
-      santri: 'Ahmad Zaki Mubarak',
-      nis: '202601015',
-      kelas_id: 'k-7a',
-      kelas_nama: 'Kelas 7A Tahfidz Putra',
-      gender: 'ikhwan',
-      tipe_hafalan: 'hadis',
-      kategori_label: 'Hadis Nabawi',
-      nama_materi: "Arba'in An-Nawawi (42 Hadis)",
-      rincian_hafalan: 'Hadis ke-1 (Innamal A\'malu Binniyat) & Hadis ke-2 (Islam, Iman, Ihsan)',
-      kelancaran: 92,
-      tajwid: 90,
-      makhraj: 91,
-      is_lulus: true,
-      musyrif: 'Ust. Ahmad Dahlan, S.Pd.I',
-      tanggal: '2026-10-04',
-      catatan: 'Hafal matan dan rawi hadis dengan lancar.',
-    },
-    {
-      id: 'st-3',
-      santri: 'Bilal Habasyi',
-      nis: '202601018',
-      kelas_id: 'k-7b',
-      kelas_nama: 'Kelas 7B Tahfidz Putra',
-      gender: 'ikhwan',
-      tipe_hafalan: 'kitab',
-      kategori_label: 'Kitab Kuning / Matan',
-      nama_materi: 'Matan Al-Jurumiyah (Nahwu)',
-      rincian_hafalan: 'Bab Kalam, Al-Kalam Huwal Lafzhul Murakkabu... s.d Faslul I\'rab',
-      kelancaran: 94,
-      tajwid: 89,
-      makhraj: 90,
-      is_lulus: true,
-      musyrif: 'Ust. Hamzah al-Bantani',
-      tanggal: '2026-10-03',
-      catatan: 'Lancar melafalkan bait matan nahwu halaqah putra.',
-    },
-    {
-      id: 'st-4',
-      santri: 'Fathimah Az-Zahra',
-      nis: '202602004',
-      kelas_id: 'k-8b',
-      kelas_nama: 'Kelas 8B Unggulan Putri',
-      gender: 'akhwat',
-      tipe_hafalan: 'custom_yayasan',
-      kategori_label: 'Kustom Yayasan',
-      nama_materi: 'Dzikir Pagi Petang & Doa Ma\'tsurat',
-      rincian_hafalan: 'Dzikir Pagi Lengkap beserta Doa Sayyidul Istighfar',
-      kelancaran: 98,
-      tajwid: 95,
-      makhraj: 96,
-      is_lulus: true,
-      musyrif: 'Usth. Fatimah Az-Zahra, S.Pd.',
-      tanggal: '2026-10-03',
-      catatan: 'Mumtaz, hafal di luar kepala halaqah putri asrama.',
-    },
-    {
-      id: 'st-5',
-      santri: 'Maryam Al-Batul',
-      nis: '202602012',
-      kelas_id: 'k-8b',
-      kelas_nama: 'Kelas 8B Unggulan Putri',
-      gender: 'akhwat',
-      tipe_hafalan: 'quran',
-      kategori_label: "Al-Qur'an",
-      nama_materi: "Juz 29 (Tabarak)",
-      rincian_hafalan: 'Surah Al-Mulk: Ayat 1 - 30',
-      kelancaran: 96,
-      tajwid: 94,
-      makhraj: 95,
-      is_lulus: true,
-      musyrif: 'Usth. Maryam, S.Pd.',
-      tanggal: '2026-10-04',
-      catatan: 'Hafalan tartil & makhraj fasih santriwati halaqah putri.',
-    },
-  ]);
+  // Daftar Riwayat Setoran Hafalan (Tergantung Jalur Demo vs Tenant Live)
+  const [setoranList, setSetoranList] = useState<SetoranRecord[]>([]);
 
   // Form State Input Setoran Guru:
   // Step 1: Pilih Kelas Dulu
-  const [selectedKelasId, setSelectedKelasId] = useState(MASTER_KELAS[0].id);
+  const [selectedKelasId, setSelectedKelasId] = useState('k-7a');
   // Step 2: Pilih Santri (Filtered by Kelas)
   const [selectedSantriNis, setSelectedSantriNis] = useState('');
   // Step 3: Tipe Hafalan
@@ -178,38 +87,48 @@ export default function TahfidzManagementPage() {
     sub_materi: '',
   });
 
-  // Sinkronisasi data kurikulum hafalan & Otomatis sesuaikan filter gender halaqah
+  // Sinkronisasi data kurikulum hafalan & setoran
   useEffect(() => {
     const list = getSharedKategoriHafalan();
     setKategoriList(list);
+    setSetoranList(getSharedTahfidzSetoran() as SetoranRecord[]);
 
     const actor = getActiveActor();
     setCurrentActor(actor);
+    const classes = isTenantMode() ? getSharedMasterKelas() : MASTER_KELAS;
+    if (classes.length > 0) {
+      setSelectedKelasId(classes[0].id);
+    }
+
     if (actor.role_key === 'guru_akhwat' || actor.role_key === 'musyrifah' || actor.gender === 'akhwat') {
       setFilterKampus('akhwat');
-      const firstAkhwatKelas = MASTER_KELAS.find(k => k.gender === 'akhwat');
+      const firstAkhwatKelas = classes.find(k => k.gender === 'akhwat');
       if (firstAkhwatKelas) setSelectedKelasId(firstAkhwatKelas.id);
     } else if (actor.role_key === 'guru' || actor.role_key === 'musyrif') {
       setFilterKampus('ikhwan');
-      const firstIkhwanKelas = MASTER_KELAS.find(k => k.gender === 'ikhwan');
+      const firstIkhwanKelas = classes.find(k => k.gender === 'ikhwan');
       if (firstIkhwanKelas) setSelectedKelasId(firstIkhwanKelas.id);
     }
 
     const handleUpdate = () => {
       setKategoriList(getSharedKategoriHafalan());
+      setSetoranList(getSharedTahfidzSetoran() as SetoranRecord[]);
       setCurrentActor(getActiveActor());
     };
     window.addEventListener('ks_hafalan_updated', handleUpdate);
+    window.addEventListener('ks_tahfidz_setoran_updated', handleUpdate);
     window.addEventListener('ks_session_actor_changed', handleUpdate);
     return () => {
       window.removeEventListener('ks_hafalan_updated', handleUpdate);
+      window.removeEventListener('ks_tahfidz_setoran_updated', handleUpdate);
       window.removeEventListener('ks_session_actor_changed', handleUpdate);
     };
   }, []);
 
   // Update default santri when selected kelas changes
   useEffect(() => {
-    const santriInKelas = MASTER_SANTRI.filter(s => s.kelas_id === selectedKelasId);
+    const students = isTenantMode() ? getSharedSantriList() : MASTER_SANTRI;
+    const santriInKelas = students.filter(s => s.kelas_id === selectedKelasId);
     if (santriInKelas.length > 0) {
       setSelectedSantriNis(santriInKelas[0].nis);
     } else {
@@ -218,7 +137,9 @@ export default function TahfidzManagementPage() {
   }, [selectedKelasId]);
 
   // Filtered santri options for current selected class
-  const availableSantri = MASTER_SANTRI.filter(s => s.kelas_id === selectedKelasId);
+  const currentSantriList = isTenantMode() ? getSharedSantriList() : MASTER_SANTRI;
+  const currentKelasList = isTenantMode() ? getSharedMasterKelas() : MASTER_KELAS;
+  const availableSantri = currentSantriList.filter(s => s.kelas_id === selectedKelasId);
 
   // Filtered materi options for current selected tipe hafalan
   const availableMateri = kategoriList.filter(k => k.tipe === tipeHafalan);
@@ -227,8 +148,10 @@ export default function TahfidzManagementPage() {
     e.preventDefault();
     setModalOpen(false);
 
-    const selectedSantriObj = MASTER_SANTRI.find(s => s.nis === selectedSantriNis);
-    const selectedKelasObj = MASTER_KELAS.find(k => k.id === selectedKelasId);
+    const santriSource = isTenantMode() ? getSharedSantriList() : MASTER_SANTRI;
+    const kelasSource = isTenantMode() ? getSharedMasterKelas() : MASTER_KELAS;
+    const selectedSantriObj = santriSource.find(s => s.nis === selectedSantriNis);
+    const selectedKelasObj = kelasSource.find(k => k.id === selectedKelasId);
     const selectedMateriObj = kategoriList.find(k => k.id === selectedMateriId) || availableMateri[0];
 
     const santriNama = selectedSantriObj ? selectedSantriObj.nama : 'Santri';
@@ -478,8 +401,19 @@ export default function TahfidzManagementPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredSetoran.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50/70 transition">
+              {filteredSetoran.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-slate-500">
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <BookOpen className="w-8 h-8 text-blue-500" />
+                      <p className="font-semibold text-sm text-slate-700">Belum ada laporan hafalan</p>
+                      <p className="text-xs text-slate-400">Pencatatan setoran hafalan Al-Qur'an, Hadits, atau Matan santri akan muncul di sini.</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredSetoran.map((item) => (
+                  <tr key={item.id} className="hover:bg-slate-50/70 transition">
                   <td className="p-3">
                     <div className="font-bold text-slate-800">{item.santri}</div>
                     <div className="text-[10px] text-slate-500 font-mono">
@@ -521,7 +455,7 @@ export default function TahfidzManagementPage() {
                     <div className="text-[10px] text-slate-500">{item.tanggal}</div>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>

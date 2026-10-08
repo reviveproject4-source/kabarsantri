@@ -35,11 +35,25 @@ const INITIAL_SANTRI_AKHWAT: SantriPresensiItem[] = [
 
 export default function AbsenSantriRolePage() {
   const [currentActor, setCurrentActor] = useState<ActiveActor>(MASTER_PILLAR_ACTORS.yayasan);
+  const [notif, setNotif] = useState('');
   const [kampus, setKampus] = useState<'ikhwan' | 'akhwat'>('ikhwan');
   const [mode, setMode] = useState<'kbm' | 'asrama'>('asrama');
   const [sesi, setSesi] = useState('Sholat Subuh Berjamaah');
-  const [notif, setNotif] = useState('');
-  const [santriList, setSantriList] = useState<SantriPresensiItem[]>(INITIAL_SANTRI_IKHWAN);
+  const [santriList, setSantriList] = useState<SantriPresensiItem[]>(() => {
+    if (typeof window !== 'undefined' && isTenantMode()) {
+      const shared = getSharedSantriList();
+      return shared.map(s => ({
+        id: s.id || s.nis,
+        nis: s.nis,
+        nama: s.nama,
+        gender: s.gender,
+        kamar: s.kamar || 'Kamar Asrama',
+        kelas: s.kelas || s.kelas_id || 'Rombel Kelas',
+        status: 'hadir' as const,
+      }));
+    }
+    return INITIAL_SANTRI_IKHWAN;
+  });
 
   useEffect(() => {
     const actor = getActiveActor();
@@ -94,7 +108,11 @@ export default function AbsenSantriRolePage() {
     };
 
     window.addEventListener('ks_session_actor_changed', handleActorChange);
-    return () => window.removeEventListener('ks_session_actor_changed', handleActorChange);
+    window.addEventListener('ks_tenant_santri_updated', handleActorChange);
+    return () => {
+      window.removeEventListener('ks_session_actor_changed', handleActorChange);
+      window.removeEventListener('ks_tenant_santri_updated', handleActorChange);
+    };
   }, []);
 
   const handleSwitchKampus = (newKampus: 'ikhwan' | 'akhwat') => {
@@ -108,7 +126,21 @@ export default function AbsenSantriRolePage() {
     }
 
     setKampus(newKampus);
-    setSantriList(newKampus === 'akhwat' ? INITIAL_SANTRI_AKHWAT : INITIAL_SANTRI_IKHWAN);
+    if (isTenantMode()) {
+      const shared = getSharedSantriList();
+      const filtered = shared.filter(s => s.gender === newKampus);
+      setSantriList(filtered.map(s => ({
+        id: s.id || s.nis,
+        nis: s.nis,
+        nama: s.nama,
+        gender: s.gender,
+        kamar: s.kamar || 'Kamar Asrama',
+        kelas: s.kelas || s.kelas_id || 'Rombel Kelas',
+        status: 'hadir' as const,
+      })));
+    } else {
+      setSantriList(newKampus === 'akhwat' ? INITIAL_SANTRI_AKHWAT : INITIAL_SANTRI_IKHWAN);
+    }
   };
 
   const setSantriStatus = (id: string, status: 'hadir' | 'izin' | 'sakit' | 'alpa') => {

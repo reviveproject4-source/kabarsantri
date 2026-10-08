@@ -9,7 +9,9 @@ import {
   addSharedDisciplineRecord,
   DisciplineRecord,
   MASTER_SANTRI,
-  validateIslamicSegregation
+  validateIslamicSegregation,
+  isTenantMode,
+  getSharedSantriList
 } from '@/lib/sharedDataStore';
 import { getActiveActor, MASTER_PILLAR_ACTORS, ActiveActor } from '@/lib/sessionStore';
 
@@ -424,7 +426,7 @@ export default function DisiplinRewardPage() {
                   onChange={(e) => setFormData({ ...formData, santri: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium text-slate-800"
                 >
-                  {MASTER_SANTRI
+                  {((isTenantMode() ? getSharedSantriList() : MASTER_SANTRI)
                     .filter(s => {
                       if (currentActor.role_key === 'guru_akhwat' || currentActor.role_key === 'musyrifah' || currentActor.gender === 'akhwat') {
                         return s.gender === 'akhwat';
@@ -433,12 +435,25 @@ export default function DisiplinRewardPage() {
                         return s.gender === 'ikhwan';
                       }
                       return genderFilter === 'all' ? true : s.gender === genderFilter;
-                    })
-                    .map(s => (
-                      <option key={s.nis} value={s.nama}>
-                        {s.nama} ({s.gender === 'ikhwan' ? 'Putra' : 'Putri'} - {s.kelas_id})
-                      </option>
-                    ))}
+                    })).length === 0 ? (
+                    <option value="">-- Belum ada santri terdaftar --</option>
+                  ) : (
+                    (isTenantMode() ? getSharedSantriList() : MASTER_SANTRI)
+                      .filter(s => {
+                        if (currentActor.role_key === 'guru_akhwat' || currentActor.role_key === 'musyrifah' || currentActor.gender === 'akhwat') {
+                          return s.gender === 'akhwat';
+                        }
+                        if (currentActor.role_key === 'guru' || currentActor.role_key === 'musyrif' || currentActor.gender === 'ikhwan') {
+                          return s.gender === 'ikhwan';
+                        }
+                        return genderFilter === 'all' ? true : s.gender === genderFilter;
+                      })
+                      .map(s => (
+                        <option key={s.nis} value={s.nama}>
+                          {s.nama} ({s.gender === 'ikhwan' ? 'Putra' : 'Putri'} - {s.kelas_id || s.kelas || 'Rombel'})
+                        </option>
+                      ))
+                  )}
                 </select>
               </div>
 
