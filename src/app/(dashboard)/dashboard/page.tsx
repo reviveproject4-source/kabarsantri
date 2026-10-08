@@ -51,7 +51,8 @@ import {
   MASTER_PILLAR_ACTORS, 
   ActiveActor,
   useAppMode,
-  useActiveTenant
+  useActiveTenant,
+  setAppMode
 } from '@/lib/sessionStore';
 import { 
   getSharedPresensiList, 
@@ -114,6 +115,20 @@ export default function UnifiedRoleDashboardPage() {
   // Sinkronisasi Actor & Data dengan Event Listener (Hydration-Safe)
   useEffect(() => {
     setMounted(true);
+
+    // Auto-switch mode jika ada URL query parameter ?mode=tenant / ?mode=live / ?mode=demo
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const modeParam = params.get('mode');
+      if (modeParam === 'tenant' || modeParam === 'live') {
+        setAppMode('tenant', 'tenant-rabu-001');
+        setActiveActorByRole('tenant_admin_nh');
+      } else if (modeParam === 'demo') {
+        setAppMode('demo');
+        setActiveActorByRole('yayasan');
+      }
+    }
+
     const actor = getActiveActor();
     setCurrentActor(actor);
     setSessions(getSharedLearningSessions());
