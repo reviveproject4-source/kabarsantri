@@ -72,6 +72,8 @@ import {
   getLeaveRequests, 
   submitLeaveRequest 
 } from '@/lib/kepegawaianStore';
+import { checkStudentQuota, getTenantEntitlements } from '@/lib/tenantEntitlementStore';
+import { MODULAR_PRODUCT_CATALOG } from '@/lib/productCatalog';
 
 export default function UnifiedRoleDashboardPage() {
   const [mounted, setMounted] = useState(false);
@@ -333,8 +335,9 @@ export default function UnifiedRoleDashboardPage() {
   const tenant = useActiveTenant();
 
   const tenantSantriList = isTenant ? getSharedSantriList() : [];
-  const tenantSantriCount = tenantSantriList.length;
-  const tenantCapacity = 50;
+  const quotaStats = checkStudentQuota(tenant.id, isTenant ? tenantSantriList : undefined);
+  const tenantSantriCount = quotaStats.currentActive;
+  const tenantCapacity = quotaStats.maxAllowed;
   const tenantPercent = Math.min(100, Math.round((tenantSantriCount / tenantCapacity) * 100));
   const remainingSlots = Math.max(0, tenantCapacity - tenantSantriCount);
 
@@ -354,8 +357,12 @@ export default function UnifiedRoleDashboardPage() {
               <div>
                 <div className="flex items-center space-x-2">
                   <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">{tenant.name}</h2>
-                  <span className="bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
-                    Tier 1 Starter (Free 50 Santri)
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                    quotaStats.isFreeZakat
+                      ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800'
+                      : 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
+                  }`}>
+                    {quotaStats.isFreeZakat ? 'KabarSantri Free — Zakat (Maks 50 Santri)' : 'Full Modular BOS'}
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -366,23 +373,23 @@ export default function UnifiedRoleDashboardPage() {
 
             <div className="flex items-center space-x-2">
               <span className="text-xs bg-blue-50 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-800 font-semibold">
-                ● Status: <strong>Aktif Siap Onboarding</strong>
+                ● Status: <strong>{quotaStats.isFreeZakat ? 'Paket Zakat Aktif' : 'Lisensi Aktif'}</strong>
               </span>
             </div>
           </div>
 
-          {/* Meteran Kuota & Akses Fitur Tier 1 */}
+          {/* Meteran Kuota & Status Produk Modular */}
           <div className="grid md:grid-cols-3 gap-3 text-xs">
             <div className="p-3 bg-blue-50/70 dark:bg-blue-950/40 rounded-xl border border-blue-100 dark:border-blue-900 space-y-1.5">
               <div className="flex justify-between text-slate-700 dark:text-slate-300 font-medium">
-                <span>Penggunaan Kuota:</span>
+                <span>Penggunaan Kuota Santri Aktif:</span>
                 <strong className="text-blue-900 dark:text-blue-200 font-bold">{tenantSantriCount} / {tenantCapacity} Santri</strong>
               </div>
               <div className="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-2">
                 <div className="bg-blue-600 h-2 rounded-full transition-all duration-300" style={{ width: `${tenantPercent}%` }}></div>
               </div>
               <div className="flex justify-between items-center text-[10px] text-blue-700 dark:text-blue-300 font-semibold">
-                <span>Tersisa {remainingSlots} slot santri</span>
+                <span>Tersisa {remainingSlots} slot santri aktif</span>
                 <Link href="/santri/create" className="text-blue-800 dark:text-blue-200 underline font-bold hover:text-blue-950">
                   + Tambah Santri
                 </Link>
@@ -390,13 +397,11 @@ export default function UnifiedRoleDashboardPage() {
             </div>
 
             <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
-              <span className="text-slate-500 dark:text-slate-400 block">Fitur Utama Aktif:</span>
+              <span className="text-slate-500 dark:text-slate-400 block font-semibold">Produk Zakat Aktif:</span>
               <div className="flex flex-wrap gap-1 text-[10px]">
-                <span className="bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-medium text-slate-700 dark:text-slate-200">Tahfidz</span>
-                <span className="bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-medium text-slate-700 dark:text-slate-200">Adab</span>
-                <span className="bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-medium text-slate-700 dark:text-slate-200">Reward</span>
-                <span className="bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-medium text-slate-700 dark:text-slate-200">Pelanggaran</span>
-                <span className="bg-blue-100 dark:bg-blue-950 px-2 py-0.5 rounded font-bold text-blue-800 dark:text-blue-200">Portal Wali</span>
+                <span className="bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded font-bold border border-blue-300 dark:border-blue-800">1. Laporan Hafalan</span>
+                <span className="bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded font-bold border border-blue-300 dark:border-blue-800">2. Absensi Santri</span>
+                <span className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">Core Santri Master</span>
               </div>
             </div>
 

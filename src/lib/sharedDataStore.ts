@@ -452,6 +452,8 @@ export interface SantriOption {
   kamar?: string;
   wali_nama?: string;
   wali_kontak?: string;
+  status?: string;
+  lifecycle_status?: string;
 }
 
 export const MASTER_KELAS: KelasItem[] = [
