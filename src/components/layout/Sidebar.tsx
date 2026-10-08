@@ -22,6 +22,7 @@ import { getFilteredNavigation, NavItem } from '@/config/navigation';
 import LockedFeatureModal from '@/components/common/LockedFeatureModal';
 import { APP_BRAND, useActiveTenant } from '@/lib/sessionStore';
 import { checkStudentQuota } from '@/lib/tenantEntitlementStore';
+import { isTenantMode } from '@/lib/sharedDataStore';
 
 const ICON_MAP: Record<string, any> = {
   LayoutDashboard,
@@ -59,6 +60,15 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
   const quotaInfo = checkStudentQuota(tenant.id);
 
   const isYayasanExecutive = Boolean(pathname?.startsWith('/dashboard/yayasan') || pathname?.startsWith('/dashboard/wakil-yayasan'));
+
+  const isTenant = typeof window !== 'undefined' ? isTenantMode() : false;
+  const getHrefWithMode = (baseHref: string) => {
+    const mode = isTenant ? 'tenant' : 'demo';
+    if (baseHref.includes('?')) {
+      return `${baseHref}&mode=${mode}`;
+    }
+    return `${baseHref}?mode=${mode}`;
+  };
 
   // Yayasan tidak memerlukan fitur presensi harian. Filter berdasarkan Produk Entitlement Tenant.
   const menuItems = getFilteredNavigation(tenant.id).filter(item => {
@@ -148,7 +158,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
                       return (
                         <Link
                           key={cIdx}
-                          href={child.href}
+                          href={getHrefWithMode(child.href)}
                           onClick={(e) => handleMenuClick(e, child, isMobile)}
                           className={`flex items-center justify-between px-3 py-2 text-xs rounded-lg transition ${
                             isChildActive
@@ -174,7 +184,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
                 </div>
               ) : (
                 <Link
-                  href={group.href}
+                  href={getHrefWithMode(group.href)}
                   onClick={(e) => handleMenuClick(e, group, isMobile)}
                   className={`flex items-center justify-between px-3 py-2 text-xs rounded-lg transition ${
                     pathname === group.href

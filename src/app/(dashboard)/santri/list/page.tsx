@@ -26,7 +26,7 @@ export default function DataIndukSantriPage() {
   const isTenantActive = typeof window !== 'undefined' ? (isTenantMode() || isTenant) : isTenant;
 
   const [tenantSantri, setTenantSantri] = useState<any[]>(() => {
-    if (typeof window !== 'undefined' && isTenantMode()) {
+    if (typeof window !== 'undefined' && (isTenantMode() || isTenant)) {
       const list = getSharedSantriList();
       return list.map((s, idx) => ({
         id: `ts-${idx + 1}`,
@@ -157,14 +157,14 @@ export default function DataIndukSantriPage() {
 
         <div className="flex items-center space-x-2">
           <Link
-            href="/santri/assign-kelas"
+            href={isTenantActive ? "/santri/assign-kelas?mode=tenant" : "/santri/assign-kelas"}
             className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl shadow-xs transition flex items-center space-x-1.5"
           >
             <Building2 className="w-4 h-4 text-slate-500" />
             <span>Plotting Rombel</span>
           </Link>
           <Link
-            href="/santri/create"
+            href={isTenantActive ? "/santri/create?mode=tenant" : "/santri/create"}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center space-x-1.5"
           >
             <UserPlus className="w-4 h-4" />
@@ -268,7 +268,7 @@ export default function DataIndukSantriPage() {
               </p>
             </div>
             <Link
-              href="/santri/create"
+              href={isTenantActive ? "/santri/create?mode=tenant" : "/santri/create"}
               className="inline-flex items-center space-x-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition"
             >
               <UserPlus className="w-4 h-4" />

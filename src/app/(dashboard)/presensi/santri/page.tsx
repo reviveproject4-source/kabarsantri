@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { UserCheck, CheckCircle2, Search, Building2, School, ShieldCheck, MapPin, Sparkles, AlertCircle } from 'lucide-react';
 import { getActiveActor, MASTER_PILLAR_ACTORS, ActiveActor } from '@/lib/sessionStore';
 import { MASTER_SANTRI, validateIslamicSegregation, isTenantMode, getSharedSantriList } from '@/lib/sharedDataStore';
@@ -39,21 +40,7 @@ export default function AbsenSantriRolePage() {
   const [kampus, setKampus] = useState<'ikhwan' | 'akhwat'>('ikhwan');
   const [mode, setMode] = useState<'kbm' | 'asrama'>('asrama');
   const [sesi, setSesi] = useState('Sholat Subuh Berjamaah');
-  const [santriList, setSantriList] = useState<SantriPresensiItem[]>(() => {
-    if (typeof window !== 'undefined' && isTenantMode()) {
-      const shared = getSharedSantriList();
-      return shared.map(s => ({
-        id: s.id || s.nis,
-        nis: s.nis,
-        nama: s.nama,
-        gender: s.gender,
-        kamar: s.kamar || 'Kamar Asrama',
-        kelas: s.kelas || s.kelas_id || 'Rombel Kelas',
-        status: 'hadir' as const,
-      }));
-    }
-    return INITIAL_SANTRI_IKHWAN;
-  });
+  const [santriList, setSantriList] = useState<SantriPresensiItem[]>([]);
 
   useEffect(() => {
     const actor = getActiveActor();
@@ -62,7 +49,8 @@ export default function AbsenSantriRolePage() {
     const isTenant = isTenantMode();
     if (isTenant) {
       const shared = getSharedSantriList();
-      const mapped: SantriPresensiItem[] = shared.map(s => ({
+      const filtered = shared.filter(s => s.gender === kampus);
+      const mapped: SantriPresensiItem[] = filtered.map(s => ({
         id: s.id || s.nis,
         nis: s.nis,
         nama: s.nama,
@@ -87,7 +75,8 @@ export default function AbsenSantriRolePage() {
       setCurrentActor(updated);
       if (isTenantMode()) {
         const shared = getSharedSantriList();
-        setSantriList(shared.map(s => ({
+        const filtered = shared.filter(s => s.gender === kampus);
+        setSantriList(filtered.map(s => ({
           id: s.id || s.nis,
           nis: s.nis,
           nama: s.nama,
@@ -113,7 +102,7 @@ export default function AbsenSantriRolePage() {
       window.removeEventListener('ks_session_actor_changed', handleActorChange);
       window.removeEventListener('ks_tenant_santri_updated', handleActorChange);
     };
-  }, []);
+  }, [kampus]);
 
   const handleSwitchKampus = (newKampus: 'ikhwan' | 'akhwat') => {
     if (currentActor.gender && currentActor.gender !== newKampus) {
@@ -313,8 +302,16 @@ export default function AbsenSantriRolePage() {
                   <td colSpan={3} className="py-12 text-center text-slate-500">
                     <div className="flex flex-col items-center justify-center space-y-2">
                       <UserCheck className="w-8 h-8 text-blue-500" />
-                      <p className="font-semibold text-sm text-slate-700">Belum ada data santri terdaftar</p>
+                      <p className="font-semibold text-sm text-slate-700">
+                        Belum ada data santri terdaftar {kampus === 'akhwat' ? 'Putri' : 'Putra'}
+                      </p>
                       <p className="text-xs text-slate-400">Silakan daftarkan santri terlebih dahulu di menu Data Santri untuk mulai merekap presensi harian.</p>
+                      <Link
+                        href={isTenantMode() ? "/santri/create?mode=tenant" : "/santri/create"}
+                        className="mt-2 inline-flex items-center space-x-1 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs transition"
+                      >
+                        <span>+ Daftarkan Santri Baru</span>
+                      </Link>
                     </div>
                   </td>
                 </tr>

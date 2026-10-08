@@ -70,7 +70,8 @@ import {
 } from '@/lib/sharedDataStore';
 import { 
   getLeaveRequests, 
-  submitLeaveRequest 
+  submitLeaveRequest,
+  getEmployees
 } from '@/lib/kepegawaianStore';
 import { checkStudentQuota, getTenantEntitlements } from '@/lib/tenantEntitlementStore';
 import { MODULAR_PRODUCT_CATALOG } from '@/lib/productCatalog';
@@ -366,7 +367,7 @@ export default function UnifiedRoleDashboardPage() {
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {tenant.city} • Pimpinan: <strong>Ust. H. Fauzan Mansur, Lc.</strong>
+                  {tenant.city} • Pimpinan: <strong>Administrator Lembaga</strong>
                 </p>
               </div>
             </div>
@@ -390,7 +391,7 @@ export default function UnifiedRoleDashboardPage() {
               </div>
               <div className="flex justify-between items-center text-[10px] text-blue-700 dark:text-blue-300 font-semibold">
                 <span>Tersisa {remainingSlots} slot santri aktif</span>
-                <Link href="/santri/create" className="text-blue-800 dark:text-blue-200 underline font-bold hover:text-blue-950">
+                <Link href="/santri/create?mode=tenant" className="text-blue-800 dark:text-blue-200 underline font-bold hover:text-blue-950">
                   + Tambah Santri
                 </Link>
               </div>
@@ -625,14 +626,14 @@ export default function UnifiedRoleDashboardPage() {
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Pengelola: <strong>Ust. H. Fauzan Mansur, Lc.</strong> &bull; Seluruh data dummy telah dikosongkan untuk onboarding resmi.
+                  Pengelola: <strong>Administrator Lembaga</strong> &bull; Seluruh data dummy telah dikosongkan untuk onboarding resmi.
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               <Link
-                href="/santri/create"
+                href="/santri/create?mode=tenant"
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center space-x-1.5"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -662,10 +663,10 @@ export default function UnifiedRoleDashboardPage() {
                 <UserCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="text-2xl font-black text-slate-900 dark:text-slate-100">
-                1 <span className="text-xs font-normal text-slate-400">Pegawai</span>
+                {getEmployees().length} <span className="text-xs font-normal text-slate-400">Pegawai</span>
               </div>
               <span className="text-[11px] text-blue-700 dark:text-blue-300 font-semibold block">
-                1 Administrator Aktif
+                {getEmployees().length === 0 ? '0 Pegawai (Siap diinput)' : `${getEmployees().length} Pegawai Terdaftar`}
               </span>
             </div>
 
@@ -717,7 +718,7 @@ export default function UnifiedRoleDashboardPage() {
                   </p>
                 </div>
                 <Link
-                  href="/santri/create"
+                  href="/santri/create?mode=tenant"
                   className="w-full mt-2 py-2 bg-blue-600 hover:bg-blue-700 text-white text-center font-bold text-xs rounded-lg transition"
                 >
                   + Tambah Santri
@@ -733,7 +734,7 @@ export default function UnifiedRoleDashboardPage() {
                   </p>
                 </div>
                 <Link
-                  href="/kepegawaian?tab=direktori"
+                  href="/kepegawaian?tab=direktori&mode=tenant"
                   className="w-full mt-2 py-2 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-center font-bold text-xs rounded-lg transition"
                 >
                   Direktori SDM
@@ -749,7 +750,7 @@ export default function UnifiedRoleDashboardPage() {
                   </p>
                 </div>
                 <Link
-                  href="/finance/spp"
+                  href="/finance/spp?mode=tenant"
                   className="w-full mt-2 py-2 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-center font-bold text-xs rounded-lg transition"
                 >
                   Kelola SPP
@@ -765,7 +766,7 @@ export default function UnifiedRoleDashboardPage() {
                   </p>
                 </div>
                 <Link
-                  href="/portal-wali"
+                  href="/portal-wali?mode=tenant"
                   className="w-full mt-2 py-2 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-center font-bold text-xs rounded-lg transition"
                 >
                   Cek Portal Wali
@@ -786,7 +787,7 @@ export default function UnifiedRoleDashboardPage() {
                 </p>
               </div>
               <Link
-                href="/santri/create"
+                href="/santri/create?mode=tenant"
                 className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center space-x-1"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -808,7 +809,7 @@ export default function UnifiedRoleDashboardPage() {
                   </p>
                 </div>
                 <Link
-                  href="/santri/create"
+                  href="/santri/create?mode=tenant"
                   className="inline-flex items-center space-x-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition"
                 >
                   <Plus className="w-4 h-4" />

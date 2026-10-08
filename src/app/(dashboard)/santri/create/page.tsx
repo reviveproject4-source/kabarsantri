@@ -13,13 +13,15 @@ import {
   Users, 
   Lock 
 } from 'lucide-react';
-import { saveTenantSantri, getSharedSantriList } from '@/lib/sharedDataStore';
+import { saveTenantSantri, getSharedSantriList, isTenantMode } from '@/lib/sharedDataStore';
 import { checkStudentQuota, upgradeProduct, FREE_PACKAGE_MAX_ACTIVE_STUDENTS } from '@/lib/tenantEntitlementStore';
 import { useActiveTenant } from '@/lib/sessionStore';
 
 export default function TambahSantriPage() {
   const router = useRouter();
   const tenant = useActiveTenant();
+  const isTenant = typeof window !== 'undefined' ? isTenantMode() : false;
+  const listUrl = isTenant ? '/santri/list?mode=tenant' : '/santri/list';
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [quotaExceededError, setQuotaExceededError] = useState<string | null>(null);
@@ -32,14 +34,16 @@ export default function TambahSantriPage() {
   });
 
   const [formData, setFormData] = useState({
-    nis: '202601015',
-    nisn: '0089283741',
-    nama_lengkap: 'Ahmad Zaki Mubarak',
+    nis: '',
+    nisn: '',
+    nama_lengkap: '',
     gender: 'L',
-    tempat_lahir: 'Surabaya',
-    tanggal_lahir: '2012-05-14',
-    unit_id: 'unit-mts-putra',
-    kamar_id: 'kamar-101',
+    tempat_lahir: '',
+    tanggal_lahir: '',
+    unit_id: 'unit-tahfidz-nh',
+    kamar_id: 'kamar-asrama-nh',
+    wali_nama: '',
+    wali_kontak: '',
   });
 
   const refreshQuota = () => {
@@ -91,7 +95,11 @@ export default function TambahSantriPage() {
       nis: formData.nis,
       nama: formData.nama_lengkap,
       kelas_id: formData.unit_id,
+      kelas: formData.unit_id === 'unit-mts-putra' ? 'Kelas 7A Tahfidz Putra' : 'Kelas Tahfidz Nurul Huda',
+      kamar: formData.kamar_id === 'kamar-101' ? 'Kamar 101 - Asrama' : 'Kamar Asrama Santri',
       gender: formData.gender === 'P' ? 'akhwat' : 'ikhwan',
+      wali_nama: formData.wali_nama || 'Wali Santri',
+      wali_kontak: formData.wali_kontak || '-',
       status: 'active'
     });
 
@@ -108,7 +116,7 @@ export default function TambahSantriPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <Link 
-            href="/santri/list" 
+            href={listUrl} 
             className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -166,7 +174,7 @@ export default function TambahSantriPage() {
               <span>Upgrade Paket KabarSantri</span>
             </button>
             <Link
-              href="/santri/list"
+              href={listUrl}
               className="px-4 py-2 border border-amber-300 dark:border-amber-700 bg-white/60 dark:bg-slate-900 text-xs font-semibold rounded-xl text-amber-900 dark:text-amber-200 hover:bg-white transition"
             >
               Kembali ke Daftar Santri
@@ -186,7 +194,7 @@ export default function TambahSantriPage() {
           </p>
           <div className="flex justify-center gap-3 pt-2">
             <Link
-              href="/santri/list"
+              href={listUrl}
               className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-xs transition"
             >
               Lihat Daftar Santri →
@@ -220,6 +228,7 @@ export default function TambahSantriPage() {
                 disabled={!quotaStats.canAdd}
                 value={formData.nis}
                 onChange={(e) => setFormData({ ...formData, nis: e.target.value })}
+                placeholder="Contoh: 202601001"
                 className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 disabled:opacity-50"
               />
             </div>
@@ -232,6 +241,7 @@ export default function TambahSantriPage() {
                 disabled={!quotaStats.canAdd}
                 value={formData.nisn}
                 onChange={(e) => setFormData({ ...formData, nisn: e.target.value })}
+                placeholder="Contoh: 0089283741"
                 className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 disabled:opacity-50"
               />
             </div>
@@ -247,6 +257,7 @@ export default function TambahSantriPage() {
               disabled={!quotaStats.canAdd}
               value={formData.nama_lengkap}
               onChange={(e) => setFormData({ ...formData, nama_lengkap: e.target.value })}
+              placeholder="Masukkan nama lengkap santri..."
               className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 disabled:opacity-50"
             />
           </div>
@@ -275,6 +286,7 @@ export default function TambahSantriPage() {
                 disabled={!quotaStats.canAdd}
                 value={formData.tempat_lahir}
                 onChange={(e) => setFormData({ ...formData, tempat_lahir: e.target.value })}
+                placeholder="Kota / Kabupaten"
                 className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 disabled:opacity-50"
               />
             </div>
@@ -304,6 +316,7 @@ export default function TambahSantriPage() {
                 onChange={(e) => setFormData({ ...formData, unit_id: e.target.value })}
                 className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 disabled:opacity-50"
               >
+                <option value="unit-tahfidz-nh">Madrasah Tahfidz Nurul Huda</option>
                 <option value="unit-mts-putra">MTs Tahfidz Sains (Putra)</option>
                 <option value="unit-ma-putra">MA Unggulan Al-Qur'an (Putra)</option>
                 <option value="unit-pondok-salaf">Pondok Pesantren Salafiyah</option>
@@ -319,10 +332,46 @@ export default function TambahSantriPage() {
                 onChange={(e) => setFormData({ ...formData, kamar_id: e.target.value })}
                 className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 disabled:opacity-50"
               >
+                <option value="kamar-asrama-nh">Gedung Asrama Santri</option>
                 <option value="kamar-101">Kamar 101 - Gedung Abu Bakar</option>
                 <option value="kamar-102">Kamar 102 - Gedung Abu Bakar</option>
                 <option value="kamar-201">Kamar 201 - Gedung Umar bin Khattab</option>
               </select>
+            </div>
+          </div>
+
+          {/* Data Kontak Orang Tua / Wali */}
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-3">
+              Informasi Kontak Orang Tua / Wali Santri (Portal Wali)
+            </h4>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Nama Orang Tua / Wali
+                </label>
+                <input
+                  type="text"
+                  disabled={!quotaStats.canAdd}
+                  value={formData.wali_nama}
+                  onChange={(e) => setFormData({ ...formData, wali_nama: e.target.value })}
+                  placeholder="Nama orang tua / wali santri"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 disabled:opacity-50"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Nomor WhatsApp Wali
+                </label>
+                <input
+                  type="text"
+                  disabled={!quotaStats.canAdd}
+                  value={formData.wali_kontak}
+                  onChange={(e) => setFormData({ ...formData, wali_kontak: e.target.value })}
+                  placeholder="Contoh: 081234567890"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 disabled:opacity-50"
+                />
+              </div>
             </div>
           </div>
 
@@ -333,7 +382,7 @@ export default function TambahSantriPage() {
 
           <div className="flex justify-end space-x-3 pt-2">
             <Link
-              href="/santri/list"
+              href={listUrl}
               className="px-4 py-2 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition"
             >
               Batal

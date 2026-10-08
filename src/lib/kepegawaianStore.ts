@@ -853,32 +853,7 @@ const STORAGE_KEY = 'ks_kepegawaian_store_v2';
 const TENANT_STORAGE_KEY = 'ks_tenant_kepegawaian_store_v1';
 
 const INITIAL_TENANT_STATE = {
-  employees: [
-    {
-      id: 'emp-nh-001',
-      tenant_id: 'tenant-rabu-001',
-      nip: 'NIP.NH.2026.001',
-      nik: '3506010101850001',
-      full_name: 'Ust. H. Fauzan Mansur, Lc.',
-      email: 'admin@nurulhuda.kabarsantri.id',
-      phone_number: '081234567890',
-      gender: 'L' as const,
-      date_of_birth: '1985-05-10',
-      join_date: '2026-10-01',
-      lifecycle_status: 'ACTIVE' as const,
-      current_department: 'YAYASAN' as const,
-      current_position: 'Pengasuh & Administrator Lembaga',
-      current_role_slug: 'tenant_admin',
-      job_description: ['Pimpinan Pesantren & Administrator Lembaga'],
-      user_account_id: 'usr-nh-01',
-      user_account_active: true,
-      leave_allowance_annual: 12,
-      leave_balance: 12,
-      position_history: [],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
-  ],
+  employees: [],
   contracts: [],
   leaves: [],
   disciplineCases: [],

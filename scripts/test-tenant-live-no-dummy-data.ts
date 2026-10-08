@@ -92,8 +92,8 @@ assert(
 console.log('\n--- Test 4 - 6: Actor & Master Santri Zero Dummy ---');
 const activeActor = getActiveActor();
 assert(
-  activeActor.role_key === 'tenant_admin_nh' && activeActor.name === 'Ust. H. Fauzan Mansur, Lc.',
-  'Test 4: getActiveActor() returns Tenant Admin (Ust. H. Fauzan Mansur, Lc.)'
+  activeActor.role_key === 'tenant_admin_nh' && (activeActor.name === 'Administrator Pesantren' || activeActor.name.includes('Administrator')),
+  'Test 4: getActiveActor() returns Tenant Admin (Administrator Pesantren, 0 fake identity)'
 );
 
 // -----------------------------------------------------------------------------
@@ -152,8 +152,8 @@ assert(
 console.log('\n--- Test 11 - 13: HRD & Rumah Tangga Isolation ---');
 const employees = getEmployees();
 assert(
-  employees.length === 1 && employees[0].full_name === 'Ust. H. Fauzan Mansur, Lc.',
-  'Test 11: Tenant employees store contains only the official tenant administrator (0 fake teachers)'
+  employees.length === 0,
+  'Test 11: Tenant employees store starts completely empty (0 dummy employees/teachers)'
 );
 
 // -----------------------------------------------------------------------------

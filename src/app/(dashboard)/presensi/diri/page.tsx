@@ -28,9 +28,11 @@ import {
 import { 
   getSharedPresensiList, 
   saveSharedPresensi, 
-  PresensiPegawaiRecord 
+  PresensiPegawaiRecord,
+  isTenantMode
 } from '@/lib/sharedDataStore';
 import { useActiveActor, ActiveActor } from '@/lib/sessionStore';
+import { getEmployees } from '@/lib/kepegawaianStore';
 
 /**
  * MASTER POS / ZONA KERJA PESANTREN (SKALA 50 - 150 PEGAWAI)
@@ -188,6 +190,11 @@ export default function AbsenDiriPribadiPage() {
   // Filter Divisi pada Riwayat Presensi (Memudahkan kelola 50-150 Pegawai)
   const [filterDivisi, setFilterDivisi] = useState<string>('ALL');
 
+  // Support Tenant Mode: Dynamic Employee Selection / Real Name Input
+  const [tenantEmployees, setTenantEmployees] = useState<any[]>([]);
+  const [selectedEmpId, setSelectedEmpId] = useState<string>('');
+  const [inputNamaPegawai, setInputNamaPegawai] = useState<string>('');
+
   // Geolocation & Titik Google Maps Real
   const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number; accuracy: number } | null>(null);
   const [gpsLoading, setGpsLoading] = useState(false);
@@ -195,11 +202,20 @@ export default function AbsenDiriPribadiPage() {
   const [distanceMeters, setDistanceMeters] = useState<number | null>(null);
   const [isWithinPos, setIsWithinPos] = useState<boolean | null>(null);
 
-  // Otomatis tentukan Pos Kerja sesuai Akun Aktif
+  // Otomatis tentukan Pos Kerja sesuai Akun Aktif & Muat Pegawai Tenant
   useEffect(() => {
     const defaultPos = detectDefaultPosKerja(activeActor);
     setSelectedPos(defaultPos);
     setTempat(`${defaultPos.nama} (${defaultPos.gedung})`);
+
+    if (isTenantMode()) {
+      const emps = getEmployees();
+      setTenantEmployees(emps);
+      if (emps.length > 0) {
+        setSelectedEmpId(emps[0].id);
+        setInputNamaPegawai(emps[0].full_name);
+      }
+    }
   }, [activeActor]);
 
   // Fungsi Deteksi Titik GPS Geolocation via Browser/HP
@@ -307,10 +323,22 @@ export default function AbsenDiriPribadiPage() {
     // Map status untuk shared store
     const mappedStatus = selectedStatus === 'tugas_luar' ? 'ijin' : selectedStatus;
 
+    const chosenEmp = tenantEmployees.find(e => e.id === selectedEmpId);
+    const isTenant = isTenantMode();
+    const namaPencatat = isTenant
+      ? (chosenEmp ? chosenEmp.full_name : inputNamaPegawai.trim() || activeActor.name)
+      : activeActor.name;
+    const nipPencatat = isTenant
+      ? (chosenEmp ? chosenEmp.nip : activeActor.nip)
+      : activeActor.nip;
+    const jabatanPencatat = isTenant
+      ? (chosenEmp ? chosenEmp.current_position : activeActor.title)
+      : activeActor.title;
+
     saveSharedPresensi({
-      pegawai_nama: activeActor.name,
-      nip: activeActor.nip,
-      jabatan: activeActor.title as any,
+      pegawai_nama: namaPencatat,
+      nip: nipPencatat,
+      jabatan: jabatanPencatat as any,
       divisi: (activeActor.dept.includes('Keuangan') 
         ? 'Keuangan' 
         : activeActor.dept.includes('Pendidikan') || activeActor.dept.includes('KBM') 
@@ -330,14 +358,14 @@ export default function AbsenDiriPribadiPage() {
       await supabase.from('presensi_sesi_harian').insert({
         tipe_presensi: activeActor.role_key === 'guru' ? 'guru_kbm' : 'staf_operasional',
         status_kehadiran: selectedStatus === 'masuk' ? 'hadir' : selectedStatus,
-        keterangan: `[${activeActor.title}] ${selectedStatus.toUpperCase()} di ${tempat} (${waktuStr}) - ${keterangan}${gpsDetail}`,
+        keterangan: `[${jabatanPencatat}] ${selectedStatus.toUpperCase()} di ${tempat} (${waktuStr}) - ${keterangan}${gpsDetail}`,
         waktu_scan: new Date().toISOString(),
       });
     } catch (err) {
       console.warn('Supabase presensi notice:', err);
     }
 
-    setNotif(`✓ Presensi [${selectedStatus.toUpperCase()}] atas nama ${activeActor.name} berhasil tersimpan di pos kerja: ${selectedPos.nama}!`);
+    setNotif(`✓ Presensi [${selectedStatus.toUpperCase()}] atas nama ${namaPencatat} berhasil tersimpan di pos kerja: ${selectedPos.nama}!`);
     setKeterangan('');
     setTimeout(() => setNotif(''), 7000);
   };
@@ -414,14 +442,14 @@ export default function AbsenDiriPribadiPage() {
           </div>
 
           {/* Kartu Profil Pegawai Aktif */}
-          <div className="p-4 bg-emerald-50/70 rounded-xl border border-emerald-200 text-xs space-y-2">
+          <div className="p-4 bg-emerald-50/70 rounded-xl border border-emerald-200 text-xs space-y-3">
             <div className="flex items-start justify-between">
               <div>
                 <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider block">
                   Identitas Pegawai Anda:
                 </span>
                 <span className="font-extrabold text-sm text-slate-900 block mt-0.5">
-                  {activeActor.name}
+                  {isTenantMode() ? (inputNamaPegawai.trim() || activeActor.name) : activeActor.name}
                 </span>
                 <span className="text-[11px] text-slate-600 block">
                   {activeActor.title} • {activeActor.dept}
@@ -431,9 +459,53 @@ export default function AbsenDiriPribadiPage() {
                 Akun Sah
               </span>
             </div>
+
+            {isTenantMode() && (
+              <div className="pt-2 border-t border-emerald-200/60 space-y-1.5">
+                {tenantEmployees.length > 0 ? (
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-700 mb-1">
+                      Pilih Pegawai Terdaftar:
+                    </label>
+                    <select
+                      value={selectedEmpId}
+                      onChange={(e) => {
+                        setSelectedEmpId(e.target.value);
+                        const found = tenantEmployees.find(emp => emp.id === e.target.value);
+                        if (found) setInputNamaPegawai(found.full_name);
+                      }}
+                      className="w-full text-xs p-1.5 border border-emerald-300 rounded-lg bg-white"
+                    >
+                      {tenantEmployees.map(emp => (
+                        <option key={emp.id} value={emp.id}>
+                          {emp.full_name} ({emp.current_position || 'Pegawai'})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-700 mb-1">
+                      Nama Asatidz / Pegawai yang Hadir:
+                    </label>
+                    <input
+                      type="text"
+                      value={inputNamaPegawai}
+                      onChange={(e) => setInputNamaPegawai(e.target.value)}
+                      placeholder="Ketik nama lengkap Anda untuk presensi"
+                      className="w-full text-xs p-2 border border-emerald-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      Belum ada staf di direktori SDM. Anda dapat langsung mengetikkan nama asli Anda.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="pt-2 border-t border-emerald-200/60 flex items-center justify-between text-[11px] text-slate-500 font-mono">
               <span>NIP: {activeActor.nip}</span>
-              <span>Unit: {activeActor.unit_name || 'MTs Pesantren Putra'}</span>
+              <span>Unit: {activeActor.unit_name || 'Pesantren Tahfidz Nurul Huda'}</span>
             </div>
           </div>
 
@@ -681,7 +753,18 @@ export default function AbsenDiriPribadiPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredList.map((item) => (
+                {filteredList.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-12 text-center text-slate-500">
+                      <div className="flex flex-col items-center justify-center space-y-2">
+                        <UserCheck className="w-8 h-8 text-slate-400" />
+                        <p className="font-semibold text-sm text-slate-700">Belum ada riwayat presensi tercatat</p>
+                        <p className="text-xs text-slate-400">Silakan gunakan formulir di samping untuk mencatat presensi mandiri.</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredList.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/70 transition">
                     <td className="p-2.5">
                       <div className="font-bold text-slate-800">{item.pegawai_nama}</div>
@@ -712,7 +795,7 @@ export default function AbsenDiriPribadiPage() {
                       {item.keterangan || '-'}
                     </td>
                   </tr>
-                ))}
+                )))}
               </tbody>
             </table>
           </div>
