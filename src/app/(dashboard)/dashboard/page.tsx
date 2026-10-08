@@ -65,7 +65,8 @@ import {
   createPermissionRequest,
   issueGatePass,
   PermissionRequest,
-  MASTER_SANTRI
+  MASTER_SANTRI,
+  getSharedSantriList
 } from '@/lib/sharedDataStore';
 import { 
   getLeaveRequests, 
@@ -331,6 +332,12 @@ export default function UnifiedRoleDashboardPage() {
   const { isDemo, isTenant, setMode: setAppModeState } = useAppMode();
   const tenant = useActiveTenant();
 
+  const tenantSantriList = isTenant ? getSharedSantriList() : [];
+  const tenantSantriCount = tenantSantriList.length;
+  const tenantCapacity = 50;
+  const tenantPercent = Math.min(100, Math.round((tenantSantriCount / tenantCapacity) * 100));
+  const remainingSlots = Math.max(0, tenantCapacity - tenantSantriCount);
+
   return (
     <div className="space-y-6">
       {/* ========================================================================= */}
@@ -369,13 +376,13 @@ export default function UnifiedRoleDashboardPage() {
             <div className="p-3 bg-blue-50/70 dark:bg-blue-950/40 rounded-xl border border-blue-100 dark:border-blue-900 space-y-1.5">
               <div className="flex justify-between text-slate-700 dark:text-slate-300 font-medium">
                 <span>Penggunaan Kuota:</span>
-                <strong className="text-blue-900 dark:text-blue-200 font-bold">42 / 50 Santri</strong>
+                <strong className="text-blue-900 dark:text-blue-200 font-bold">{tenantSantriCount} / {tenantCapacity} Santri</strong>
               </div>
               <div className="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-2">
-                <div className="bg-blue-600 h-2 rounded-full" style={{ width: '84%' }}></div>
+                <div className="bg-blue-600 h-2 rounded-full transition-all duration-300" style={{ width: `${tenantPercent}%` }}></div>
               </div>
               <div className="flex justify-between items-center text-[10px] text-blue-700 dark:text-blue-300 font-semibold">
-                <span>Tersisa 8 slot santri</span>
+                <span>Tersisa {remainingSlots} slot santri</span>
                 <Link href="/santri/create" className="text-blue-800 dark:text-blue-200 underline font-bold hover:text-blue-950">
                   + Tambah Santri
                 </Link>
@@ -595,12 +602,257 @@ export default function UnifiedRoleDashboardPage() {
       )}
 
       {/* ========================================================================= */}
-      {/* TAMPILAN 1: DASHBOARD TIM PEGAWAI / STAF WORKSPACE (NON-PIMPINAN)         */}
+      {/* JALUR TENANT LIVE RESMI VS JALUR SIMULATOR DEMO 12 PERAN                  */}
       {/* ========================================================================= */}
-      {!isPimpinan && (
+      {isTenant ? (
         <div className="space-y-6">
-          {/* Card Profil & Presensi Cepat */}
-          <div className="grid md:grid-cols-3 gap-4">
+          {/* 1. KARTU IDENTITAS TENANT & STATUS ONBOARDING */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 flex items-center justify-center font-black text-xl shrink-0">
+                <Building2 className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base">Pusat Kendali Administrator</h3>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                    Database Bersih Siap Pakai
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Pengelola: <strong>Ust. H. Fauzan Mansur, Lc.</strong> &bull; Seluruh data dummy telah dikosongkan untuk onboarding resmi.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Link
+                href="/santri/create"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center space-x-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Input Santri Pertama</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* 2. 4 KARTU STATISTIK REAL-TIME TENANT (ZERO-DUMMY) */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+            <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 dark:text-slate-400 font-medium">Santri Terdaftar</span>
+                <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="text-2xl font-black text-slate-900 dark:text-slate-100">
+                {tenantSantriCount} <span className="text-xs font-normal text-slate-400">/ 50 slot</span>
+              </div>
+              <span className="text-[11px] text-blue-700 dark:text-blue-300 font-semibold block">
+                {tenantSantriCount === 0 ? 'Belum ada santri' : `${tenantSantriCount} santri aktif`}
+              </span>
+            </div>
+
+            <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 dark:text-slate-400 font-medium">Asatidz &amp; SDM</span>
+                <UserCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="text-2xl font-black text-slate-900 dark:text-slate-100">
+                1 <span className="text-xs font-normal text-slate-400">Pegawai</span>
+              </div>
+              <span className="text-[11px] text-blue-700 dark:text-blue-300 font-semibold block">
+                1 Administrator Aktif
+              </span>
+            </div>
+
+            <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 dark:text-slate-400 font-medium">Penerimaan SPP</span>
+                <Wallet className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="text-2xl font-black text-slate-900 dark:text-slate-100">
+                Rp 0
+              </div>
+              <span className="text-[11px] text-blue-700 dark:text-blue-300 font-semibold block">
+                0 Tagihan Tertunggak
+              </span>
+            </div>
+
+            <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 dark:text-slate-400 font-medium">Izin Keluar Kampus</span>
+                <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="text-2xl font-black text-slate-900 dark:text-slate-100">
+                0 <span className="text-xs font-normal text-slate-400">Santri</span>
+              </div>
+              <span className="text-[11px] text-blue-700 dark:text-blue-300 font-semibold block">
+                Kampus Kondusif
+              </span>
+            </div>
+          </div>
+
+          {/* 3. PANDUAN LANGKAH ONBOARDING (4 LANGKAH MEMULAI) */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-4">
+            <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm">
+                Panduan Onboarding Pesantren (Langkah Cepat Memulai)
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Ikuti 4 langkah terstruktur di bawah ini untuk mengonfigurasi pesantren Anda secara menyeluruh:
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+              <div className="p-4 bg-blue-50/50 dark:bg-blue-950/30 rounded-xl border border-blue-100 dark:border-blue-900 space-y-2 flex flex-col justify-between">
+                <div>
+                  <span className="px-2 py-0.5 rounded bg-blue-600 text-white font-black text-[10px]">Langkah 1</span>
+                  <h4 className="font-bold text-slate-900 dark:text-slate-100 text-xs mt-1.5">Input Santri Baru</h4>
+                  <p className="text-slate-600 dark:text-slate-400 text-[11px] mt-1">
+                    Daftarkan santri pertama beserta wali murid, kontak WhatsApp, dan kelas.
+                  </p>
+                </div>
+                <Link
+                  href="/santri/create"
+                  className="w-full mt-2 py-2 bg-blue-600 hover:bg-blue-700 text-white text-center font-bold text-xs rounded-lg transition"
+                >
+                  + Tambah Santri
+                </Link>
+              </div>
+
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2 flex flex-col justify-between">
+                <div>
+                  <span className="px-2 py-0.5 rounded bg-slate-700 text-white font-black text-[10px]">Langkah 2</span>
+                  <h4 className="font-bold text-slate-900 dark:text-slate-100 text-xs mt-1.5">Kelola Asatidz &amp; Staf</h4>
+                  <p className="text-slate-600 dark:text-slate-400 text-[11px] mt-1">
+                    Daftarkan guru pengajar, musyrif asrama, dan pegawai operasional pesantren.
+                  </p>
+                </div>
+                <Link
+                  href="/kepegawaian?tab=direktori"
+                  className="w-full mt-2 py-2 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-center font-bold text-xs rounded-lg transition"
+                >
+                  Direktori SDM
+                </Link>
+              </div>
+
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2 flex flex-col justify-between">
+                <div>
+                  <span className="px-2 py-0.5 rounded bg-slate-700 text-white font-black text-[10px]">Langkah 3</span>
+                  <h4 className="font-bold text-slate-900 dark:text-slate-100 text-xs mt-1.5">Atur Tarif SPP</h4>
+                  <p className="text-slate-600 dark:text-slate-400 text-[11px] mt-1">
+                    Konfigurasi nominal SPP bulanan, uang makan, dan terbitkan invoice digital.
+                  </p>
+                </div>
+                <Link
+                  href="/finance/spp"
+                  className="w-full mt-2 py-2 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-center font-bold text-xs rounded-lg transition"
+                >
+                  Kelola SPP
+                </Link>
+              </div>
+
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2 flex flex-col justify-between">
+                <div>
+                  <span className="px-2 py-0.5 rounded bg-slate-700 text-white font-black text-[10px]">Langkah 4</span>
+                  <h4 className="font-bold text-slate-900 dark:text-slate-100 text-xs mt-1.5">Portal Wali &amp; Presensi</h4>
+                  <p className="text-slate-600 dark:text-slate-400 text-[11px] mt-1">
+                    Uji coba akses portal wali murid mandiri dan sistem absensi digital GPS.
+                  </p>
+                </div>
+                <Link
+                  href="/portal-wali"
+                  className="w-full mt-2 py-2 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-center font-bold text-xs rounded-lg transition"
+                >
+                  Cek Portal Wali
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* 4. TABEL DATA SANTRI REAL-TIME (CLEAN EMPTY STATE JIKA 0 SANTRI) */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm">
+                  Daftar Santri Terdaftar ({tenantSantriCount} Santri)
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Data eksklusif tenant Pesantren Tahfidz Nurul Huda
+                </p>
+              </div>
+              <Link
+                href="/santri/create"
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center space-x-1"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Tambah Santri</span>
+              </Link>
+            </div>
+
+            {tenantSantriCount === 0 ? (
+              <div className="p-10 text-center space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 mx-auto flex items-center justify-center">
+                  <Users className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm">
+                    Belum Ada Data Santri Terdaftar
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto mt-1">
+                    Database tenant Anda 100% bersih tanpa residu data dummy. Silakan daftarkan santri pertama untuk mulai mengelola akademik, asrama, dan SPP.
+                  </p>
+                </div>
+                <Link
+                  href="/santri/create"
+                  className="inline-flex items-center space-x-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Daftarkan Santri Pertama Sekarang</span>
+                </Link>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 font-semibold border-b border-slate-200 dark:border-slate-800">
+                    <tr>
+                      <th className="py-3 px-4">NIS</th>
+                      <th className="py-3 px-4">Nama Lengkap</th>
+                      <th className="py-3 px-4">Gender</th>
+                      <th className="py-3 px-4">Kelas</th>
+                      <th className="py-3 px-4">Wali Santri</th>
+                      <th className="py-3 px-4">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                    {tenantSantriList.map((s) => (
+                      <tr key={s.id || s.nis} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
+                        <td className="py-3 px-4 font-mono font-bold text-blue-700 dark:text-blue-300">{s.nis}</td>
+                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100">{s.nama}</td>
+                        <td className="py-3 px-4 capitalize">{s.gender}</td>
+                        <td className="py-3 px-4">{s.kelas || s.kelas_id}</td>
+                        <td className="py-3 px-4">{s.wali_nama || '-'}</td>
+                        <td className="py-3 px-4">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
+                            Aktif
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* ========================================================================= */}
+          {/* TAMPILAN 1: DASHBOARD TIM PEGAWAI / STAF WORKSPACE (NON-PIMPINAN)         */}
+          {/* ========================================================================= */}
+          {!isPimpinan && (
+            <div className="space-y-6">
+              {/* Card Profil & Presensi Cepat */}
+              <div className="grid md:grid-cols-3 gap-4">
             {/* Box 1: Status Khidmah & Unit Penempatan */}
             <div className="bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 text-white rounded-2xl p-5 shadow-sm space-y-3">
               <div className="flex items-center justify-between">
@@ -1946,6 +2198,8 @@ export default function UnifiedRoleDashboardPage() {
           )}
         </div>
       )}
+    </>
+  )}
 
       {/* ========================================================================= */}
       {/* MODAL 1: FORM PENGAJUAN CUTI / IZIN MANDIRI PEGAWAI                      */}

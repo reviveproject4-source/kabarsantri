@@ -4,6 +4,18 @@
  * Supabase DB, dan Custom Browser Events.
  */
 
+export function isTenantMode(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const mode = localStorage.getItem('ks_app_mode_v2');
+    if (mode === 'tenant') return true;
+    if (document.cookie.includes('ks_app_mode=tenant')) return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 // ============================================================================
 // 1. PENGAJUAN DANA RUMAH TANGGA & KBM
 // ============================================================================
@@ -85,6 +97,14 @@ export const DEFAULT_PENGAJUAN: PengajuanItem[] = [
 ];
 
 export function getSharedPengajuanList(): PengajuanItem[] {
+  if (isTenantMode()) {
+    try {
+      const raw = localStorage.getItem('ks_tenant_pengajuan_dana_v1');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
   if (typeof window === 'undefined') return DEFAULT_PENGAJUAN;
   try {
     const raw = localStorage.getItem('ks_pengajuan_dana_v2');
@@ -125,7 +145,11 @@ export function saveSharedPengajuan(item: Omit<PengajuanItem, 'id' | 'nomor' | '
 
   const updated = [newItem, ...current];
   if (typeof window !== 'undefined') {
-    localStorage.setItem('ks_pengajuan_dana_v2', JSON.stringify(updated));
+    if (isTenantMode()) {
+      localStorage.setItem('ks_tenant_pengajuan_dana_v1', JSON.stringify(updated));
+    } else {
+      localStorage.setItem('ks_pengajuan_dana_v2', JSON.stringify(updated));
+    }
     window.dispatchEvent(new CustomEvent('ks_expense_updated', { detail: newItem }));
   }
   return newItem;
@@ -364,6 +388,14 @@ const DEFAULT_PRESENSI_HISTORY: PresensiPegawaiRecord[] = [
 ];
 
 export function getSharedPresensiList(): PresensiPegawaiRecord[] {
+  if (isTenantMode()) {
+    try {
+      const raw = localStorage.getItem('ks_tenant_presensi_pegawai_v1');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
   if (typeof window === 'undefined') return DEFAULT_PRESENSI_HISTORY;
   try {
     const raw = localStorage.getItem('ks_presensi_pegawai_v2');
@@ -386,7 +418,11 @@ export function saveSharedPresensi(record: Omit<PresensiPegawaiRecord, 'id'>): P
 
   const updated = [newRec, ...current];
   if (typeof window !== 'undefined') {
-    localStorage.setItem('ks_presensi_pegawai_v2', JSON.stringify(updated));
+    if (isTenantMode()) {
+      localStorage.setItem('ks_tenant_presensi_pegawai_v1', JSON.stringify(updated));
+    } else {
+      localStorage.setItem('ks_presensi_pegawai_v2', JSON.stringify(updated));
+    }
     window.dispatchEvent(new CustomEvent('ks_presensi_updated', { detail: newRec }));
   }
   return newRec;
@@ -411,6 +447,11 @@ export interface SantriOption {
   nama: string;
   kelas_id: string;
   gender: 'ikhwan' | 'akhwat';
+  id?: string;
+  kelas?: string;
+  kamar?: string;
+  wali_nama?: string;
+  wali_kontak?: string;
 }
 
 export const MASTER_KELAS: KelasItem[] = [
@@ -478,6 +519,28 @@ export const MASTER_SANTRI: SantriOption[] = [
   { nis: '202602030', nama: 'Zainab Al-Kubra', kelas_id: 'k-9b', gender: 'akhwat' },
   { nis: '202602035', nama: 'Khadijah Al-Kubro', kelas_id: 'k-9b', gender: 'akhwat' },
 ];
+
+export function getSharedSantriList(): SantriOption[] {
+  if (isTenantMode()) {
+    try {
+      const raw = localStorage.getItem('ks_tenant_santri_list_v1');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+  return MASTER_SANTRI;
+}
+
+export function saveTenantSantri(santri: SantriOption): SantriOption[] {
+  const current = getSharedSantriList();
+  const updated = [santri, ...current];
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('ks_tenant_santri_list_v1', JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('ks_tenant_santri_updated', { detail: updated }));
+  }
+  return updated;
+}
 
 export interface KategoriHafalan {
   id: string;
@@ -800,6 +863,14 @@ export const DEFAULT_SESSIONS: LearningSession[] = [
 let memorySessions: LearningSession[] = [...DEFAULT_SESSIONS];
 
 export function getSharedLearningSessions(): LearningSession[] {
+  if (isTenantMode()) {
+    try {
+      const raw = localStorage.getItem('ks_tenant_learning_sessions_v1');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
   if (typeof window === 'undefined') return memorySessions;
   try {
     const raw = localStorage.getItem('ks_learning_sessions_v3');
@@ -815,6 +886,13 @@ export function getSharedLearningSessions(): LearningSession[] {
 }
 
 export function saveSharedLearningSessions(sessions: LearningSession[]) {
+  if (isTenantMode()) {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ks_tenant_learning_sessions_v1', JSON.stringify(sessions));
+      window.dispatchEvent(new CustomEvent('ks_kbm_session_updated', { detail: sessions }));
+    }
+    return;
+  }
   memorySessions = sessions;
   if (typeof window !== 'undefined') {
     localStorage.setItem('ks_learning_sessions_v3', JSON.stringify(sessions));
@@ -1462,6 +1540,14 @@ export const DEFAULT_PERMISSION_REQUESTS: PermissionRequest[] = [
 ];
 
 export function getSharedPermissionRequests(): PermissionRequest[] {
+  if (isTenantMode()) {
+    try {
+      const raw = localStorage.getItem('ks_tenant_permission_requests_v1');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
   if (typeof window === 'undefined') return DEFAULT_PERMISSION_REQUESTS;
   try {
     const raw = localStorage.getItem('ks_permission_requests_v3');
@@ -1508,7 +1594,11 @@ export function getSharedPermissionRequests(): PermissionRequest[] {
 
 export function saveSharedPermissionRequests(list: PermissionRequest[]): void {
   if (typeof window !== 'undefined') {
-    localStorage.setItem('ks_permission_requests_v3', JSON.stringify(list));
+    if (isTenantMode()) {
+      localStorage.setItem('ks_tenant_permission_requests_v1', JSON.stringify(list));
+    } else {
+      localStorage.setItem('ks_permission_requests_v3', JSON.stringify(list));
+    }
     window.dispatchEvent(new CustomEvent('ks_permission_updated', { detail: list }));
   }
 }
@@ -2022,6 +2112,14 @@ const DEFAULT_DISCIPLINE_RECORDS: DisciplineRecord[] = [
 ];
 
 export function getSharedDisciplineRecords(): DisciplineRecord[] {
+  if (isTenantMode()) {
+    try {
+      const raw = localStorage.getItem('ks_tenant_discipline_records_v1');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
   if (typeof window === 'undefined') return DEFAULT_DISCIPLINE_RECORDS;
   try {
     const raw = localStorage.getItem('ks_discipline_records_v2');
@@ -2037,7 +2135,11 @@ export function getSharedDisciplineRecords(): DisciplineRecord[] {
 
 export function saveSharedDisciplineRecords(list: DisciplineRecord[]): void {
   if (typeof window !== 'undefined') {
-    localStorage.setItem('ks_discipline_records_v2', JSON.stringify(list));
+    if (isTenantMode()) {
+      localStorage.setItem('ks_tenant_discipline_records_v1', JSON.stringify(list));
+    } else {
+      localStorage.setItem('ks_discipline_records_v2', JSON.stringify(list));
+    }
     window.dispatchEvent(new CustomEvent('ks_discipline_updated', { detail: list }));
   }
 }

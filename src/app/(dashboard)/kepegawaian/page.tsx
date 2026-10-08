@@ -63,7 +63,7 @@ import {
   getEmployeeContract,
   getHrMetrics,
   getAuditLogs,
-  DEFAULT_DISCIPLINE_CASES
+  getDisciplinaryCases
 } from '@/lib/kepegawaianStore';
 
 import { 
@@ -104,6 +104,7 @@ export default function KepegawaianPage() {
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
   const [performances, setPerformances] = useState<PerformanceEvaluation[]>([]);
   const [offboardings, setOffboardings] = useState<OffboardingClearance[]>([]);
+  const [disciplineCases, setDisciplineCases] = useState<DisciplinaryCase[]>([]);
   const [auditLogs, setAuditLogs] = useState<HrAuditEntry[]>([]);
   const [metrics, setMetrics] = useState<HrDashboardMetrics>({
     total_employees: 0,
@@ -216,6 +217,7 @@ export default function KepegawaianPage() {
     setLeaves(getLeaveRequests());
     setPerformances(getPerformanceEvaluations());
     setOffboardings(getOffboardings());
+    setDisciplineCases(getDisciplinaryCases());
     setAuditLogs(getAuditLogs());
     setMetrics(getHrMetrics());
   };
@@ -840,7 +842,14 @@ export default function KepegawaianPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-3">
-            {leaves.map(lv => (
+            {leaves.length === 0 ? (
+              <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center space-y-2">
+                <Calendar className="w-8 h-8 text-blue-600 mx-auto" />
+                <h3 className="font-bold text-slate-800 text-sm">Belum Ada Pengajuan Cuti</h3>
+                <p className="text-xs text-slate-500">Seluruh pegawai dan asatidz aktif bertugas dan tidak ada permohonan cuti tertunda.</p>
+              </div>
+            ) : (
+              leaves.map(lv => (
               <div
                 key={lv.id}
                 className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
@@ -924,7 +933,7 @@ export default function KepegawaianPage() {
                   </div>
                 )}
               </div>
-            ))}
+            )))}
           </div>
         </div>
       )}
@@ -953,7 +962,14 @@ export default function KepegawaianPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {performances.map(p => (
+            {performances.length === 0 ? (
+              <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center space-y-2 col-span-2">
+                <Award className="w-8 h-8 text-blue-600 mx-auto" />
+                <h3 className="font-bold text-slate-800 text-sm">Belum Ada Evaluasi Kinerja</h3>
+                <p className="text-xs text-slate-500">Evaluasi kinerja pegawai berbasis bukti kerja nyata akan ditampilkan di sini.</p>
+              </div>
+            ) : (
+              performances.map(p => (
               <div
                 key={p.id}
                 className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3"
@@ -1014,7 +1030,7 @@ export default function KepegawaianPage() {
                   <span className="text-slate-800 font-medium not-italic">{p.supervisor_name}</span>
                 </p>
               </div>
-            ))}
+            )))}
           </div>
         </div>
       )}
@@ -1035,7 +1051,14 @@ export default function KepegawaianPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-3">
-            {DEFAULT_DISCIPLINE_CASES.map(c => (
+            {disciplineCases.length === 0 ? (
+              <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center space-y-2">
+                <CheckCircle2 className="w-8 h-8 text-blue-600 mx-auto" />
+                <h3 className="font-bold text-slate-800 text-sm">Tidak Ada Kasus Disiplin</h3>
+                <p className="text-xs text-slate-500">Seluruh pegawai dan asatidz memiliki rekam kedisiplinan yang bersih tanpa sanksi.</p>
+              </div>
+            ) : (
+              disciplineCases.map(c => (
               <div
                 key={c.id}
                 className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3"
@@ -1065,7 +1088,7 @@ export default function KepegawaianPage() {
                   <span className="font-mono text-rose-600 font-semibold">Masa Berlaku Sanksi s/d: {c.sanction_expiry_date}</span>
                 </div>
               </div>
-            ))}
+            )))}
           </div>
         </div>
       )}
@@ -1094,7 +1117,14 @@ export default function KepegawaianPage() {
           </div>
 
           <div className="space-y-4">
-            {offboardings.map(off => (
+            {offboardings.length === 0 ? (
+              <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center space-y-2">
+                <UserCheck className="w-8 h-8 text-blue-600 mx-auto" />
+                <h3 className="font-bold text-slate-800 text-sm">Tidak Ada Pegawai Dalam Proses Offboarding</h3>
+                <p className="text-xs text-slate-500">Semua akun pegawai aktif bertugas dan tidak ada proses perpisahan/resign berjalan.</p>
+              </div>
+            ) : (
+              offboardings.map(off => (
               <div
                 key={off.id}
                 className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4"
@@ -1199,7 +1229,7 @@ export default function KepegawaianPage() {
                   </div>
                 </div>
               </div>
-            ))}
+            )))}
           </div>
         </div>
       )}

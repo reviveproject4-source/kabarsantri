@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { UserPlus, ArrowLeft, Check, ShieldCheck } from 'lucide-react';
+import { saveTenantSantri } from '@/lib/sharedDataStore';
 
 export default function TambahSantriPage() {
   const router = useRouter();
@@ -25,47 +26,59 @@ export default function TambahSantriPage() {
     e.preventDefault();
     setLoading(true);
 
-    // Simulasi penyimpanan master santri + inisialisasi tabungan & uang jajan
+    saveTenantSantri({
+      nis: formData.nis,
+      nama: formData.nama_lengkap,
+      kelas_id: formData.unit_id,
+      gender: formData.gender === 'P' ? 'akhwat' : 'ikhwan'
+    });
+
     setTimeout(() => {
       setLoading(false);
       setSuccess(true);
-    }, 600);
+    }, 400);
   };
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <Link href="/dashboard" className="p-2 bg-white rounded-lg border border-slate-200 text-slate-500 hover:text-slate-800">
+          <Link href="/santri/list" className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-slate-800">Tambah Santri Baru</h1>
-            <p className="text-xs text-slate-500">Langkah 1: Pendaftaran Data Pokok Santri & Rekening Otomatis</p>
+            <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">Tambah Santri Baru</h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Pendaftaran Data Pokok Santri Resmi (Kuota Tier 1: 50 Santri)</p>
           </div>
         </div>
       </div>
 
       {success ? (
-        <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center space-y-4 shadow-sm">
-          <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8 text-center space-y-4 shadow-sm">
+          <div className="w-14 h-14 bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mx-auto">
             <Check className="w-8 h-8" />
           </div>
-          <h2 className="text-xl font-bold text-slate-800">Santri Berhasil Didaftarkan!</h2>
-          <p className="text-xs text-slate-600 max-w-md mx-auto">
-            Data santri <strong>{formData.nama_lengkap}</strong> (NIS: {formData.nis}) telah aktif.
-            Rekening tabungan wadiah dan wallet e-pocket telah diinisialisasi otomatis di latar belakang.
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Santri Berhasil Didaftarkan!</h2>
+          <p className="text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto">
+            Data santri <strong>{formData.nama_lengkap}</strong> (NIS: {formData.nis}) telah aktif di database tenant Anda.
           </p>
           <div className="flex justify-center gap-3 pt-2">
             <Link
-              href="/wali/list"
-              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow transition"
+              href="/santri/list"
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-xs transition"
             >
-              Lanjut ke Langkah 2: Hubungkan Wali Santri →
+              Lihat Daftar Santri →
             </Link>
             <button
-              onClick={() => setSuccess(false)}
-              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-xl transition"
+              onClick={() => {
+                setSuccess(false);
+                setFormData({
+                  ...formData,
+                  nis: String(Number(formData.nis) + 1),
+                  nama_lengkap: ''
+                });
+              }}
+              className="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-medium rounded-xl transition"
             >
               Tambah Santri Lain
             </button>

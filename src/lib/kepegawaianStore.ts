@@ -19,7 +19,7 @@ import {
   PositionHistory,
   SanctionLevel
 } from '../types/kepegawaian';
-import { syncSubstituteTeacherToSessions } from './sharedDataStore';
+import { syncSubstituteTeacherToSessions, isTenantMode } from './sharedDataStore';
 
 export type { LeaveRequest, Employee, DepartmentUnit, EmploymentContract } from '../types/kepegawaian';
 
@@ -850,6 +850,42 @@ export const DEFAULT_AUDIT_LOGS: HrAuditEntry[] = [
 // ============================================================================
 
 const STORAGE_KEY = 'ks_kepegawaian_store_v2';
+const TENANT_STORAGE_KEY = 'ks_tenant_kepegawaian_store_v1';
+
+const INITIAL_TENANT_STATE = {
+  employees: [
+    {
+      id: 'emp-nh-001',
+      tenant_id: 'tenant-rabu-001',
+      nip: 'NIP.NH.2026.001',
+      nik: '3506010101850001',
+      full_name: 'Ust. H. Fauzan Mansur, Lc.',
+      email: 'admin@nurulhuda.kabarsantri.id',
+      phone_number: '081234567890',
+      gender: 'L' as const,
+      date_of_birth: '1985-05-10',
+      join_date: '2026-10-01',
+      lifecycle_status: 'ACTIVE' as const,
+      current_department: 'YAYASAN' as const,
+      current_position: 'Pengasuh & Administrator Lembaga',
+      current_role_slug: 'tenant_admin',
+      job_description: ['Pimpinan Pesantren & Administrator Lembaga'],
+      user_account_id: 'usr-nh-01',
+      user_account_active: true,
+      leave_allowance_annual: 12,
+      leave_balance: 12,
+      position_history: [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+  ],
+  contracts: [],
+  leaves: [],
+  disciplineCases: [],
+  performances: [],
+  offboardings: [],
+  auditLogs: []
+};
 
 let inMemoryState = {
   employees: DEFAULT_EMPLOYEES,
@@ -864,14 +900,16 @@ let inMemoryState = {
 function loadState() {
   if (typeof window === 'undefined') return inMemoryState;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const key = isTenantMode() ? TENANT_STORAGE_KEY : STORAGE_KEY;
+    const raw = localStorage.getItem(key);
     if (!raw) {
-      saveState(inMemoryState);
-      return inMemoryState;
+      const defaultState = isTenantMode() ? INITIAL_TENANT_STATE : inMemoryState;
+      saveState(defaultState as any);
+      return defaultState as any;
     }
     return JSON.parse(raw);
   } catch (e) {
-    return inMemoryState;
+    return isTenantMode() ? INITIAL_TENANT_STATE : inMemoryState;
   }
 }
 
@@ -879,7 +917,8 @@ function saveState(state: typeof inMemoryState) {
   inMemoryState = state;
   if (typeof window !== 'undefined') {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      const key = isTenantMode() ? TENANT_STORAGE_KEY : STORAGE_KEY;
+      localStorage.setItem(key, JSON.stringify(state));
     } catch (e) {
       // ignore localstorage errors
     }
@@ -1498,6 +1537,10 @@ export function getHrMetrics(): HrDashboardMetrics {
     pending_leave_approvals: leaves.filter(l => l.status === 'SUBMITTED').length,
     pending_offboarding_clearances: off.filter(o => !o.all_cleared).length
   };
+}
+
+export function getDisciplinaryCases(): DisciplinaryCase[] {
+  return loadState().disciplineCases;
 }
 
 export function getAuditLogs(): HrAuditEntry[] {

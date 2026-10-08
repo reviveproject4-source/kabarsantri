@@ -16,91 +16,105 @@ import {
   Printer
 } from 'lucide-react';
 import PrintableKuitansi from '@/components/finance/PrintableKuitansi';
+import { isTenantMode } from '@/lib/sharedDataStore';
+
+const DEMO_TRANSAKSI_LIST = [
+  {
+    id: 'val-1',
+    nomor_invoice: 'INV-202610-002',
+    santri: 'Ahmad Zaki Mubarak',
+    nis: '202601015',
+    wali: 'Dr. Hendra Gunawan',
+    jenis: 'SPP',
+    nominal: 500000,
+    bank_tujuan: 'BSI (Bank Syariah Indonesia)',
+    tanggal_transfer: '2026-10-04',
+    bukti_img_url: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=500&auto=format&fit=crop&q=60',
+    file_size_compressed: '98 KB',
+    status: 'MENUNGGU_VALIDASI',
+    nomor_kuitansi: null,
+  },
+  {
+    id: 'val-2',
+    nomor_invoice: 'UJ-202610-089',
+    santri: 'Muhammad Al-Fatih',
+    nis: '202601001',
+    wali: 'H. Syamsul Bahri',
+    jenis: 'Uang Jajan',
+    nominal: 150000,
+    bank_tujuan: 'Bank Muamalat',
+    tanggal_transfer: '2026-10-04',
+    bukti_img_url: 'https://images.unsplash.com/photo-1554224154-26032ffc0d07?w=500&auto=format&fit=crop&q=60',
+    file_size_compressed: '112 KB',
+    status: 'MENUNGGU_VALIDASI',
+    nomor_kuitansi: null,
+  },
+  {
+    id: 'val-3',
+    nomor_invoice: 'TBG-202610-042',
+    santri: 'Bilal Habasyi',
+    nis: '202601018',
+    wali: 'Ust. Zaid',
+    jenis: 'Tabungan',
+    nominal: 300000,
+    bank_tujuan: 'BSI Giro Yayasan',
+    tanggal_transfer: '2026-10-03',
+    bukti_img_url: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=500&auto=format&fit=crop&q=60',
+    file_size_compressed: '85 KB',
+    status: 'VALID',
+    nomor_kuitansi: 'KWT-20261003-0042',
+  },
+  {
+    id: 'val-4',
+    nomor_invoice: 'PPDB-2026-015',
+    santri: 'Fatih Al-Ayyubi',
+    nis: '202601021',
+    wali: 'H. Ridwan',
+    jenis: 'Daftar Ulang',
+    nominal: 3500000,
+    bank_tujuan: 'BCA Yayasan',
+    tanggal_transfer: '2026-10-03',
+    bukti_img_url: 'https://images.unsplash.com/photo-1554224154-26032ffc0d07?w=500&auto=format&fit=crop&q=60',
+    file_size_compressed: '124 KB',
+    status: 'MENUNGGU_VALIDASI',
+    nomor_kuitansi: null,
+  },
+  {
+    id: 'val-5',
+    nomor_invoice: 'DON-2026-088',
+    santri: 'Fathimah Az-Zahra',
+    nis: '202602004',
+    wali: 'Hj. Siti Aminah',
+    jenis: 'Donasi',
+    nominal: 1000000,
+    bank_tujuan: 'BSI Infaq Pondok',
+    tanggal_transfer: '2026-10-02',
+    bukti_img_url: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=500&auto=format&fit=crop&q=60',
+    file_size_compressed: '92 KB',
+    status: 'VALID',
+    nomor_kuitansi: 'KWT-20261002-0088',
+  },
+];
 
 export default function ValidasiKeuanganPage() {
   const [filterKategori, setFilterKategori] = useState<string>('semua');
   const [selectedBukti, setSelectedBukti] = useState<any>(null);
   const [kuitansiModal, setKuitansiModal] = useState<any>(null);
   const [notif, setNotif] = useState('');
+  const [transaksiList, setTransaksiList] = useState<any[]>([]);
 
-  // Daftar Transaksi yang Masuk dari Wali Santri (dengan Bukti TF Terkompresi < 150KB)
-  const [transaksiList, setTransaksiList] = useState([
-    {
-      id: 'val-1',
-      nomor_invoice: 'INV-202610-002',
-      santri: 'Ahmad Zaki Mubarak',
-      nis: '202601015',
-      wali: 'Dr. Hendra Gunawan',
-      jenis: 'SPP',
-      nominal: 500000,
-      bank_tujuan: 'BSI (Bank Syariah Indonesia)',
-      tanggal_transfer: '2026-10-04',
-      bukti_img_url: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=500&auto=format&fit=crop&q=60',
-      file_size_compressed: '98 KB',
-      status: 'MENUNGGU_VALIDASI',
-      nomor_kuitansi: null,
-    },
-    {
-      id: 'val-2',
-      nomor_invoice: 'UJ-202610-089',
-      santri: 'Muhammad Al-Fatih',
-      nis: '202601001',
-      wali: 'H. Syamsul Bahri',
-      jenis: 'Uang Jajan',
-      nominal: 150000,
-      bank_tujuan: 'Bank Muamalat',
-      tanggal_transfer: '2026-10-04',
-      bukti_img_url: 'https://images.unsplash.com/photo-1554224154-26032ffc0d07?w=500&auto=format&fit=crop&q=60',
-      file_size_compressed: '112 KB',
-      status: 'MENUNGGU_VALIDASI',
-      nomor_kuitansi: null,
-    },
-    {
-      id: 'val-3',
-      nomor_invoice: 'TBG-202610-042',
-      santri: 'Bilal Habasyi',
-      nis: '202601018',
-      wali: 'Ust. Zaid',
-      jenis: 'Tabungan',
-      nominal: 300000,
-      bank_tujuan: 'BSI Giro Yayasan',
-      tanggal_transfer: '2026-10-03',
-      bukti_img_url: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=500&auto=format&fit=crop&q=60',
-      file_size_compressed: '85 KB',
-      status: 'VALID',
-      nomor_kuitansi: 'KWT-20261003-0042',
-    },
-    {
-      id: 'val-4',
-      nomor_invoice: 'PPDB-2026-015',
-      santri: 'Fatih Al-Ayyubi',
-      nis: '202601021',
-      wali: 'H. Ridwan',
-      jenis: 'Daftar Ulang',
-      nominal: 3500000,
-      bank_tujuan: 'BCA Yayasan',
-      tanggal_transfer: '2026-10-03',
-      bukti_img_url: 'https://images.unsplash.com/photo-1554224154-26032ffc0d07?w=500&auto=format&fit=crop&q=60',
-      file_size_compressed: '124 KB',
-      status: 'MENUNGGU_VALIDASI',
-      nomor_kuitansi: null,
-    },
-    {
-      id: 'val-5',
-      nomor_invoice: 'DON-2026-088',
-      santri: 'Fathimah Az-Zahra',
-      nis: '202602004',
-      wali: 'Hj. Siti Aminah',
-      jenis: 'Donasi',
-      nominal: 1000000,
-      bank_tujuan: 'BSI Infaq Pondok',
-      tanggal_transfer: '2026-10-02',
-      bukti_img_url: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=500&auto=format&fit=crop&q=60',
-      file_size_compressed: '92 KB',
-      status: 'VALID',
-      nomor_kuitansi: 'KWT-20261002-0088',
-    },
-  ]);
+  React.useEffect(() => {
+    if (isTenantMode()) {
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('ks_tenant_validasi_list_v1');
+        setTransaksiList(stored ? JSON.parse(stored) : []);
+      } else {
+        setTransaksiList([]);
+      }
+    } else {
+      setTransaksiList(DEMO_TRANSAKSI_LIST);
+    }
+  }, []);
 
   const handleValidasi = async (id: string, aksi: 'valid' | 'tolak') => {
     const kuitansiNo = 'KWT-' + Date.now().toString().slice(-6);
@@ -225,7 +239,18 @@ export default function ValidasiKeuanganPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {filteredList.map((item) => (
+              {filteredList.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-slate-500">
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <Receipt className="w-8 h-8 text-blue-500" />
+                      <p className="font-semibold text-sm text-slate-700">Belum ada antrean bukti transfer</p>
+                      <p className="text-xs text-slate-400">Semua pembayaran wali santri yang masuk via portal akan tampil di sini untuk divalidasi kasir.</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredList.map((item) => (
                 <tr key={item.id} className="hover:bg-slate-50/60 transition">
                   <td className="py-3 px-4">
                     <div className="font-bold text-slate-800">{item.santri}</div>
@@ -299,7 +324,7 @@ export default function ValidasiKeuanganPage() {
                     )}
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>

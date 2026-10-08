@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserCheck, CheckCircle2, Search, Building2, School, ShieldCheck, MapPin, Sparkles, AlertCircle } from 'lucide-react';
 import { getActiveActor, MASTER_PILLAR_ACTORS, ActiveActor } from '@/lib/sessionStore';
-import { MASTER_SANTRI, validateIslamicSegregation } from '@/lib/sharedDataStore';
+import { MASTER_SANTRI, validateIslamicSegregation, isTenantMode, getSharedSantriList } from '@/lib/sharedDataStore';
 
 interface SantriPresensiItem {
   id: string;
@@ -45,23 +45,51 @@ export default function AbsenSantriRolePage() {
     const actor = getActiveActor();
     setCurrentActor(actor);
 
-    if (actor.role_key === 'guru_akhwat' || actor.role_key === 'musyrifah' || actor.gender === 'akhwat') {
-      setKampus('akhwat');
-      setSantriList(INITIAL_SANTRI_AKHWAT);
+    const isTenant = isTenantMode();
+    if (isTenant) {
+      const shared = getSharedSantriList();
+      const mapped: SantriPresensiItem[] = shared.map(s => ({
+        id: s.id || s.nis,
+        nis: s.nis,
+        nama: s.nama,
+        gender: s.gender,
+        kamar: s.kamar || 'Kamar Asrama',
+        kelas: s.kelas || s.kelas_id || 'Rombel Kelas',
+        status: 'hadir' as const,
+      }));
+      setSantriList(mapped);
     } else {
-      setKampus('ikhwan');
-      setSantriList(INITIAL_SANTRI_IKHWAN);
-    }
-
-    const handleActorChange = () => {
-      const updated = getActiveActor();
-      setCurrentActor(updated);
-      if (updated.role_key === 'guru_akhwat' || updated.role_key === 'musyrifah' || updated.gender === 'akhwat') {
+      if (actor.role_key === 'guru_akhwat' || actor.role_key === 'musyrifah' || actor.gender === 'akhwat') {
         setKampus('akhwat');
         setSantriList(INITIAL_SANTRI_AKHWAT);
       } else {
         setKampus('ikhwan');
         setSantriList(INITIAL_SANTRI_IKHWAN);
+      }
+    }
+
+    const handleActorChange = () => {
+      const updated = getActiveActor();
+      setCurrentActor(updated);
+      if (isTenantMode()) {
+        const shared = getSharedSantriList();
+        setSantriList(shared.map(s => ({
+          id: s.id || s.nis,
+          nis: s.nis,
+          nama: s.nama,
+          gender: s.gender,
+          kamar: s.kamar || 'Kamar Asrama',
+          kelas: s.kelas || s.kelas_id || 'Rombel Kelas',
+          status: 'hadir' as const,
+        })));
+      } else {
+        if (updated.role_key === 'guru_akhwat' || updated.role_key === 'musyrifah' || updated.gender === 'akhwat') {
+          setKampus('akhwat');
+          setSantriList(INITIAL_SANTRI_AKHWAT);
+        } else {
+          setKampus('ikhwan');
+          setSantriList(INITIAL_SANTRI_IKHWAN);
+        }
       }
     };
 
@@ -248,7 +276,18 @@ export default function AbsenSantriRolePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {santriList.map((s) => (
+              {santriList.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="py-12 text-center text-slate-500">
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <UserCheck className="w-8 h-8 text-blue-500" />
+                      <p className="font-semibold text-sm text-slate-700">Belum ada data santri terdaftar</p>
+                      <p className="text-xs text-slate-400">Silakan daftarkan santri terlebih dahulu di menu Data Santri untuk mulai merekap presensi harian.</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                santriList.map((s) => (
                 <tr key={s.id} className="hover:bg-slate-50/60 transition">
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
@@ -288,7 +327,7 @@ export default function AbsenSantriRolePage() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>
