@@ -98,7 +98,7 @@ export const MASTER_PILLAR_ACTORS: Record<string, ActiveActor> = {
     id: 'emp-pgw-001',
     role_key: 'pegawai',
     role_slug: 'guru',
-    name: 'Ust. Lukman Hakim, M.Kom.',
+    name: 'Guru & Tenaga Kependidikan',
     nip: 'PEG-GRU-001',
     title: 'Guru & Tenaga Kependidikan',
     dept: 'KBM, Tahfidz & Kepegawaian',
@@ -111,7 +111,7 @@ export const MASTER_PILLAR_ACTORS: Record<string, ActiveActor> = {
     id: 'wali-001',
     role_key: 'wali_santri',
     role_slug: 'wali_santri',
-    name: 'H. Ahmad Fauzi',
+    name: 'Wali Santri',
     nip: 'WALI-2026-001',
     title: 'Wali Santri',
     dept: 'Portal Informasi Orang Tua',
@@ -350,7 +350,14 @@ export function getActiveActor(): ActiveActor {
   try {
     const mode = getAppMode();
     if (mode === 'tenant') {
-      return MASTER_PILLAR_ACTORS.tenant_admin_nh;
+      const raw = localStorage.getItem(SESSION_ACTOR_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.role_key && ['yayasan', 'pegawai', 'wali_santri'].includes(parsed.role_key)) {
+          return MASTER_PILLAR_ACTORS[parsed.role_key];
+        }
+      }
+      return MASTER_PILLAR_ACTORS.yayasan;
     }
     const raw = localStorage.getItem(SESSION_ACTOR_STORAGE_KEY);
     if (!raw) {

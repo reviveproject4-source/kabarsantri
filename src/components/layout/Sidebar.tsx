@@ -141,7 +141,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
       </div>
 
       {/* Identitas Lembaga / Pesantren (Tenant) */}
-      {tenant.name ? (
+      {isHydrated && tenant.name ? (
         <div className="px-4 py-2 bg-slate-900/90 dark:bg-slate-950/90 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center space-x-2 min-w-0">
             {tenant.logo_url ? (

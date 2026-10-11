@@ -163,10 +163,10 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
     const currentKey = current.role_key;
 
     if (isTenant) {
-      // Jalur Tenant Live terisolasi: Akun harus tetap Admin Lembaga Tenant (bukan Super Admin)
-      if (currentKey !== 'tenant_admin_nh') {
-        setActiveRole('tenant_admin_nh');
-        setActiveActorByRole('tenant_admin_nh');
+      // Jalur Tenant Live terisolasi: Cegah peran Super Admin masuk ke tenant live
+      if (currentKey === 'super_admin' || currentKey === 'tenant_admin_nh') {
+        setActiveRole('yayasan');
+        setActiveActorByRole('yayasan');
       }
       return;
     }
@@ -235,7 +235,7 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
       id: 'pegawai',
       label: 'Pegawai',
       title: 'Guru & Tenaga Kependidikan',
-      name: 'Ust. Lukman Hakim, M.Kom.',
+      name: '',
       nip: 'PEG-GRU-001',
       dept: 'KBM, Tahfidz & Kepegawaian',
       icon: '👨‍🏫'
@@ -244,7 +244,7 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
       id: 'wali_santri',
       label: 'Wali Santri',
       title: 'Wali Santri / Orang Tua',
-      name: 'H. Ahmad Fauzi',
+      name: '',
       nip: 'WALI-2026-001',
       dept: 'Portal Informasi Orang Tua',
       icon: '👨‍👩‍👧',
@@ -257,7 +257,7 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
     setActiveActorByRole(roleId);
     setDropdownOpen(false);
     if (roleId === 'wali_santri') {
-      window.location.href = '/portal-wali';
+      window.location.href = isTenant ? '/portal-wali?mode=tenant' : '/portal-wali';
     }
   };
 
@@ -293,7 +293,7 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
           </Link>
 
           {/* Desktop Institution Badge */}
-          {tenant.name ? (
+          {isHydrated && tenant.name ? (
             <button
               onClick={() => setTenantModalOpen(true)}
               title="Klik untuk melihat Identitas Lembaga"
@@ -311,7 +311,7 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
           ) : null}
 
           {/* Compact Institution Badge (Tablet / Mobile) */}
-          {tenant.name ? (
+          {isHydrated && tenant.name ? (
             <button
               onClick={() => setTenantModalOpen(true)}
               title="Klik untuk Identitas Lembaga"
