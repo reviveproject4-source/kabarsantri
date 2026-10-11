@@ -428,180 +428,57 @@ export default function UnifiedRoleDashboardPage() {
         </div>
       ) : (
         <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs border-b border-slate-100 dark:border-slate-800 pb-3">
             <div className="flex items-center space-x-2">
-              <span className="font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[11px]">Akun Uji Coba:</span>
+              <span className="font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[11px]">Peran Pengguna:</span>
               <span className="px-2.5 py-1 rounded-lg font-bold text-xs bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
-                {isPimpinan ? '🏛️ Level Pimpinan' : '👷 Level Pegawai / Staf'}
+                {currentActor.role_key === 'yayasan' ? '🏛️ Yayasan' : currentActor.role_key === 'wali_santri' ? '👨‍👩‍👧 Wali Santri' : '👨‍🏫 Pegawai'}
               </span>
               <span className="font-bold text-slate-800 dark:text-slate-100 text-sm">{currentActor.name}</span>
               <span className="text-slate-400">({currentActor.title})</span>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
-                NIP: {currentActor.nip}
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md font-mono">
+                NIP/ID: {currentActor.nip}
               </span>
             </div>
           </div>
 
-          {/* Mobile Clickable Role Trigger */}
-          <div className="sm:hidden">
-            <button
-              onClick={() => setRolePickerModalOpen(true)}
-              className="w-full py-2.5 px-3 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 rounded-xl flex items-center justify-between text-blue-900 dark:text-blue-200 font-bold text-xs transition"
-            >
-              <div className="flex items-center space-x-2 truncate">
-                <Users className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                <span className="truncate">Peran: {currentActor.name} ({currentActor.title})</span>
-              </div>
-              <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ml-1">
-                Ganti Peran ▼
-              </span>
-            </button>
-          </div>
-
-          {/* Desktop Role Switcher Buttons */}
-          <div className="hidden sm:block space-y-1.5 text-xs">
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-              <span className="text-[10px] font-bold text-blue-900 dark:text-blue-300 shrink-0 uppercase tracking-wider">Pimpinan:</span>
-              {[
-                { id: 'yayasan', label: '1. Ketua Yayasan' },
-                { id: 'wakil_yayasan', label: '2. Wk. Yayasan' },
-                { id: 'kepala_kepegawaian', label: '3. Ka. HRD' },
-                { id: 'keuangan', label: '4. Ka. Keuangan' },
-                { id: 'mudir', label: '5. Mudir' },
-                { id: 'kepala_rumah_tangga', label: '6. Ka. RT' },
-              ].map(r => (
+          {/* 3 Commercial Roles Switcher */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+            {[
+              { id: 'yayasan', label: 'Yayasan', sub: 'Pimpinan & Kebijakan Lembaga', icon: Building2 },
+              { id: 'pegawai', label: 'Pegawai', sub: 'Guru, Tahfidz & Kepegawaian', icon: UserCheck },
+              { id: 'wali_santri', label: 'Wali Santri', sub: 'Portal Orang Tua Santri', icon: Users, href: '/portal-wali' },
+            ].map((r) => {
+              const Icon = r.icon;
+              const isSelected = (currentActor.role_key === r.id) || (r.id === 'pegawai' && !['yayasan', 'wali_santri'].includes(currentActor.role_key));
+              return (
                 <button
                   key={r.id}
-                  onClick={() => handleSwitchRole(r.id)}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold shrink-0 transition ${
-                    currentActor.role_key === r.id
-                      ? 'bg-blue-600 text-white shadow-xs font-bold'
-                      : 'bg-blue-50/70 dark:bg-slate-800 text-blue-900 dark:text-slate-300 hover:bg-blue-100 border border-blue-100 dark:border-slate-700'
+                  onClick={() => {
+                    handleSwitchRole(r.id);
+                    if (r.href) {
+                      window.location.href = r.href;
+                    }
+                  }}
+                  className={`p-3 rounded-xl border flex items-center space-x-3 text-left transition ${
+                    isSelected
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-xs font-semibold'
+                      : 'bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-50/50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700'
                   }`}
                 >
-                  {r.label}
+                  <div className={`p-2 rounded-lg ${isSelected ? 'bg-white/20 text-white' : 'bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400'}`}>
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <div className="truncate">
+                    <span className="font-bold text-xs block leading-tight">{r.label}</span>
+                    <span className={`text-[10px] truncate block ${isSelected ? 'text-blue-100' : 'text-slate-400'}`}>{r.sub}</span>
+                  </div>
                 </button>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-              <span className="text-[10px] font-bold text-blue-800 dark:text-blue-400 shrink-0 uppercase tracking-wider">Tim Pegawai:</span>
-              {[
-                { id: 'guru', label: '7a. Guru Putra' },
-                { id: 'guru_akhwat', label: '7b. Guru Putri' },
-                { id: 'musyrif', label: '8a. Musyrif Asrama' },
-                { id: 'musyrifah', label: '8b. Musyrifah Asrama' },
-                { id: 'laundry', label: '9a. Pegawai Laundry' },
-                { id: 'dapur', label: '9b. Pegawai Dapur' },
-                { id: 'satpam', label: '9c. Satpam Gerbang' },
-                { id: 'kasir', label: '10. Staf Kasir SPP' },
-                { id: 'staf_hrd', label: '11. Staf Admin HRD' },
-              ].map(r => (
-                <button
-                  key={r.id}
-                  onClick={() => handleSwitchRole(r.id)}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold shrink-0 transition ${
-                    currentActor.role_key === r.id
-                      ? 'bg-blue-600 text-white shadow-xs font-bold'
-                      : 'bg-blue-50/70 dark:bg-slate-800 text-blue-900 dark:text-slate-300 hover:bg-blue-100 border border-blue-100 dark:border-slate-700'
-                  }`}
-                >
-                  {r.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL PILIH PERAN MOBILE (CLICKABLE) */}
-      {rolePickerModalOpen && (
-        <div className="fixed inset-0 z-50 sm:hidden bg-slate-950/70 backdrop-blur-xs flex items-end">
-          <div className="w-full bg-white dark:bg-slate-900 rounded-t-3xl max-h-[85vh] p-4 flex flex-col shadow-2xl border-t border-slate-200 dark:border-slate-800 animate-in slide-in-from-bottom duration-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center space-x-2">
-                <Users className="w-5 h-5 text-blue-600" />
-                <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Pilih Peran Demo</h3>
-              </div>
-              <button 
-                onClick={() => setRolePickerModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="overflow-y-auto space-y-3 py-3 text-xs">
-              <div>
-                <span className="text-[10px] font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider block mb-1">
-                  🏛️ PIMPINAN (6 PILAR)
-                </span>
-                <div className="space-y-1">
-                  {[
-                    { id: 'yayasan', label: '1. Ketua Yayasan', name: 'KH. Abdullah Faqih, Lc.' },
-                    { id: 'wakil_yayasan', label: '2. Wakil Ketua Yayasan', name: 'Drs. H. M. Mansyur, M.Pd.' },
-                    { id: 'kepala_kepegawaian', label: '3. Ka. HRD', name: 'Ust. Ir. Faisal Rahman, M.M.' },
-                    { id: 'keuangan', label: '4. Ka. Keuangan', name: 'Ust. Ahmad Dahlan, S.E.' },
-                    { id: 'mudir', label: '5. Mudir', name: 'Dr. KH. Mahmud Ridwan, M.A.' },
-                    { id: 'kepala_rumah_tangga', label: '6. Ka. RT & Sarpras', name: 'Pak Subandi, S.T.' },
-                  ].map(r => (
-                    <button
-                      key={r.id}
-                      onClick={() => handleSwitchRole(r.id)}
-                      className={`w-full text-left p-2.5 rounded-xl border flex items-center justify-between transition ${
-                        currentActor.role_key === r.id
-                          ? 'bg-blue-600 text-white border-blue-600 font-bold shadow-xs'
-                          : 'bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700'
-                      }`}
-                    >
-                      <div>
-                        <div>{r.label}</div>
-                        <div className={`text-[10px] ${currentActor.role_key === r.id ? 'text-blue-100' : 'text-slate-400'}`}>{r.name}</div>
-                      </div>
-                      {currentActor.role_key === r.id && <Check className="w-4 h-4 text-white" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider block mb-1">
-                  👷 TIM PEGAWAI / STAF
-                </span>
-                <div className="space-y-1">
-                  {[
-                    { id: 'guru', label: '7a. Guru Putra (Ikhwan)', name: 'Ust. Lukman Hakim, M.Kom.' },
-                    { id: 'guru_akhwat', label: '7b. Guru Putri (Akhwat)', name: 'Usth. Fatimah Az-Zahra, S.Pd.' },
-                    { id: 'musyrif', label: '8a. Musyrif Asrama Putra', name: 'Ust. Hamzah al-Bantani' },
-                    { id: 'musyrifah', label: '8b. Musyrifah Asrama Putri', name: 'Usth. Siti Khadijah, S.Pd.I.' },
-                    { id: 'laundry', label: '9a. Staf Laundry', name: 'Ibu Sumiati' },
-                    { id: 'dapur', label: '9b. Staf Dapur', name: 'Pak Slamet' },
-                    { id: 'satpam', label: '9c. Satpam Pos Gerbang', name: 'Pak Subandi' },
-                    { id: 'kasir', label: '10. Staf Kasir SPP', name: 'Mbak Anisa, A.Md.' },
-                    { id: 'staf_hrd', label: '11. Staf Admin HRD', name: 'Ust. Wildan Pratama' },
-                  ].map(r => (
-                    <button
-                      key={r.id}
-                      onClick={() => handleSwitchRole(r.id)}
-                      className={`w-full text-left p-2.5 rounded-xl border flex items-center justify-between transition ${
-                        currentActor.role_key === r.id
-                          ? 'bg-blue-600 text-white border-blue-600 font-bold shadow-xs'
-                          : 'bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700'
-                      }`}
-                    >
-                      <div>
-                        <div>{r.label}</div>
-                        <div className={`text-[10px] ${currentActor.role_key === r.id ? 'text-blue-100' : 'text-slate-400'}`}>{r.name}</div>
-                      </div>
-                      {currentActor.role_key === r.id && <Check className="w-4 h-4 text-white" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -1527,9 +1404,7 @@ export default function UnifiedRoleDashboardPage() {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* TAMPILAN 2: DASHBOARD LEVEL PIMPINAN (6 PILAR UTAMA & SUPER ADMIN)        */}
-      {/* ========================================================================= */}
+      {/* TAMPILAN DASHBOARD PIMPINAN & YAYASAN */}
       {isPimpinan && (
         <div className="space-y-6">
           {/* Card Presensi Cepat Pimpinan */}
@@ -1564,13 +1439,13 @@ export default function UnifiedRoleDashboardPage() {
             </div>
           </div>
 
-          {/* PILAR 6: KEPALA BAGIAN RUMAH TANGGA & SARPRAS */}
+          {/* SARANA PRASARANA & RUMAH TANGGA */}
           {currentActor.role_key === 'kepala_rumah_tangga' && (
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
                   <span className="text-[10px] font-bold text-blue-800 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full uppercase border border-blue-200 dark:border-blue-900">
-                    🏛️ PILAR 6: RUMAH TANGGA &amp; SARPRAS
+                    SARANA PRASARANA &amp; RUMAH TANGGA
                   </span>
                   <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-1">
                     Operasional RT: {currentActor.name}
@@ -1683,15 +1558,13 @@ export default function UnifiedRoleDashboardPage() {
             </div>
           )}
 
-          {/* ------------------------------------------------------------------------- */}
-          {/* PILAR 3: KEPALA BAGIAN KEPEGAWAIAN / HRD                                  */}
-          {/* ------------------------------------------------------------------------- */}
+          {/* KEPEGAWAIAN & SDM */}
           {currentActor.role_key === 'kepala_kepegawaian' && (
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
                   <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full uppercase border border-blue-200 dark:border-blue-800">
-                    PILAR 3: KEPEGAWAIAN (HRD)
+                    KEPEGAWAIAN &amp; SDM
                   </span>
                   <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-1">
                     Tata Kelola SDM: {currentActor.name}
@@ -1789,15 +1662,13 @@ export default function UnifiedRoleDashboardPage() {
             </div>
           )}
 
-          {/* ------------------------------------------------------------------------- */}
-          {/* PILAR 4: KEPALA BAGIAN KEUANGAN                                          */}
-          {/* ------------------------------------------------------------------------- */}
+          {/* MANAJEMEN KEUANGAN & SPP */}
           {currentActor.role_key === 'keuangan' && (
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
                   <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full uppercase border border-blue-200 dark:border-blue-800">
-                    PILAR 4: KEPALA BAGIAN KEUANGAN
+                    MANAJEMEN KEUANGAN &amp; SPP
                   </span>
                   <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-1">
                     Pusat Pengendali Kas &amp; SPP: {currentActor.name}
@@ -1902,15 +1773,13 @@ export default function UnifiedRoleDashboardPage() {
             </div>
           )}
 
-          {/* ------------------------------------------------------------------------- */}
-          {/* PILAR 5: MUDIR PESANTREN / KEPALA SEKOLAH                                */}
-          {/* ------------------------------------------------------------------------- */}
+          {/* KEPALA SEKOLAH & MUDIR (AKADEMIK) */}
           {currentActor.role_key === 'mudir' && (
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
                   <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full uppercase border border-blue-200 dark:border-blue-800">
-                    PILAR 5: MUDIR PESANTREN
+                    KEPALA SEKOLAH &amp; MUDIR (AKADEMIK)
                   </span>
                   <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-1">
                     Pimpinan KBM &amp; Tarbiyah: {currentActor.name}
@@ -1985,15 +1854,13 @@ export default function UnifiedRoleDashboardPage() {
             </div>
           )}
 
-          {/* ------------------------------------------------------------------------- */}
-          {/* PILAR 2: WAKIL KETUA YAYASAN                                             */}
-          {/* ------------------------------------------------------------------------- */}
+          {/* OPERASIONAL YAYASAN & PERSETUJUAN */}
           {currentActor.role_key === 'wakil_yayasan' && (
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
                   <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full uppercase border border-blue-200 dark:border-blue-800">
-                    PILAR 2: WAKIL KETUA YAYASAN
+                    OPERASIONAL YAYASAN &amp; PERSETUJUAN
                   </span>
                   <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-1">
                     Control Tower Persetujuan: {currentActor.name}
@@ -2062,15 +1929,13 @@ export default function UnifiedRoleDashboardPage() {
             </div>
           )}
 
-          {/* ------------------------------------------------------------------------- */}
-          {/* PILAR 1: KETUA YAYASAN                                                    */}
-          {/* ------------------------------------------------------------------------- */}
+          {/* KETUA YAYASAN & EKSEKUTIF */}
           {currentActor.role_key === 'yayasan' && (
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
                   <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full uppercase border border-blue-200 dark:border-blue-800">
-                    PILAR 1: KETUA YAYASAN (EIS)
+                    KETUA YAYASAN &amp; EKSEKUTIF
                   </span>
                   <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-1">
                     Executive EIS: {currentActor.name}

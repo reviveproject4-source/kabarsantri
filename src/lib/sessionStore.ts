@@ -87,12 +87,38 @@ export const MASTER_PILLAR_ACTORS: Record<string, ActiveActor> = {
     role_slug: 'ketua_yayasan',
     name: 'KH. Abdullah Faqih, Lc.',
     nip: 'PEG-YYS-001',
-    title: 'Ketua Yayasan',
-    dept: 'Dewan Pembina / Yayasan (Information Only)',
+    title: 'Pimpinan Yayasan',
+    dept: 'Yayasan & Manajemen Eksekutif',
     gender: 'ikhwan',
     tenant_id: 'tenant-pesantren-001',
     tenant_name: 'Pondok Pesantren Al-Hikmah Terpadu',
     unit_name: 'Kantor Pusat Yayasan'
+  },
+  pegawai: {
+    id: 'emp-pgw-001',
+    role_key: 'pegawai',
+    role_slug: 'guru',
+    name: 'Ust. Lukman Hakim, M.Kom.',
+    nip: 'PEG-GRU-001',
+    title: 'Guru & Tenaga Kependidikan',
+    dept: 'KBM, Tahfidz & Kepegawaian',
+    gender: 'ikhwan',
+    tenant_id: 'tenant-pesantren-001',
+    tenant_name: 'Pondok Pesantren Al-Hikmah Terpadu',
+    unit_name: 'MTs Pesantren Putra'
+  },
+  wali_santri: {
+    id: 'wali-001',
+    role_key: 'wali_santri',
+    role_slug: 'wali_santri',
+    name: 'H. Ahmad Fauzi',
+    nip: 'WALI-2026-001',
+    title: 'Wali Santri',
+    dept: 'Portal Informasi Orang Tua',
+    gender: 'ikhwan',
+    tenant_id: 'tenant-pesantren-001',
+    tenant_name: 'Pondok Pesantren Al-Hikmah Terpadu',
+    unit_name: 'Komite Wali Santri'
   },
   wakil_yayasan: {
     id: 'emp-yys-002',
@@ -101,7 +127,7 @@ export const MASTER_PILLAR_ACTORS: Record<string, ActiveActor> = {
     name: 'Drs. H. M. Mansyur, M.Pd.',
     nip: 'PEG-YYS-002',
     title: 'Wakil Ketua Yayasan',
-    dept: 'Operasional Yayasan (Approval Authority)',
+    dept: 'Operasional Yayasan & Persetujuan',
     gender: 'ikhwan',
     tenant_id: 'tenant-pesantren-001',
     tenant_name: 'Pondok Pesantren Al-Hikmah Terpadu',
@@ -114,7 +140,7 @@ export const MASTER_PILLAR_ACTORS: Record<string, ActiveActor> = {
     name: 'Ust. Ir. Faisal Rahman, M.M.',
     nip: 'PEG-HRD-001',
     title: 'Kepala Bagian Kepegawaian (HRD)',
-    dept: 'Kepegawaian & SDM (Kelola Orang & Cuti)',
+    dept: 'Kepegawaian & SDM Pesantren',
     gender: 'ikhwan',
     tenant_id: 'tenant-pesantren-001',
     tenant_name: 'Pondok Pesantren Al-Hikmah Terpadu',
@@ -127,7 +153,7 @@ export const MASTER_PILLAR_ACTORS: Record<string, ActiveActor> = {
     name: 'Ust. Ahmad Dahlan, S.E.',
     nip: 'PEG-KEU-001',
     title: 'Kepala Bagian Keuangan',
-    dept: 'Keuangan & Kompensasi (Nominal Rahasia)',
+    dept: 'Keuangan & Akuntansi Pesantren',
     gender: 'ikhwan',
     tenant_id: 'tenant-pesantren-001',
     tenant_name: 'Pondok Pesantren Al-Hikmah Terpadu',
@@ -309,7 +335,11 @@ export function isLeaderActor(roleKey: string): boolean {
 }
 
 export function isStaffActor(roleKey: string): boolean {
-  return ['guru', 'guru_akhwat', 'musyrif', 'musyrifah', 'laundry', 'dapur', 'satpam', 'kasir', 'staf_hrd'].includes(roleKey);
+  return ['pegawai', 'guru', 'guru_akhwat', 'musyrif', 'musyrifah', 'laundry', 'dapur', 'satpam', 'kasir', 'staf_hrd'].includes(roleKey);
+}
+
+export function isWaliActor(roleKey: string): boolean {
+  return roleKey === 'wali_santri';
 }
 
 const SESSION_ACTOR_STORAGE_KEY = 'ks_active_session_actor_v1';

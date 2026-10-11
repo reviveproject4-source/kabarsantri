@@ -165,7 +165,7 @@ export default function DisiplinRewardPage() {
               Paket Tier 1 (Free 50 Santri Included)
             </span>
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
-              Pilar Karakter & Asrama
+              Karakter &amp; Asrama
             </span>
           </div>
           <h1 className="text-xl font-bold text-slate-800">Tugas Guru & Musyrif: Adab, Reward & Disiplin Santri</h1>

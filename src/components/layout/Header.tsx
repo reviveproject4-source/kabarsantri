@@ -222,94 +222,49 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
   };
 
   const roles = [
-    // --- KELOMPOK PIMPINAN (6 PILAR UTAMA) ---
-    { id: 'yayasan', category: 'PIMPINAN', label: '1. Ketua Yayasan', dept: 'Executive EIS', name: 'KH. Abdullah Faqih, Lc.', nip: 'PEG-YYS-001' },
-    { id: 'wakil_yayasan', category: 'PIMPINAN', label: '2. Wakil Ketua Yayasan', dept: 'Approval Tower', name: 'Drs. H. M. Mansyur, M.Pd.', nip: 'PEG-YYS-002' },
-    { id: 'kepala_kepegawaian', category: 'PIMPINAN', label: '3. Kepala HRD', dept: 'Approval Cuti & SDM', name: 'Ust. Ir. Faisal Rahman, M.M.', nip: 'PEG-HRD-001' },
-    { id: 'keuangan', category: 'PIMPINAN', label: '4. Kepala Keuangan', dept: 'Kompensasi & Kas', name: 'Ust. Ahmad Dahlan, S.E.', nip: 'PEG-KEU-001' },
-    { id: 'mudir', category: 'PIMPINAN', label: '5. Mudir Madrasah', dept: 'KBM Guru & Santri', name: 'Dr. KH. Mahmud Ridwan, M.A.', nip: 'PEG-MDR-001' },
-    { id: 'kepala_rumah_tangga', category: 'PIMPINAN', label: '6. Ka. Rumah Tangga', dept: 'Fasilitas & Sarpras', name: 'Pak Subandi, S.T.', nip: 'PEG-RT-001' },
-    
-    // --- KELOMPOK TIM PEGAWAI / STAF OPERASIONAL ---
-    { id: 'guru', category: 'PEGAWAI', label: '7a. Guru Putra (Ikhwan)', dept: 'KBM Putra', name: 'Ust. Lukman Hakim, M.Kom.', nip: 'PEG-GRU-001' },
-    { id: 'guru_akhwat', category: 'PEGAWAI', label: '7b. Guru Putri (Akhwat)', dept: 'KBM Putri', name: 'Usth. Fatimah Az-Zahra, S.Pd.', nip: 'PEG-GRU-002' },
-    { id: 'musyrif', category: 'PEGAWAI', label: '8a. Musyrif Asrama Putra', dept: 'Asrama Putra', name: 'Ust. Hamzah al-Bantani', nip: 'PEG-MSR-001' },
-    { id: 'musyrifah', category: 'PEGAWAI', label: '8b. Musyrifah Asrama Putri', dept: 'Asrama Putri', name: 'Usth. Siti Khadijah, S.Pd.I.', nip: 'PEG-MSR-002' },
-    { id: 'laundry', category: 'PEGAWAI', label: '9a. Staf Laundry', dept: 'Unit Laundry', name: 'Ibu Sumiati', nip: 'NIP.LND.2021.013' },
-    { id: 'dapur', category: 'PEGAWAI', label: '9b. Staf Dapur & Gizi', dept: 'Konsumsi Santri', name: 'Pak Slamet', nip: 'NIP.DPR.2022.019' },
-    { id: 'satpam', category: 'PEGAWAI', label: '9c. Satpam Gerbang', dept: 'Pos Keamanan', name: 'Pak Subandi', nip: 'NIP.SEC.2020.005' },
-    { id: 'kasir', category: 'PEGAWAI', label: '10. Staf Kasir SPP', dept: 'Loket Keuangan', name: 'Mbak Anisa, A.Md.', nip: 'NIP.KEU.2023.041' },
-    { id: 'staf_hrd', category: 'PEGAWAI', label: '11. Staf Admin HRD', dept: 'Presensi & SDM', name: 'Ust. Wildan Pratama', nip: 'NIP.HRD.2024.055' },
-
-    // --- SUPER ADMIN ---
-    { id: 'super_admin', category: 'SYSTEM', label: '★ Super Admin (Platform)', dept: 'Onboarding Tenant', name: 'Super Admin KabarSantri', nip: 'ROOT-SYS-001' },
+    {
+      id: 'yayasan',
+      label: 'Yayasan',
+      title: 'Pimpinan Yayasan',
+      name: 'KH. Abdullah Faqih, Lc.',
+      nip: 'PEG-YYS-001',
+      dept: 'Yayasan & Manajemen Eksekutif',
+      icon: '🏛️'
+    },
+    {
+      id: 'pegawai',
+      label: 'Pegawai',
+      title: 'Guru & Tenaga Kependidikan',
+      name: 'Ust. Lukman Hakim, M.Kom.',
+      nip: 'PEG-GRU-001',
+      dept: 'KBM, Tahfidz & Kepegawaian',
+      icon: '👨‍🏫'
+    },
+    {
+      id: 'wali_santri',
+      label: 'Wali Santri',
+      title: 'Wali Santri / Orang Tua',
+      name: 'H. Ahmad Fauzi',
+      nip: 'WALI-2026-001',
+      dept: 'Portal Informasi Orang Tua',
+      icon: '👨‍👩‍👧',
+      href: '/portal-wali'
+    },
   ];
 
-  const handleSwitchRole = (roleId: any) => {
+  const handleSwitchRole = (roleId: string) => {
     setActiveRole(roleId);
     setActiveActorByRole(roleId);
     setDropdownOpen(false);
+    if (roleId === 'wali_santri') {
+      window.location.href = '/portal-wali';
+    }
   };
 
   const currentRoleObj = roles.find(r => r.id === activeRole) || roles[0];
 
   return (
     <>
-      {/* JALUR BANNER: Ringkas, Bersih, Sesuai Warna Logo (Biru Tua) */}
-      {isDemo ? (
-        <div className="bg-blue-900 dark:bg-slate-950 text-white px-3 sm:px-6 py-1.5 text-xs font-semibold flex items-center justify-between border-b border-blue-800 dark:border-slate-800 z-20">
-          <div className="flex items-center space-x-2 truncate">
-            <span className="bg-blue-600 text-white px-1.5 py-0.5 rounded text-[10px] font-black shrink-0 uppercase tracking-wide">
-              Jalur Demo
-            </span>
-            <span className="truncate text-blue-100 text-[11px] sm:text-xs">
-              Simulasi 6-Pilar • Pondok Al-Hikmah (12 Peran Aktif)
-            </span>
-          </div>
-          <button 
-            onClick={() => {
-              setAppModeState('tenant', 'tenant-rabu-001');
-              if (typeof window !== 'undefined') {
-                const url = new URL(window.location.href);
-                url.searchParams.delete('mode');
-                url.searchParams.set('mode', 'tenant');
-                window.location.href = url.toString();
-              }
-            }}
-            className="ml-2 bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-md transition shrink-0 whitespace-nowrap shadow-xs"
-            title="Masuk ke Jalur Tenant Lembaga Resmi"
-          >
-            Masuk Tenant Resmi ➔
-          </button>
-        </div>
-      ) : (
-        <div className="bg-blue-950 dark:bg-slate-950 text-white px-3 sm:px-6 py-1.5 text-xs font-semibold flex items-center justify-between border-b border-blue-900 dark:border-slate-800 z-20">
-          <div className="flex items-center space-x-2 truncate">
-            <span className="bg-blue-600 text-white px-1.5 py-0.5 rounded text-[10px] font-black shrink-0 uppercase tracking-wide">
-              Tenant Live
-            </span>
-            <span className="truncate text-blue-100 text-[11px] sm:text-xs">
-              {tenant.name} • Jalur Resmi ({santriCount}/50 Santri)
-            </span>
-          </div>
-          <button 
-            onClick={() => {
-              setAppModeState('demo');
-              if (typeof window !== 'undefined') {
-                const url = new URL(window.location.href);
-                url.searchParams.delete('mode');
-                url.searchParams.set('mode', 'demo');
-                window.location.href = url.toString();
-              }
-            }}
-            className="ml-2 bg-blue-800/80 hover:bg-blue-700 border border-blue-600/50 text-blue-100 text-[11px] font-bold px-2.5 py-1 rounded-md transition shrink-0 whitespace-nowrap"
-            title="Beralih ke Demo 6-Pilar"
-          >
-            Beralih ke Demo ➔
-          </button>
-        </div>
-      )}
-
       {/* MAIN HEADER NAVBAR */}
       <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-2.5 sm:px-6 flex items-center justify-between z-10 select-none w-full max-w-full overflow-hidden transition-colors">
         {/* Left: Hamburger, App Logo (Logo Resmi), & Tenant Badge */}
@@ -369,105 +324,52 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
         </div>
 
         {/* Right Controls: Role Switcher, Dark/Light Mode, & Actions */}
-        <div className="flex items-center space-x-1 sm:space-x-2 shrink-0">
-          {/* Point 1: Role Switcher Context (Demo) OR Tenant Badge (Tenant) */}
-          {isTenantActive ? (
-            <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-blue-50 dark:bg-blue-950/50 text-blue-900 dark:text-blue-200 rounded-lg border border-blue-200 dark:border-blue-800">
-              <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-              <div className="flex flex-col text-left">
-                <span className="text-[11px] font-extrabold leading-tight">Admin Lembaga</span>
-                <span className="text-[9px] text-blue-700 dark:text-blue-300 font-semibold leading-tight">{santriCount}/50 Santri</span>
-              </div>
-            </div>
-          ) : (
-            <div className="relative">
-              <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center space-x-1 px-2 py-1.5 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-900 dark:text-blue-200 text-[11px] sm:text-xs font-semibold rounded-lg border border-blue-200 dark:border-blue-800 transition"
-                title="Ganti Peran Uji Coba"
-              >
-                <RefreshCw className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-                <span className="max-w-[65px] sm:max-w-none truncate">{currentRoleObj?.label.replace(/^\d+\w*\.\s*/, '').split('(')[0].trim()}</span>
-                <ChevronDown className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" />
-              </button>
+        <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+          {/* Role Switcher: 3 Commercial Roles */}
+          <div className="relative">
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="flex items-center space-x-1 px-2.5 py-1.5 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-900 dark:text-blue-200 text-xs font-semibold rounded-lg border border-blue-200 dark:border-blue-800 transition"
+              title="Ganti Peran Pengguna"
+            >
+              <span className="text-sm">{currentRoleObj?.icon || '🏛️'}</span>
+              <span className="font-bold">{currentRoleObj?.label || 'Yayasan'}</span>
+              <ChevronDown className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0 ml-0.5" />
+            </button>
 
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-20px)] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-2.5 z-50 animate-in fade-in zoom-in-95 duration-100">
-                  <div className="px-3 py-1.5 text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 mb-1">
-                    <span>Pilih Peran Demo:</span>
-                    <span className="text-[10px] bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded-full font-bold">12 Akun</span>
-                  </div>
-                  <div className="space-y-1 max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
-                    {/* Kelompok Pimpinan */}
-                    <div className="pt-1">
-                      <span className="text-[10px] font-black text-blue-800 dark:text-blue-300 uppercase tracking-wider px-2 py-1 block">
-                        🏛️ PIMPINAN (6 PILAR)
-                      </span>
-                      {roles.filter(r => r.category === 'PIMPINAN').map((r) => (
-                        <button
-                          key={r.id}
-                          onClick={() => handleSwitchRole(r.id)}
-                          className={`w-full text-left px-2.5 py-1.5 text-xs rounded-xl flex flex-col transition my-0.5 ${
-                            activeRole === r.id
-                              ? 'bg-blue-600 text-white font-medium shadow-xs'
-                              : 'text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-800'
-                          }`}
-                        >
-                          <span className="font-bold text-[11px]">{r.label}</span>
-                          <span className={`text-[10px] ${activeRole === r.id ? 'text-blue-100' : 'text-slate-400'}`}>
-                            {r.name} • {r.dept}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Kelompok Staf Pegawai */}
-                    <div className="pt-2">
-                      <span className="text-[10px] font-black text-blue-700 dark:text-blue-400 uppercase tracking-wider px-2 py-1 block">
-                        👷 STAF & PEGAWAI OPERASIONAL
-                      </span>
-                      {roles.filter(r => r.category === 'PEGAWAI').map((r) => (
-                        <button
-                          key={r.id}
-                          onClick={() => handleSwitchRole(r.id)}
-                          className={`w-full text-left px-2.5 py-1.5 text-xs rounded-xl flex flex-col transition my-0.5 ${
-                            activeRole === r.id
-                              ? 'bg-blue-600 text-white font-medium shadow-xs'
-                              : 'text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-800'
-                          }`}
-                        >
-                          <span className="font-bold text-[11px]">{r.label}</span>
-                          <span className={`text-[10px] ${activeRole === r.id ? 'text-blue-100' : 'text-slate-400'}`}>
-                            {r.name} • {r.dept}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Super Admin */}
-                    <div className="pt-2">
-                      {roles.filter(r => r.category === 'SYSTEM').map((r) => (
-                        <button
-                          key={r.id}
-                          onClick={() => handleSwitchRole(r.id)}
-                          className={`w-full text-left px-2.5 py-1.5 text-xs rounded-xl flex flex-col transition my-0.5 ${
-                            activeRole === r.id
-                              ? 'bg-slate-900 text-white font-medium shadow-xs'
-                              : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                          }`}
-                        >
-                          <span className="font-bold text-[11px]">{r.label}</span>
-                          <span className={`text-[10px] ${activeRole === r.id ? 'text-slate-300' : 'text-slate-400'}`}>
-                            {r.dept}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-20px)] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-2 z-50 animate-in fade-in zoom-in-95 duration-100">
+                <div className="px-3 py-1.5 text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 mb-1">
+                  <span>Pilih Peran:</span>
+                  <span className="text-[10px] bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded-full font-bold">3 Peran Utama</span>
                 </div>
-              )}
-            </div>
-          )}
+                <div className="space-y-1">
+                  {roles.map((r) => (
+                    <button
+                      key={r.id}
+                      onClick={() => handleSwitchRole(r.id)}
+                      className={`w-full text-left p-2.5 rounded-xl flex items-center space-x-3 transition ${
+                        activeRole === r.id
+                          ? 'bg-blue-600 text-white font-medium shadow-xs'
+                          : 'text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <span className="text-xl shrink-0">{r.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-xs">{r.label}</span>
+                          {activeRole === r.id && <Check className="w-3.5 h-3.5 text-white" />}
+                        </div>
+                        <span className={`text-[10px] block truncate ${activeRole === r.id ? 'text-blue-100' : 'text-slate-400'}`}>
+                          {r.title} • {r.name}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* THEME TOGGLE (DARK MODE / LIGHT MODE) */}
           <button
@@ -488,18 +390,6 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
             )}
           </button>
 
-          {/* Desktop-Only: Super Admin Console Link (Demo-Only) */}
-          {!isTenantActive && (
-            <Link
-              href="/super-admin"
-              className="hidden sm:flex p-1.5 sm:px-2.5 text-blue-700 dark:text-blue-300 hover:text-blue-900 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg border border-blue-200 dark:border-blue-800 text-xs font-bold items-center space-x-1 transition shadow-2xs shrink-0"
-              title="Super Admin: Onboarding Tenant & Kuota"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-              <span className="text-[11px]">Super Admin</span>
-            </Link>
-          )}
-
           {/* Desktop-Only: Multi-Device Sync */}
           <button
             onClick={() => setSyncModalOpen(true)}
@@ -510,7 +400,7 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
             <span className="text-[11px]">Sync</span>
           </button>
 
-          {/* Mobile Clickable More Actions Menu (Menghemat Layar agar Tidak Penuh) */}
+          {/* Mobile Clickable More Actions Menu */}
           <div className="relative sm:hidden">
             <button
               onClick={() => setMobileActionsOpen(!mobileActionsOpen)}
@@ -522,16 +412,6 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
 
             {mobileActionsOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 p-1.5 z-50">
-                {!isTenantActive && (
-                  <Link
-                    href="/super-admin"
-                    onClick={() => setMobileActionsOpen(false)}
-                    className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg flex items-center space-x-2"
-                  >
-                    <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Super Admin</span>
-                  </Link>
-                )}
                 <button
                   onClick={() => {
                     setMobileActionsOpen(false);
@@ -560,12 +440,12 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
           {/* Profile Avatar */}
           <div className="flex items-center space-x-1.5 sm:space-x-2 pl-1 sm:pl-2 border-l border-slate-200 dark:border-slate-800">
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-700 text-white flex items-center justify-center font-bold text-[11px] sm:text-xs shadow-xs uppercase shrink-0">
-              {isTenantActive ? 'NH' : currentRoleObj.name.split(' ').slice(0, 2).map((n: string) => n[0]).join('')}
+              {currentRoleObj?.id === 'yayasan' ? 'YY' : currentRoleObj?.id === 'pegawai' ? 'PG' : 'WS'}
             </div>
             <div className="hidden lg:block text-left text-xs">
-              <div className="font-bold text-slate-800 dark:text-slate-200">{isTenantActive ? 'Administrator Lembaga' : currentRoleObj.name}</div>
+              <div className="font-bold text-slate-800 dark:text-slate-200">{currentRoleObj?.title}</div>
               <div className="text-[10px] text-slate-400">
-                {isTenantActive ? 'Admin Lembaga' : currentRoleObj.dept}
+                {currentRoleObj?.name}
               </div>
             </div>
             <Link 

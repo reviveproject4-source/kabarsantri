@@ -368,7 +368,7 @@ export default function SuperAdminOnboardingPage() {
                         <div className="text-[10px] text-slate-500">
                           {isTier1 
                             ? '✓ Hafalan + Adab + Reward + Pelanggaran + Wali' 
-                            : '✓ Full 6-Pilar (KBM, HRD, Keuangan, RT)'}
+                            : '✓ Full ERP Modular (KBM, HRD, Keuangan, RT)'}
                         </div>
                       </td>
 
@@ -539,7 +539,7 @@ export default function SuperAdminOnboardingPage() {
                     </div>
                     <div className="text-[11px] font-semibold text-slate-700">Kuota: 250 Santri</div>
                     <p className="text-[10px] text-slate-500 leading-tight">
-                      Fitur: 6 Pilar Lengkap (KBM, HRD, Keuangan, dan Rumah Tangga).
+                      Fitur: Modul Lengkap (KBM, HRD, Keuangan, dan Rumah Tangga).
                     </p>
                   </div>
                 </div>

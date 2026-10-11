@@ -248,28 +248,28 @@ export default function LoginPage() {
               <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 rounded-xl p-4 text-blue-950 dark:text-blue-200 space-y-2">
                 <div className="flex items-center space-x-2 font-bold text-sm text-blue-900 dark:text-blue-300">
                   <FlaskConical className="w-4 h-4 text-blue-600 shrink-0" />
-                  <span>Simulasi Lengkap 6-Pilar Pesantren</span>
+                  <span>Uji Coba Sistem KabarSantri</span>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Akses langsung seluruh fitur backoffice dengan 12 peran aktif tanpa login kata sandi.
+                  Akses langsung seluruh fitur backoffice untuk peran Yayasan, Pegawai, dan Wali Santri.
                 </p>
 
                 <div className="grid grid-cols-2 gap-1.5 pt-2 text-[11px] font-medium text-slate-700 dark:text-slate-300">
                   <div className="flex items-center space-x-1.5 bg-white dark:bg-slate-800 p-1.5 rounded border border-blue-100 dark:border-slate-700">
                     <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                    <span>450 Santri</span>
+                    <span>Peran Yayasan</span>
                   </div>
                   <div className="flex items-center space-x-1.5 bg-white dark:bg-slate-800 p-1.5 rounded border border-blue-100 dark:border-slate-700">
                     <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                    <span>12 Peran Aktif</span>
+                    <span>Peran Pegawai</span>
                   </div>
                   <div className="flex items-center space-x-1.5 bg-white dark:bg-slate-800 p-1.5 rounded border border-blue-100 dark:border-slate-700">
                     <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                    <span>Scanner Gerbang</span>
+                    <span>Portal Wali Santri</span>
                   </div>
                   <div className="flex items-center space-x-1.5 bg-white dark:bg-slate-800 p-1.5 rounded border border-blue-100 dark:border-slate-700">
                     <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                    <span>Approval 6-Pilar</span>
+                    <span>Tata Kelola Lembaga</span>
                   </div>
                 </div>
               </div>
@@ -281,7 +281,7 @@ export default function LoginPage() {
                 className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-lg shadow-sm flex items-center justify-center space-x-2 transition"
               >
                 <FlaskConical className="w-4 h-4" />
-                <span>{loading ? 'Menyiapkan Demo...' : 'Mulai Demo 6-Pilar ➔'}</span>
+                <span>{loading ? 'Menyiapkan Sistem...' : 'Mulai Eksplorasi Sistem ➔'}</span>
               </button>
             </div>
           ) : (

@@ -588,12 +588,12 @@ export default function DashboardKepalaSekolahPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header Mudir - Pilar 5 Governance */}
+      {/* Header Mudir - Manajemen Akademik */}
       <div className="bg-gradient-to-r from-emerald-800 to-teal-900 text-white rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2 flex-wrap gap-1">
             <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-700/80 border border-emerald-500/40">
-              PILAR 5: MUDIR / KEPALA SEKOLAH
+              MUDIR / KEPALA SEKOLAH (AKADEMIK)
             </span>
             <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-teal-950/60 text-teal-200 border border-teal-500/30">
               Domain: Akademik & Proses KBM (Guru & Santri)
@@ -1154,7 +1154,7 @@ export default function DashboardKepalaSekolahPage() {
                   <h3 className="font-bold text-slate-800 text-sm">Supervisi Asatidz & Penugasan Guru Pengganti (Inval)</h3>
                 </div>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Sesuai 6-Pilar Governance: Cuti di-ACC oleh HRD. Mudir menerima notifikasi untuk menugaskan Guru Pengganti (Inval) agar KBM santri tidak kosong.
+                  Sesuai Tata Kelola Lembaga: Cuti disetujui oleh HRD. Mudir menerima notifikasi untuk menugaskan Guru Pengganti (Inval) agar KBM santri tidak kosong.
                 </p>
               </div>
 

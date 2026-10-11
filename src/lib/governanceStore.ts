@@ -59,7 +59,7 @@ export const SIX_GOVERNANCE_PILLARS: GovernancePillar[] = [
   {
     id: 'pilar-1',
     pillar_number: 1,
-    name: 'PILAR 1: KETUA YAYASAN',
+    name: 'KETUA YAYASAN',
     leader_title: 'Ketua Yayasan',
     role_key: 'ketua_yayasan',
     scope: 'Strategic Governance & Executive Oversight',
@@ -78,7 +78,7 @@ export const SIX_GOVERNANCE_PILLARS: GovernancePillar[] = [
   {
     id: 'pilar-2',
     pillar_number: 2,
-    name: 'PILAR 2: WAKIL KETUA YAYASAN',
+    name: 'WAKIL KETUA YAYASAN',
     leader_title: 'Wakil Ketua Yayasan',
     role_key: 'wakil_yayasan',
     scope: 'Operational Control Tower & Cross-Domain Oversight',
@@ -96,7 +96,7 @@ export const SIX_GOVERNANCE_PILLARS: GovernancePillar[] = [
   {
     id: 'pilar-3',
     pillar_number: 3,
-    name: 'PILAR 3: KEPALA BAGIAN KEPEGAWAIAN (HRD)',
+    name: 'KEPALA BAGIAN KEPEGAWAIAN (HRD)',
     leader_title: 'Kepala Bagian Kepegawaian',
     role_key: 'kepala_kepegawaian',
     scope: 'People Management & Employee Governance',
@@ -114,7 +114,7 @@ export const SIX_GOVERNANCE_PILLARS: GovernancePillar[] = [
   {
     id: 'pilar-4',
     pillar_number: 4,
-    name: 'PILAR 4: KEPALA BAGIAN KEUANGAN (FINANCE)',
+    name: 'KEPALA BAGIAN KEUANGAN (FINANCE)',
     leader_title: 'Kepala Bagian Keuangan',
     role_key: 'keuangan',
     scope: 'Financial Ledger, Cashflow & Compensation Execution',
@@ -132,7 +132,7 @@ export const SIX_GOVERNANCE_PILLARS: GovernancePillar[] = [
   {
     id: 'pilar-5',
     pillar_number: 5,
-    name: 'PILAR 5: MUDIR / KEPALA SEKOLAH',
+    name: 'MUDIR / KEPALA SEKOLAH',
     leader_title: 'Mudir Pesantren / Kepala Madrasah',
     role_key: 'mudir',
     scope: 'Akademik, Proses KBM, Guru & Santri',
@@ -152,7 +152,7 @@ export const SIX_GOVERNANCE_PILLARS: GovernancePillar[] = [
   {
     id: 'pilar-6',
     pillar_number: 6,
-    name: 'PILAR 6: KEPALA BAGIAN RUMAH TANGGA',
+    name: 'KEPALA BAGIAN RUMAH TANGGA',
     leader_title: 'Kepala Bagian Rumah Tangga',
     role_key: 'kepala_rumah_tangga',
     scope: 'Operasional Fasilitas, Sarpras, Aset & Logistik',
@@ -262,7 +262,7 @@ export const ROLE_PERMISSIONS: Record<string, PermissionToken[]> = {
     // NO hr.leave.approve, NO finance.compensation.read!
   ],
 
-  // 5. Mudir (Pilar 5): PENDIDIKAN & PROSES KBM (GURU & SANTRI)
+  // 5. Mudir: PENDIDIKAN & PROSES KBM (GURU & SANTRI)
   mudir: [
     'kbm.academic.manage',
     'kbm.teacher.supervise',

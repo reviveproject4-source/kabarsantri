@@ -25,10 +25,10 @@ export const BACKOFFICE_NAVIGATION: NavItem[] = [
     href: '/dashboard',
     icon: 'LayoutDashboard',
     children: [
-      { title: 'Overview Backoffice', href: '/dashboard' },
-      { title: 'Dashboard Ketua Yayasan', href: '/dashboard/yayasan', badge: 'Executive' },
-      { title: 'Dashboard Wakil Ketua Yayasan', href: '/dashboard/wakil-yayasan', badge: 'Operasional' },
-      { title: 'Dashboard Kepala Sekolah (Mudir)', href: '/dashboard/mudir', badge: 'KBM' },
+      { title: 'Dashboard Utama', href: '/dashboard' },
+      { title: 'Dashboard Yayasan', href: '/dashboard/yayasan' },
+      { title: 'Persetujuan & Kebijakan', href: '/dashboard/wakil-yayasan' },
+      { title: 'Dashboard Akademik', href: '/dashboard/mudir' },
     ],
   },
   {
@@ -41,26 +41,26 @@ export const BACKOFFICE_NAVIGATION: NavItem[] = [
     ],
   },
   {
-    title: 'Absensi & Presensi Santri',
+    title: 'Absensi & Presensi',
     href: '/presensi',
     icon: 'UserCheck',
     productCode: 'presensi',
     children: [
-      { title: 'Absen Santri (Musyrif/Guru)', href: '/presensi/santri', productCode: 'presensi' },
-      { title: 'Absen Diri Pribadi', href: '/presensi/diri', productCode: 'presensi' },
+      { title: 'Absen Santri', href: '/presensi/santri', productCode: 'presensi' },
+      { title: 'Absen Diri Pegawai', href: '/presensi/diri', productCode: 'presensi' },
     ],
   },
   {
-    title: 'e-Rapot & Penilaian KBM',
+    title: 'Penilaian KBM',
     href: '/akademik/nilai',
     icon: 'GraduationCap',
     productCode: 'rapot',
     children: [
-      { title: 'Nilai Pelajaran KBM (Guru)', href: '/akademik/nilai', productCode: 'rapot' },
+      { title: 'Nilai Pelajaran KBM', href: '/akademik/nilai', productCode: 'rapot' },
     ],
   },
   {
-    title: 'e-Adab & Kedisiplinan',
+    title: 'Kedisiplinan & Adab',
     href: '/akademik/disiplin',
     icon: 'BookOpen',
     productCode: 'adab',
@@ -75,24 +75,24 @@ export const BACKOFFICE_NAVIGATION: NavItem[] = [
     href: '/santri',
     icon: 'GraduationCap',
     children: [
-      { title: 'Data Induk Santri (Maks 50)', href: '/santri/list' },
+      { title: 'Data Induk Santri', href: '/santri/list' },
       { title: 'Tambah Santri Baru', href: '/santri/create' },
       { title: 'Wali Santri & Akun PIN', href: '/wali/list' },
-      { title: 'Assign Kelas & Rombel (Mudir)', href: '/dashboard/mudir?tab=assign_kelas' },
-      { title: 'Perizinan & QR Gate Pass', href: '/akademik/perizinan', productCode: 'izin' },
+      { title: 'Rombel & Kelas Santri', href: '/dashboard/mudir?tab=assign_kelas' },
+      { title: 'Perizinan Santri', href: '/akademik/perizinan', productCode: 'izin' },
     ],
   },
   {
-    title: 'Kepegawaian & SDM (HRD)',
+    title: 'Kepegawaian & SDM',
     href: '/kepegawaian',
     icon: 'Users',
     productCode: 'hrd',
     children: [
-      { title: 'Pusat Kepegawaian & Direktori', href: '/kepegawaian', productCode: 'hrd', badge: 'HRD' },
+      { title: 'Direktori Kepegawaian', href: '/kepegawaian', productCode: 'hrd' },
       { title: 'Manajemen Cuti & Izin', href: '/kepegawaian?tab=cuti', productCode: 'hrd' },
-      { title: 'Evaluasi Kinerja & Eviden', href: '/kepegawaian?tab=kinerja', productCode: 'hrd' },
+      { title: 'Evaluasi Kinerja', href: '/kepegawaian?tab=kinerja', productCode: 'hrd' },
       { title: 'Disiplin & Berita Acara', href: '/kepegawaian?tab=disiplin', productCode: 'hrd' },
-      { title: 'Clearance 4-Pintu (Offboarding)', href: '/kepegawaian?tab=offboarding', productCode: 'hrd' },
+      { title: 'Offboarding Pegawai', href: '/kepegawaian?tab=offboarding', productCode: 'hrd' },
     ],
   },
   {
@@ -101,12 +101,12 @@ export const BACKOFFICE_NAVIGATION: NavItem[] = [
     icon: 'Wallet',
     productCode: 'finance',
     children: [
-      { title: 'Validasi Bukti Transfer', href: '/finance/validasi', productCode: 'finance', badge: 'Verifikasi' },
-      { title: 'Pengeluaran & Approval Dana', href: '/finance/pengeluaran', productCode: 'finance', badge: 'Pengeluaran' },
-      { title: 'Atur Batas Threshold Mandiri', href: '/finance/pengaturan-threshold', productCode: 'finance' },
+      { title: 'Validasi Pembayaran SPP', href: '/finance/validasi', productCode: 'finance' },
+      { title: 'Pengeluaran & Anggaran', href: '/finance/pengeluaran', productCode: 'finance' },
+      { title: 'Batas Mandiri Persetujuan', href: '/finance/pengaturan-threshold', productCode: 'finance' },
       { title: 'Tagihan & SPP Santri', href: '/finance/spp', productCode: 'finance' },
       { 
-        title: 'Uang Jajan Santri (Kantin)', 
+        title: 'Uang Saku Santri', 
         href: '/finance/uang-jajan', 
         productCode: 'finance',
         featureFlag: 'enable_uang_jajan',
@@ -114,24 +114,21 @@ export const BACKOFFICE_NAVIGATION: NavItem[] = [
     ],
   },
   {
-    title: 'Rumah Tangga & Sarpras',
+    title: 'Sarana & Prasarana',
     href: '/rumah-tangga',
     icon: 'Utensils',
     productCode: 'rumah_tangga',
     children: [
-      { title: 'Hub Fasilitas & Gudang RT', href: '/rumah-tangga', productCode: 'rumah_tangga', badge: 'Operasional' },
-      { title: 'Pengajuan Kebutuhan Dana RT', href: '/rumah-tangga/pengajuan', productCode: 'rumah_tangga', badge: 'Keuangan' },
+      { title: 'Fasilitas & Gudang Logistik', href: '/rumah-tangga', productCode: 'rumah_tangga' },
+      { title: 'Pengajuan Fasilitas', href: '/rumah-tangga/pengajuan', productCode: 'rumah_tangga' },
     ],
   },
   {
-    title: 'Super Admin Onboarding',
-    href: '/super-admin',
-    icon: 'ShieldCheck',
-    superAdminOnly: true,
+    title: 'Portal Wali Santri',
+    href: '/portal-wali',
+    icon: 'Users',
     children: [
-      { title: 'Onboarding Tenant Baru (Rabu)', href: '/super-admin', badge: 'Super Admin' },
-      { title: 'Daftar Tenant & Kuota Santri', href: '/super-admin?tab=tenants' },
-      { title: 'Kirim Kredensial via WA', href: '/super-admin?tab=broadcast' },
+      { title: 'Portal Wali Santri', href: '/portal-wali' },
     ],
   },
   {
@@ -142,11 +139,21 @@ export const BACKOFFICE_NAVIGATION: NavItem[] = [
       { title: 'Ringkasan Eksekutif', href: '/laporan/ringkasan' },
     ],
   },
+  {
+    title: 'Super Admin Onboarding',
+    href: '/super-admin',
+    icon: 'ShieldCheck',
+    superAdminOnly: true,
+    children: [
+      { title: 'Onboarding Tenant Baru', href: '/super-admin' },
+      { title: 'Daftar Tenant & Kuota', href: '/super-admin?tab=tenants' },
+    ],
+  },
 ];
 
 /**
- * Filter navigasi secara dinamis berdasarkan Feature Flags dan Tenant Product Entitlements.
- * Jalur Tenant Live terisolasi 100% dan TIDAK PERNAH menampilkan menu Super Admin.
+ * Filter navigasi secara dinamis berdasarkan Feature Flags, Entitlement, dan Peran Aktif.
+ * Mendukung 3 Peran Komersial Utama: Yayasan, Pegawai, dan Wali Santri.
  */
 export function getFilteredNavigation(
   tenantId?: string,
@@ -155,6 +162,36 @@ export function getFilteredNavigation(
   isTenant?: boolean
 ): NavItem[] {
   const isTenantActive = isTenant ?? (typeof window !== 'undefined' ? (window.location.search.includes('mode=tenant') || document.cookie.includes('ks_app_mode=tenant')) : false);
+
+  // Khusus peran Wali Santri: langsung fokus ke Portal Wali Santri
+  if (activeRole === 'wali_santri') {
+    return [
+      {
+        title: 'Portal Orang Tua',
+        href: '/portal-wali',
+        icon: 'Users',
+        children: [
+          { title: 'Portal Wali Santri', href: '/portal-wali' },
+        ],
+      },
+    ];
+  }
+
+  // Khusus peran Pegawai: fokus ke operasional KBM, Presensi, Tahfidz, Kedisiplinan & Cuti
+  if (activeRole === 'pegawai') {
+    return BACKOFFICE_NAVIGATION.filter(item => {
+      const allowed = ['/dashboard', '/akademik/tahfidz', '/presensi', '/akademik/nilai', '/akademik/disiplin', '/kepegawaian'];
+      return allowed.includes(item.href);
+    }).map(item => {
+      if (item.href === '/dashboard' && item.children) {
+        return {
+          ...item,
+          children: item.children.filter(c => c.href === '/dashboard')
+        };
+      }
+      return item;
+    });
+  }
 
   return BACKOFFICE_NAVIGATION
     .filter(item => {
@@ -201,7 +238,6 @@ export function getFilteredNavigation(
       };
     })
     .filter(item => {
-      // Remove group if all its children were filtered out
       if (item.children && item.children.length === 0) {
         return false;
       }

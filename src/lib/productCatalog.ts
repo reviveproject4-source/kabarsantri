@@ -63,7 +63,7 @@ export const MODULAR_PRODUCT_CATALOG: Record<ProductCode, ModularProduct> = {
       'Laporan Hasil Hafalan per Santri',
       'Laporan Kelompok / Halaqah'
     ],
-    governancePillarRole: 'mudir' // Pilar 5: Mudir KBM & Tahfidz
+    governancePillarRole: 'mudir'
   },
 
   presensi: {
@@ -82,7 +82,7 @@ export const MODULAR_PRODUCT_CATALOG: Record<ProductCode, ModularProduct> = {
       'Riwayat & Rekapitulasi Presensi',
       'Laporan Kehadiran Santri Bulanan'
     ],
-    governancePillarRole: 'mudir' // Pilar 5: Mudir / Kesantrian
+    governancePillarRole: 'mudir'
   },
 
   rapot: {
@@ -100,7 +100,7 @@ export const MODULAR_PRODUCT_CATALOG: Record<ProductCode, ModularProduct> = {
       'Evaluasi Remedial KBM',
       'Rekapitulasi Nilai & e-Rapot Santri'
     ],
-    governancePillarRole: 'mudir' // Pilar 5: Mudir
+    governancePillarRole: 'mudir'
   },
 
   adab: {
@@ -118,7 +118,7 @@ export const MODULAR_PRODUCT_CATALOG: Record<ProductCode, ModularProduct> = {
       'Rekomendasi Tindakan & Iqob Edukatif',
       'Laporan Perkembangan Akhlak Santri'
     ],
-    governancePillarRole: 'mudir' // Pilar 5: Mudir / Kesantrian
+    governancePillarRole: 'mudir'
   },
 
   izin: {
@@ -136,7 +136,7 @@ export const MODULAR_PRODUCT_CATALOG: Record<ProductCode, ModularProduct> = {
       'Scanner Check-Out & Check-In Pos Satpam',
       'Deteksi Terlambat & Case Review Keterlambatan'
     ],
-    governancePillarRole: 'mudir' // Pilar 5: Mudir / Kesantrian & RT
+    governancePillarRole: 'mudir'
   },
 
   hrd: {
@@ -155,7 +155,7 @@ export const MODULAR_PRODUCT_CATALOG: Record<ProductCode, ModularProduct> = {
       'Alur 4-Pintu Clearance Offboarding (RT, Keuangan, HRD, IT)',
       'Enforcement Section 7 Gaji Terkunci (Zero Leakage)'
     ],
-    governancePillarRole: 'kepala_kepegawaian' // Pilar 3: Ka. HRD
+    governancePillarRole: 'kepala_kepegawaian'
   },
 
   finance: {
@@ -180,7 +180,7 @@ export const MODULAR_PRODUCT_CATALOG: Record<ProductCode, ModularProduct> = {
       'Batas Kewenangan Pengeluaran Dana Yayasan',
       'Buku Besar Double-Entry Kas & Pendapatan SPP'
     ],
-    governancePillarRole: 'keuangan' // Pilar 4: Ka. Keuangan & Pilar 2: Wakil Yayasan
+    governancePillarRole: 'keuangan'
   },
 
   rumah_tangga: {
@@ -198,7 +198,7 @@ export const MODULAR_PRODUCT_CATALOG: Record<ProductCode, ModularProduct> = {
       'Pengajuan Kebutuhan Operasional Non-Moneter',
       'Plafon Anggaran Operasional Bulanan KaBid RT'
     ],
-    governancePillarRole: 'kepala_rumah_tangga' // Pilar 6: Ka. Rumah Tangga
+    governancePillarRole: 'kepala_rumah_tangga'
   }
 };
 

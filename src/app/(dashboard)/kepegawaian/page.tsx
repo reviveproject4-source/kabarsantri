@@ -432,12 +432,12 @@ export default function KepegawaianPage() {
         </div>
       )}
 
-      {/* Header Banner - Pilar 3 Design System */}
+      {/* Header Banner - Manajemen Kepegawaian */}
       <div className="bg-gradient-to-r from-emerald-800 to-teal-900 text-white rounded-2xl p-6 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2 flex-wrap gap-1">
             <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-700/80 border border-emerald-500/40">
-              PILAR 3: HRD & KEPEGAWAIAN
+              DIVISI HRD &amp; KEPEGAWAIAN
             </span>
             <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-teal-950/60 text-teal-200 border border-teal-500/30">
               Domain: People Management & Approval Cuti

@@ -57,7 +57,7 @@ export default function PengaturanThresholdTenantPage() {
             <span>Mode Baca Saja (Read-Only) - Hak Akses Bagian Keuangan</span>
           </div>
           <p className="leading-relaxed text-amber-800">
-            Berdasarkan tata kelola 6 Pilar Pesantren, wewenang penetapan dan pengubahan ambang batas pengeluaran mandiri tenant berada sepenuhnya di tangan <strong>Wakil Ketua Yayasan</strong>. Bagian Keuangan hanya memiliki hak akses baca (Read-Only) untuk memantau batas nominal yang telah ditetapkan dan menjalankan verifikasi pencairan anggaran.
+            Berdasarkan tata kelola manajemen Pesantren, wewenang penetapan dan pengubahan ambang batas pengeluaran mandiri tenant berada sepenuhnya di tangan <strong>Wakil Ketua Yayasan</strong>. Bagian Keuangan hanya memiliki hak akses baca (Read-Only) untuk memantau batas nominal yang telah ditetapkan dan menjalankan verifikasi pencairan anggaran.
           </p>
           <div className="pt-1">
             <Link

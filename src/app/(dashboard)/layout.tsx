@@ -48,8 +48,16 @@ export default function DashboardLayout({
 
   const dashboardHref = getDashboardHref();
 
+  interface MobileTabItem {
+    href: string;
+    label: string;
+    icon: any;
+    isActive: boolean;
+    badge?: string;
+  }
+
   // Primary Quick Mobile Bottom Tabs (Optimized for Small Screens)
-  const mobileBottomTabs = [
+  const mobileBottomTabs: MobileTabItem[] = [
     { 
       href: dashboardHref, 
       label: 'Dashboard', 
@@ -67,7 +75,6 @@ export default function DashboardLayout({
       label: 'Absen Diri', 
       icon: UserCheck,
       isActive: Boolean(pathname?.startsWith('/presensi')),
-      badge: 'GPS'
     },
     { 
       href: '/kepegawaian', 
@@ -77,35 +84,35 @@ export default function DashboardLayout({
     },
   ];
 
-  // All 6 Pillars & Modules for the Mobile Bottom Sheet (Semua menggunakan warna Logo Biru)
+  // Modul untuk Mobile Bottom Sheet
   const allPillars = [
     {
-      title: 'Pilar 1: Yayasan',
+      title: 'Yayasan & Pimpinan',
       desc: 'Ringkasan Eksekutif & Informasi Strategis',
       items: [
-        { href: '/dashboard/yayasan', label: 'Dashboard Ketua Yayasan', icon: Building2 },
+        { href: '/dashboard/yayasan', label: 'Dashboard Yayasan', icon: Building2 },
         { href: '/laporan/ringkasan', label: 'Ringkasan Eksekutif & Analitik', icon: FileText },
       ]
     },
     {
-      title: 'Pilar 2: Wakil Yayasan',
-      desc: 'Persetujuan Anggaran & Threshold',
+      title: 'Operasional & Persetujuan',
+      desc: 'Persetujuan Anggaran & Kebijakan',
       items: [
-        { href: '/dashboard/wakil-yayasan', label: 'Dashboard Approval (Control Tower)', icon: ShieldCheck },
-        { href: '/finance/pengaturan-threshold', label: 'Atur Batas Threshold Persetujuan', icon: Wallet },
+        { href: '/dashboard/wakil-yayasan', label: 'Dashboard Persetujuan', icon: ShieldCheck },
+        { href: '/finance/pengaturan-threshold', label: 'Batas Mandiri Persetujuan', icon: Wallet },
       ]
     },
     {
-      title: 'Pilar 3: HRD & Kepegawaian',
-      desc: 'Persetujuan Cuti & Absen Pegawai',
+      title: 'Kepegawaian & SDM',
+      desc: 'Pusat Kepegawaian, Cuti & Presensi',
       items: [
-        { href: '/kepegawaian', label: 'Pusat Kepegawaian & Approval Cuti', icon: Users },
-        { href: '/presensi/diri', label: 'Presensi Diri Sendiri (GPS)', icon: MapPin },
+        { href: '/kepegawaian', label: 'Pusat Kepegawaian & Cuti', icon: Users },
+        { href: '/presensi/diri', label: 'Presensi Diri Pegawai', icon: MapPin },
         { href: '/presensi/santri', label: 'Presensi Santri Berjamaah & Kelas', icon: CheckCircle2 },
       ]
     },
     {
-      title: 'Pilar 4: Keuangan Pesantren',
+      title: 'Keuangan & SPP',
       desc: 'SPP, Uang Saku & Pengeluaran Kas',
       items: [
         { href: '/finance', label: 'Dashboard Keuangan', icon: Wallet },
@@ -115,28 +122,28 @@ export default function DashboardLayout({
       ]
     },
     {
-      title: 'Pilar 5: Mudir / Akademik KBM',
-      desc: 'KBM Guru, Izin Santri & Tahfidz',
+      title: 'Akademik & Kesantrian',
+      desc: 'KBM Guru, Tahfidz & Kesiswaan',
       items: [
-        { href: '/dashboard/mudir', label: 'Dashboard Mudir (Kepala Sekolah)', icon: School },
+        { href: '/dashboard/mudir', label: 'Dashboard Akademik', icon: School },
         { href: '/akademik/nilai', label: 'Ruang Guru (KBM & Nilai)', icon: BookOpen },
-        { href: '/akademik/perizinan', label: 'Perizinan Santri & Gate Pass', icon: Clock },
+        { href: '/akademik/perizinan', label: 'Perizinan Santri', icon: Clock },
         { href: '/akademik/disiplin', label: 'Kedisiplinan & Pelanggaran', icon: ShieldCheck },
         { href: '/akademik/tahfidz', label: 'Setoran Tahfidz Al-Qur\'an', icon: Award },
         { href: '/santri/list', label: 'Direktori Santri & Rombel', icon: Users },
       ]
     },
     {
-      title: 'Pilar 6: Rumah Tangga & Sarpras',
-      desc: 'Fasilitas, Pemeliharaan & Logistik RT',
+      title: 'Sarana & Prasarana',
+      desc: 'Fasilitas, Pemeliharaan & Logistik',
       items: [
         { href: '/rumah-tangga', label: 'Dashboard Logistik & Sarpras', icon: Home },
-        { href: '/rumah-tangga/pengajuan', label: 'Pengajuan Pengadaan Sarpras', icon: FileText },
+        { href: '/rumah-tangga/pengajuan', label: 'Pengajuan Pengadaan Fasilitas', icon: FileText },
       ]
     },
     {
-      title: 'Portal Terkait',
-      desc: 'Akses Portal Eksternal',
+      title: 'Portal Orang Tua',
+      desc: 'Akses Portal Wali Murid',
       items: [
         { href: '/portal-wali', label: 'Portal Wali Santri', icon: ExternalLink },
         { href: '/login', label: 'Ganti Akun / Logout', icon: ArrowRight },
@@ -242,7 +249,7 @@ export default function DashboardLayout({
                     <Layers className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Semua Modul &amp; 6 Pilar</h3>
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Semua Modul KabarSantri</h3>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">Navigasi terpadu pesantren</p>
                   </div>
                 </div>
@@ -278,7 +285,7 @@ export default function DashboardLayout({
                   </span>
                 </div>
 
-                {/* 6 Pilar Cards */}
+                {/* Modul Cards */}
                 <div className="space-y-2.5">
                   {allPillars.map((pillar, idx) => (
                     <div 
