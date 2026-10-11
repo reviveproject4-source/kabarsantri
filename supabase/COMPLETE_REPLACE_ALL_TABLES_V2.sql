@@ -1,4 +1,4 @@
-﻿-- ==============================================================================
+-- ==============================================================================
 -- KABARSANTRI ERP v2.0 - MASTER CONSOLIDATED DATABASE REPLACEMENT SCRIPT
 -- Target Project: https://fugqdiuxnjwfgxpvxqsy.supabase.co
 -- Generated: 2026-10-04
@@ -2444,4 +2444,154 @@ VALUES
     ('11111111-1111-1111-1111-111111111111', '2-1001', 'Titipan Tabungan Santri (Wadiah)', 'kewajiban', 'kredit'),
     ('11111111-1111-1111-1111-111111111111', '4-1001', 'Pendapatan SPP Bulanan', 'pendapatan', 'kredit')
 ON CONFLICT (tenant_id, kode_akun) DO NOTHING;
+
+-- ==============================================================================
+-- 8. TABEL OPERASIONAL REAL-TIME & STORAGE BUCKET (V2 LIVE READY)
+-- ==============================================================================
+
+-- Cloud Snapshot Sync (SyncEngine Dual-Mode)
+CREATE TABLE IF NOT EXISTS app_sync_state (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id VARCHAR(128) UNIQUE NOT NULL,
+    state_payload JSONB NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Antrean Pesan WhatsApp (WhatsApp Gateway & Kuitansi Otomatis)
+CREATE TABLE IF NOT EXISTS wa_outbox_queue (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    phone_destination VARCHAR(64) NOT NULL,
+    recipient_name VARCHAR(255),
+    template_name VARCHAR(100),
+    message_body TEXT NOT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
+    sent_at TIMESTAMPTZ,
+    vendor_message_id VARCHAR(128),
+    last_error TEXT,
+    retry_count INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Transaksi Validasi Pembayaran SPP / Infaq (Portal Wali & Bagian Keuangan)
+CREATE TABLE IF NOT EXISTS transaksi_validasi_v2 (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nomor_invoice VARCHAR(64),
+    jenis VARCHAR(100) NOT NULL,
+    nominal NUMERIC(15, 2) NOT NULL DEFAULT 0,
+    bank_tujuan VARCHAR(64),
+    bukti_img_url TEXT,
+    file_size_compressed VARCHAR(64),
+    status VARCHAR(32) NOT NULL DEFAULT 'MENUNGGU_VALIDASI',
+    nomor_kuitansi VARCHAR(64),
+    validated_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Setoran Hafalan Al-Qur'an & Hadis (Musyrif & Modul Akademik Tahfidz)
+CREATE TABLE IF NOT EXISTS tahfidz_setoran_v2 (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    santri_id VARCHAR(64),
+    jenis_setoran VARCHAR(64) NOT NULL,
+    juz INT,
+    halaman_mulai INT,
+    halaman_selesai INT,
+    skor_tajwid INT DEFAULT 0,
+    skor_kelancaran INT DEFAULT 0,
+    skor_makhraj INT DEFAULT 0,
+    catatan_musyrif TEXT,
+    status_kelulusan VARCHAR(32) DEFAULT 'lulus',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Dokumentasi Tugas Luar & Notulensi Mudir (Pimpinan Lembaga & Yayasan)
+CREATE TABLE IF NOT EXISTS dokumentasi_mudir_yayasan (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    judul VARCHAR(255) NOT NULL,
+    jenis VARCHAR(64),
+    tanggal DATE NOT NULL,
+    mitra VARCHAR(255),
+    notulensi TEXT,
+    tindak_lanjut TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Presensi Sesi Harian Mandiri (Guru KBM, Staf, & Mudir)
+CREATE TABLE IF NOT EXISTS presensi_sesi_harian (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tipe_presensi VARCHAR(64) NOT NULL,
+    status_kehadiran VARCHAR(64) NOT NULL,
+    keterangan TEXT,
+    waktu_scan TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Dompet Santri & e-Pocket Uang Jajan Koperasi
+CREATE TABLE IF NOT EXISTS dompet_santri_v2 (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    santri_id VARCHAR(64) NOT NULL,
+    jenis_transaksi VARCHAR(64) NOT NULL,
+    nominal NUMERIC(15, 2) NOT NULL DEFAULT 0,
+    keterangan TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE app_sync_state ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wa_outbox_queue ENABLE ROW LEVEL SECURITY;
+ALTER TABLE transaksi_validasi_v2 ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tahfidz_setoran_v2 ENABLE ROW LEVEL SECURITY;
+ALTER TABLE dokumentasi_mudir_yayasan ENABLE ROW LEVEL SECURITY;
+ALTER TABLE presensi_sesi_harian ENABLE ROW LEVEL SECURITY;
+ALTER TABLE dompet_santri_v2 ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'app_sync_state' AND policyname = 'allow_all_app_sync_state') THEN
+        CREATE POLICY allow_all_app_sync_state ON app_sync_state FOR ALL USING (true) WITH CHECK (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'wa_outbox_queue' AND policyname = 'allow_all_wa_outbox_queue') THEN
+        CREATE POLICY allow_all_wa_outbox_queue ON wa_outbox_queue FOR ALL USING (true) WITH CHECK (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'transaksi_validasi_v2' AND policyname = 'allow_all_transaksi_validasi_v2') THEN
+        CREATE POLICY allow_all_transaksi_validasi_v2 ON transaksi_validasi_v2 FOR ALL USING (true) WITH CHECK (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'tahfidz_setoran_v2' AND policyname = 'allow_all_tahfidz_setoran_v2') THEN
+        CREATE POLICY allow_all_tahfidz_setoran_v2 ON tahfidz_setoran_v2 FOR ALL USING (true) WITH CHECK (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'dokumentasi_mudir_yayasan' AND policyname = 'allow_all_dokumentasi_mudir_yayasan') THEN
+        CREATE POLICY allow_all_dokumentasi_mudir_yayasan ON dokumentasi_mudir_yayasan FOR ALL USING (true) WITH CHECK (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'presensi_sesi_harian' AND policyname = 'allow_all_presensi_sesi_harian') THEN
+        CREATE POLICY allow_all_presensi_sesi_harian ON presensi_sesi_harian FOR ALL USING (true) WITH CHECK (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'dompet_santri_v2' AND policyname = 'allow_all_dompet_santri_v2') THEN
+        CREATE POLICY allow_all_dompet_santri_v2 ON dompet_santri_v2 FOR ALL USING (true) WITH CHECK (true);
+    END IF;
+END $$;
+
+-- Storage Bucket untuk Bukti Transfer SPP/Infaq (<150KB)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+    'bukti-transfer',
+    'bukti-transfer',
+    true,
+    5242880,
+    ARRAY['image/jpeg', 'image/png', 'image/webp']
+)
+ON CONFLICT (id) DO UPDATE SET
+    public = true,
+    file_size_limit = 5242880,
+    allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'image/webp'];
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND schemaname = 'storage' AND policyname = 'allow_public_read_bukti_transfer') THEN
+        CREATE POLICY allow_public_read_bukti_transfer ON storage.objects FOR SELECT USING (bucket_id = 'bukti-transfer');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND schemaname = 'storage' AND policyname = 'allow_anon_upload_bukti_transfer') THEN
+        CREATE POLICY allow_anon_upload_bukti_transfer ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'bukti-transfer');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND schemaname = 'storage' AND policyname = 'allow_anon_update_bukti_transfer') THEN
+        CREATE POLICY allow_anon_update_bukti_transfer ON storage.objects FOR UPDATE USING (bucket_id = 'bukti-transfer');
+    END IF;
+END $$;
+
 

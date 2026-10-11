@@ -389,7 +389,9 @@ const TENANT_STORAGE_KEY = 'ks_active_tenant_info_v1';
 const TENANT_EVENT_NAME = 'ks_tenant_changed';
 
 export function getActiveTenant(): TenantInfo {
-  if (typeof window === 'undefined') return DEFAULT_TENANT;
+  if (typeof window === 'undefined') {
+    return getAppMode() === 'tenant' ? NURUL_HUDA_TENANT : DEFAULT_TENANT;
+  }
   try {
     const mode = getAppMode();
     if (mode === 'tenant') {
@@ -537,9 +539,26 @@ const APP_MODE_KEY = 'ks_app_mode_v2';
 const APP_MODE_EVENT = 'ks_app_mode_changed';
 
 export function getAppMode(): AppMode {
+  // 0. Hard lock dari Environment Variable (Deployment Vercel Tenant vs Vercel Demo)
+  const envMode = process.env.NEXT_PUBLIC_APP_MODE as AppMode | undefined;
+  if (envMode === 'tenant' || envMode === 'demo') {
+    return envMode;
+  }
+
+  // 1. Deteksi Subdomain / Hostname (misal: live.kabarsantri.id vs demo.kabarsantri.id)
+  if (typeof window !== 'undefined' && window.location) {
+    const host = window.location.hostname.toLowerCase();
+    if (host.startsWith('demo.') || host.includes('-demo')) {
+      return 'demo';
+    }
+    if (host.startsWith('live.') || host.startsWith('app.') || host.startsWith('tenant.') || host.includes('-tenant') || host.includes('-live')) {
+      return 'tenant';
+    }
+  }
+
   if (typeof window === 'undefined') return 'demo';
   try {
-    // 1. Prioritize URL query parameter (?mode=tenant / ?mode=demo)
+    // 2. Prioritize URL query parameter (?mode=tenant / ?mode=demo)
     if (typeof window.location !== 'undefined' && window.location.search) {
       if (window.location.search.includes('mode=tenant')) {
         if (localStorage.getItem(APP_MODE_KEY) !== 'tenant') {
