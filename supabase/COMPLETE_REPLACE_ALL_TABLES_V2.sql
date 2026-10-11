@@ -2536,6 +2536,22 @@ CREATE TABLE IF NOT EXISTS dompet_santri_v2 (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Pendaftaran Yayasan Baru dari Welcome Screen (Bahan Referensi Super Admin)
+CREATE TABLE IF NOT EXISTS yayasan_registrations (
+    id VARCHAR(64) PRIMARY KEY,
+    nama_yayasan VARCHAR(255) NOT NULL,
+    nama_pimpinan VARCHAR(255) NOT NULL,
+    no_whatsapp VARCHAR(64) NOT NULL,
+    email VARCHAR(255),
+    kota VARCHAR(255),
+    estimasi_santri VARCHAR(64),
+    paket_pilihan VARCHAR(100),
+    catatan TEXT,
+    status VARCHAR(32) NOT NULL DEFAULT 'pending',
+    activated_tenant_id VARCHAR(128),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 ALTER TABLE app_sync_state ENABLE ROW LEVEL SECURITY;
 ALTER TABLE wa_outbox_queue ENABLE ROW LEVEL SECURITY;
 ALTER TABLE transaksi_validasi_v2 ENABLE ROW LEVEL SECURITY;
@@ -2543,8 +2559,12 @@ ALTER TABLE tahfidz_setoran_v2 ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dokumentasi_mudir_yayasan ENABLE ROW LEVEL SECURITY;
 ALTER TABLE presensi_sesi_harian ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dompet_santri_v2 ENABLE ROW LEVEL SECURITY;
+ALTER TABLE yayasan_registrations ENABLE ROW LEVEL SECURITY;
 
 DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'yayasan_registrations' AND policyname = 'allow_all_yayasan_registrations') THEN
+        CREATE POLICY allow_all_yayasan_registrations ON yayasan_registrations FOR ALL USING (true) WITH CHECK (true);
+    END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'app_sync_state' AND policyname = 'allow_all_app_sync_state') THEN
         CREATE POLICY allow_all_app_sync_state ON app_sync_state FOR ALL USING (true) WITH CHECK (true);
     END IF;

@@ -36,6 +36,8 @@ export interface TenantInfo {
   city: string;
   units: TenantUnit[];
   logo_url?: string; // Logo Pesantren kustom milik tenant (bisa diganti oleh pesantren)
+  leader_name?: string;
+  leader_wa?: string;
 }
 
 export const DEFAULT_TENANT: TenantInfo = {

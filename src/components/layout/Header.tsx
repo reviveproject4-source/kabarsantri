@@ -430,7 +430,6 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
                   href="/login"
                   onClick={() => {
                     setMobileActionsOpen(false);
-                    if (isTenant) setAppModeState('demo');
                   }}
                   className="w-full text-left px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-slate-800 rounded-lg flex items-center space-x-2 border-t border-slate-100 dark:border-slate-800 mt-1"
                 >

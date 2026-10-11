@@ -17,11 +17,6 @@ export function middleware(request: NextRequest) {
     searchParams.get('mode') === 'tenant' ||
     request.cookies.get('ks_app_mode')?.value === 'tenant';
 
-  // Isolasi Ketat: Super Admin Terlarang pada Jalur Tenant Live
-  if (isTenantDeployment && pathname.startsWith('/super-admin')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-
   // 1. Daftar rute yang dilindungi otentikasi
   const isProtectedRoute = 
     pathname.startsWith('/dashboard') ||

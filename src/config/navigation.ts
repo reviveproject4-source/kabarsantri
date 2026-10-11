@@ -140,13 +140,12 @@ export const BACKOFFICE_NAVIGATION: NavItem[] = [
     ],
   },
   {
-    title: 'Super Admin Onboarding',
+    title: 'Konsol Super Admin',
     href: '/super-admin',
     icon: 'ShieldCheck',
     superAdminOnly: true,
     children: [
-      { title: 'Onboarding Tenant Baru', href: '/super-admin' },
-      { title: 'Daftar Tenant & Kuota', href: '/super-admin?tab=tenants' },
+      { title: 'Data Registrasi Yayasan', href: '/super-admin' },
     ],
   },
 ];
