@@ -24,7 +24,7 @@ export function isTenantMode(): boolean {
 if (typeof window !== 'undefined') {
   try {
     const isTenant = isTenantMode();
-    const PURGE_FLAG = 'ks_tenant_live_clean_v6';
+    const PURGE_FLAG = 'ks_tenant_live_clean_v7';
     if (isTenant && !localStorage.getItem(PURGE_FLAG)) {
       // 1. Purge legacy mock santri from tenant storage
       const rawSantri = localStorage.getItem('ks_tenant_santri_list_v1');
@@ -49,6 +49,29 @@ if (typeof window !== 'undefined') {
           localStorage.setItem('ks_tenant_kepegawaian_store_v1', JSON.stringify(parsed));
         }
       }
+      // 3. Purge legacy mock learning sessions (3 mata pelajaran) from tenant storage
+      const rawSessions = localStorage.getItem('ks_tenant_learning_sessions_v1');
+      if (rawSessions) {
+        try {
+          const parsed = JSON.parse(rawSessions);
+          const demoKeywords = ['bahasa arab', 'fiqih muamalah', 'aqidah akhlak', 'tahfidz al-qur\'an & tajwid putri', 'fiqih nisa', 'al-fatih', 'zaki', 'hasan'];
+          const cleaned = (parsed || []).filter((s: any) => {
+            const mapelLower = (s.mata_pelajaran || '').toLowerCase();
+            const guruLower = (s.guru_nama || '').toLowerCase();
+            return !demoKeywords.some(kw => mapelLower.includes(kw) || guruLower.includes(kw)) && !s.id?.startsWith('ls-');
+          });
+          localStorage.setItem('ks_tenant_learning_sessions_v1', JSON.stringify(cleaned));
+        } catch {
+          localStorage.setItem('ks_tenant_learning_sessions_v1', JSON.stringify([]));
+        }
+      } else {
+        localStorage.setItem('ks_tenant_learning_sessions_v1', JSON.stringify([]));
+      }
+      // 4. Purge legacy mock tahfidz records from tenant storage
+      localStorage.setItem('ks_tenant_tahfidz_records_v1', JSON.stringify([]));
+      // 5. Purge legacy mock kategori hafalan from tenant storage
+      localStorage.setItem('ks_tenant_kategori_hafalan_v1', JSON.stringify([]));
+
       localStorage.setItem(PURGE_FLAG, 'true');
     }
   } catch {}
@@ -661,6 +684,15 @@ const DEFAULT_KATEGORI_HAFALAN: KategoriHafalan[] = [
 ];
 
 export function getSharedKategoriHafalan(): KategoriHafalan[] {
+  if (isTenantMode()) {
+    if (typeof window === 'undefined') return [];
+    try {
+      const raw = localStorage.getItem('ks_tenant_kategori_hafalan_v1');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
   if (typeof window === 'undefined') return DEFAULT_KATEGORI_HAFALAN;
   try {
     const raw = localStorage.getItem('ks_kategori_hafalan_v2');
@@ -683,7 +715,8 @@ export function addSharedKategoriHafalan(item: Omit<KategoriHafalan, 'id'>): Kat
 
   const updated = [...current, newItem];
   if (typeof window !== 'undefined') {
-    localStorage.setItem('ks_kategori_hafalan_v2', JSON.stringify(updated));
+    const key = isTenantMode() ? 'ks_tenant_kategori_hafalan_v1' : 'ks_kategori_hafalan_v2';
+    localStorage.setItem(key, JSON.stringify(updated));
     window.dispatchEvent(new CustomEvent('ks_hafalan_updated', { detail: newItem }));
   }
   return newItem;

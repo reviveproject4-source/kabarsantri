@@ -49,6 +49,7 @@ interface SetoranRecord {
 }
 
 export default function TahfidzManagementPage() {
+  const [mounted, setMounted] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalKurikulumOpen, setModalKurikulumOpen] = useState(false);
   const [notif, setNotif] = useState('');
@@ -89,6 +90,7 @@ export default function TahfidzManagementPage() {
 
   // Sinkronisasi data kurikulum hafalan & setoran
   useEffect(() => {
+    setMounted(true);
     const list = getSharedKategoriHafalan();
     setKategoriList(list);
     setSetoranList(getSharedTahfidzSetoran() as SetoranRecord[]);
@@ -245,6 +247,14 @@ export default function TahfidzManagementPage() {
     }
   };
 
+  if (!mounted) {
+    return (
+      <div className="p-8 text-center text-xs text-slate-400">
+        Memuat data kurikulum &amp; halaqah tahfidz...
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header Info */}
@@ -352,11 +362,15 @@ export default function TahfidzManagementPage() {
             className="p-2 border border-slate-300 rounded-xl bg-slate-50 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
           >
             <option value="semua">Semua Kelas / Rombel</option>
-            {MASTER_KELAS.map((k) => (
-              <option key={k.id} value={k.id}>
-                {k.nama_kelas}
-              </option>
-            ))}
+            {currentKelasList.length > 0 ? (
+              currentKelasList.map((k) => (
+                <option key={k.id} value={k.id}>
+                  {k.nama_kelas}
+                </option>
+              ))
+            ) : (
+              <option value="" disabled>Belum ada rombel dibuka</option>
+            )}
           </select>
 
           {/* Filter Tipe Hafalan */}
@@ -496,11 +510,15 @@ export default function TahfidzManagementPage() {
                   onChange={(e) => setSelectedKelasId(e.target.value)}
                   className="w-full p-2.5 bg-white border border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none font-semibold text-slate-800"
                 >
-                  {MASTER_KELAS.map((k) => (
-                    <option key={k.id} value={k.id}>
-                      {k.nama_kelas} (Wali: {k.wali_kelas} • {k.jumlah_santri} Santri)
-                    </option>
-                  ))}
+                  {currentKelasList.length > 0 ? (
+                    currentKelasList.map((k) => (
+                      <option key={k.id} value={k.id}>
+                        {k.nama_kelas} (Wali: {k.wali_kelas} • {k.jumlah_santri} Santri)
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>-- Belum ada rombel dibuka --</option>
+                  )}
                 </select>
               </div>
 
@@ -563,17 +581,23 @@ export default function TahfidzManagementPage() {
                   <label className="block font-semibold text-slate-700 mb-1">
                     Materi / Kitab / Bab
                   </label>
-                  <select
-                    value={selectedMateriId}
-                    onChange={(e) => setSelectedMateriId(e.target.value)}
-                    className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50"
-                  >
-                    {availableMateri.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.nama_materi}
-                      </option>
-                    ))}
-                  </select>
+                  {availableMateri.length > 0 ? (
+                    <select
+                      value={selectedMateriId}
+                      onChange={(e) => setSelectedMateriId(e.target.value)}
+                      className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 font-semibold text-slate-800"
+                    >
+                      {availableMateri.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.nama_materi}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="p-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-[11px]">
+                      Belum ada kurikulum materi untuk kategori ini. Tambahkan via "+ Kurikulum Hafalan Yayasan".
+                    </div>
+                  )}
                 </div>
 
                 <div>

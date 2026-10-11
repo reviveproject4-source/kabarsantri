@@ -58,8 +58,10 @@ import {
   assignSubstituteTeacherByMudir, 
   LeaveRequest 
 } from '@/lib/kepegawaianStore';
+import { useActiveTenant } from '@/lib/sessionStore';
 
 export default function DashboardKepalaSekolahPage() {
+  const tenant = useActiveTenant();
   const [activeTab, setActiveTab] = useState<'kbm' | 'inval' | 'absen' | 'hafalan' | 'dokumentasi' | 'assign_kelas'>('kbm');
   const [modalDokumentasi, setModalDokumentasi] = useState(false);
   const [notif, setNotif] = useState('');
@@ -364,10 +366,19 @@ export default function DashboardKepalaSekolahPage() {
   // =========================================================================
   // STATE ASSIGN KELAS & ROMBEL (PINDAH KE DASHBOARD MUDIR - REVISI 3)
   // =========================================================================
+  const availableUnits = (typeof window !== 'undefined' && isTenantMode() && tenant.units && tenant.units.length > 0)
+    ? tenant.units.map(u => u.name)
+    : ["MTs Tahfidz Sains", "MA Unggulan Al-Qur'an", "Pondok Pesantren Takhasus"];
   const [selectedTahun, setSelectedTahun] = useState('2026/2027 Ganjil');
-  const [selectedUnit, setSelectedUnit] = useState('MTs Tahfidz Sains');
+  const [selectedUnit, setSelectedUnit] = useState(availableUnits[0]);
   const [selectedKelasTarget, setSelectedKelasTarget] = useState('k-7a');
   const [filterStatusSantri, setFilterStatusSantri] = useState<'ALL' | 'BARU' | 'PINDAHAN' | 'ACARA_LUAR'>('ALL');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && isTenantMode() && tenant.units && tenant.units.length > 0) {
+      setSelectedUnit(tenant.units[0].name);
+    }
+  }, [tenant.id]);
 
   const DEMO_UNASSIGNED_SANTRI = [
     { 
@@ -1548,9 +1559,9 @@ export default function DashboardKepalaSekolahPage() {
                   onChange={(e) => setSelectedUnit(e.target.value)}
                   className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none font-semibold text-slate-800"
                 >
-                  <option>MTs Tahfidz Sains</option>
-                  <option>MA Unggulan Al-Qur'an</option>
-                  <option>Pondok Pesantren Takhasus</option>
+                  {availableUnits.map((u, idx) => (
+                    <option key={idx} value={u}>{u}</option>
+                  ))}
                 </select>
               </div>
 

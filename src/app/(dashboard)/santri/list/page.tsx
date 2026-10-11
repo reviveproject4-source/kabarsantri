@@ -193,9 +193,9 @@ export default function DataIndukSantriPage() {
       {/* Table Data Induk */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden text-xs">
         <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <h3 className="font-bold text-slate-800 dark:text-slate-100">Daftar Santri Terdaftar ({filtered.length} Santri)</h3>
-          <span className="text-[11px] text-blue-700 dark:text-blue-300 font-semibold bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-900">
-            {isTenantActive ? 'Jalur Tenant Live (0 Dummy)' : 'Jalur Demo Simulasi'}
+          <h3 className="font-bold text-slate-800 dark:text-slate-100">Daftar Santri Terdaftar</h3>
+          <span className="text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-900">
+            {filtered.length} Santri Aktif
           </span>
         </div>
 

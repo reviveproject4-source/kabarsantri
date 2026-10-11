@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   HeartHandshake, 
@@ -19,8 +19,62 @@ import {
   Printer
 } from 'lucide-react';
 import PrintableKuitansi from '@/components/finance/PrintableKuitansi';
+import { useActiveTenant, useAppMode } from '@/lib/sessionStore';
+import { getSharedSantriList, isTenantMode } from '@/lib/sharedDataStore';
+
+const DEMO_CHILDREN = [
+  {
+    id: 'c-1',
+    nama: 'Muhammad Al-Fatih',
+    nis: '202601001',
+    unit: 'MTs Tahfidz Sains - Kelas 7A',
+    kamar: 'Kamar 101 - Gedung Abu Bakar',
+    tahfidz_terakhir: 'Juz 30 (Surah An-Naba: 1-40) - Nilai 95 (Mutqin)',
+    status_sholat: 'Hadir Lengkap (Subuh, Ashar, Maghrib Berjamaah)',
+    saldo_jajan: 65000,
+    limit_harian: 20000,
+    kondisi_kesehatan: 'Sehat Wal Afiat',
+    tagihan_spp: 500000,
+    spp_status: 'Belum Lunas (Jatuh Tempo: 10 Okt)',
+  },
+  {
+    id: 'c-2',
+    nama: 'Fathimah Az-Zahra',
+    nis: '202602004',
+    unit: 'MA Unggulan Al-Qur\'an - Kelas 10 Putri',
+    kamar: 'Kamar 203 - Gedung Khodijah',
+    tahfidz_terakhir: 'Juz 5 (Surah An-Nisa: 1-24) - Nilai 90 (Lulus)',
+    status_sholat: 'Hadir Lengkap',
+    saldo_jajan: 110000,
+    limit_harian: 25000,
+    kondisi_kesehatan: 'Sehat Wal Afiat',
+    tagihan_spp: 0,
+    spp_status: 'Lunas',
+  },
+];
+
+const DEMO_KUITANSI = [
+  {
+    no_kuitansi: 'KWT-202609-0012',
+    bulan: 'September 2026',
+    nominal: 500000,
+    tanggal: '02 Sep 2026',
+    status: 'SAH / TERVALIDASI',
+  },
+  {
+    no_kuitansi: 'KWT-202608-0045',
+    bulan: 'Agustus 2026',
+    nominal: 500000,
+    tanggal: '03 Agu 2026',
+    status: 'SAH / TERVALIDASI',
+  },
+];
 
 export default function PortalWaliSantriPage() {
+  const tenant = useActiveTenant();
+  const { isTenant } = useAppMode();
+  const [mounted, setMounted] = useState(false);
+  const [realSantriList, setRealSantriList] = useState<any[]>([]);
   const [selectedChild, setSelectedChild] = useState('c-1');
   const [uploadModal, setUploadModal] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -40,56 +94,49 @@ export default function PortalWaliSantriPage() {
     bank: 'Bank Syariah Indonesia (BSI)',
   });
 
-  const childrenData = [
-    {
-      id: 'c-1',
-      nama: 'Muhammad Al-Fatih',
-      nis: '202601001',
-      unit: 'MTs Tahfidz Sains - Kelas 7A',
-      kamar: 'Kamar 101 - Gedung Abu Bakar',
-      tahfidz_terakhir: 'Juz 30 (Surah An-Naba: 1-40) - Nilai 95 (Mutqin)',
-      status_sholat: 'Hadir Lengkap (Subuh, Ashar, Maghrib Berjamaah)',
-      saldo_jajan: 65000,
-      limit_harian: 20000,
-      kondisi_kesehatan: 'Sehat Wal Afiat',
-      tagihan_spp: 500000,
-      spp_status: 'Belum Lunas (Jatuh Tempo: 10 Okt)',
-    },
-    {
-      id: 'c-2',
-      nama: 'Fathimah Az-Zahra',
-      nis: '202602004',
-      unit: 'MA Unggulan Al-Qur\'an - Kelas 10 Putri',
-      kamar: 'Kamar 203 - Gedung Khodijah',
-      tahfidz_terakhir: 'Juz 5 (Surah An-Nisa: 1-24) - Nilai 90 (Lulus)',
-      status_sholat: 'Hadir Lengkap',
-      saldo_jajan: 110000,
-      limit_harian: 25000,
-      kondisi_kesehatan: 'Sehat Wal Afiat',
-      tagihan_spp: 0,
-      spp_status: 'Lunas',
-    },
-  ];
+  useEffect(() => {
+    setMounted(true);
+    if (isTenantMode()) {
+      const list = getSharedSantriList();
+      setRealSantriList(list);
+      if (list.length > 0) {
+        setSelectedChild(list[0].id || list[0].nis);
+      }
+    }
+    const handleUpdate = () => {
+      if (isTenantMode()) {
+        const list = getSharedSantriList();
+        setRealSantriList(list);
+        if (list.length > 0) {
+          setSelectedChild(list[0].id || list[0].nis);
+        }
+      }
+    };
+    window.addEventListener('ks_tenant_santri_updated', handleUpdate);
+    return () => window.removeEventListener('ks_tenant_santri_updated', handleUpdate);
+  }, []);
 
-  const currentChild = childrenData.find(c => c.id === selectedChild) || childrenData[0];
+  const isTenantActive = mounted ? (isTenant || isTenantMode()) : false;
 
-  // Riwayat Kuitansi Resmi Digital Pengganti Kartu SPP Fisik
-  const riwayatKuitansi = [
-    {
-      no_kuitansi: 'KWT-202609-0012',
-      bulan: 'September 2026',
-      nominal: 500000,
-      tanggal: '02 Sep 2026',
-      status: 'SAH / TERVALIDASI',
-    },
-    {
-      no_kuitansi: 'KWT-202608-0045',
-      bulan: 'Agustus 2026',
-      nominal: 500000,
-      tanggal: '03 Agu 2026',
-      status: 'SAH / TERVALIDASI',
-    },
-  ];
+  const childrenData = isTenantActive
+    ? realSantriList.map((s, idx) => ({
+        id: s.id || s.nis || `c-${idx}`,
+        nama: s.nama,
+        nis: s.nis,
+        unit: s.kelas_nama || 'Madrasah / Pondok',
+        kamar: s.kamar || s.asrama || 'Asrama Santri',
+        tahfidz_terakhir: 'Belum ada catatan setoran',
+        status_sholat: 'Hadir Lengkap',
+        saldo_jajan: s.saldo_jajan || 0,
+        limit_harian: 20000,
+        kondisi_kesehatan: 'Sehat Wal Afiat',
+        tagihan_spp: 0,
+        spp_status: 'Lunas',
+      }))
+    : DEMO_CHILDREN;
+
+  const currentChild = childrenData.find(c => c.id === selectedChild) || childrenData[0] || null;
+  const riwayatKuitansi = isTenantActive ? [] : DEMO_KUITANSI;
 
   // Fungsi Kompresi Bukti Transfer Otomatis (<150KB) via Client Canvas
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -177,7 +224,7 @@ export default function PortalWaliSantriPage() {
             />
             <div>
               <h1 className="font-bold text-sm leading-tight">Portal Wali Santri</h1>
-              <p className="text-[10px] text-emerald-200">Pesantren Bina Insan Santri</p>
+              <p className="text-[10px] text-emerald-200">{tenant.name.replace('Pondok Pesantren ', '')}</p>
             </div>
           </div>
           <Link href="/login" className="p-1.5 rounded-lg bg-emerald-700/60 hover:bg-emerald-700 text-emerald-100 text-xs flex items-center space-x-1">
@@ -195,133 +242,203 @@ export default function PortalWaliSantriPage() {
           </div>
         )}
 
-        {/* Multi-Child Selector */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2">
-          <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-            Pilih Ananda (Multi-Anak):
-          </label>
-          <div className="flex gap-2">
-            {childrenData.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => setSelectedChild(c.id)}
-                className={`flex-1 py-2 px-3 rounded-xl text-left border transition text-xs ${
-                  selectedChild === c.id
-                    ? 'border-emerald-600 bg-emerald-50 text-emerald-900 font-semibold shadow-sm'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                <div className="truncate">{c.nama.split(' ')[0]} {c.nama.split(' ')[1]}</div>
-                <div className="text-[10px] text-slate-400 truncate">NIS: {c.nis}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Child Identity Card */}
-        <div className="bg-gradient-to-br from-emerald-700 to-emerald-900 text-white rounded-2xl p-5 shadow-sm space-y-3">
-          <div className="flex justify-between items-start">
-            <div>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-emerald-600/80">
-                Santri Aktif
-              </span>
-              <h2 className="text-lg font-bold mt-1">{currentChild.nama}</h2>
-              <p className="text-xs text-emerald-200">NIS: {currentChild.nis} • {currentChild.unit}</p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-emerald-800 border border-emerald-600 flex items-center justify-center font-bold text-sm">
-              {currentChild.nama.substring(0, 2)}
-            </div>
-          </div>
-          <div className="pt-2 border-t border-emerald-600/60 text-xs text-emerald-100 flex items-center justify-between">
-            <span>{currentChild.kamar}</span>
-            <span className="px-2 py-0.5 rounded bg-emerald-950/60 text-[10px]">Asrama Penuh</span>
-          </div>
-        </div>
-
-        {/* Keuangan: SPP & Upload Bukti Transfer */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
-          <div className="flex justify-between items-center">
-            <h3 className="font-bold text-slate-800 text-sm flex items-center space-x-2">
-              <Wallet className="w-4 h-4 text-emerald-600" />
-              <span>Keuangan & Validasi Pembayaran</span>
-            </h3>
-            <button
-              onClick={() => setUploadModal(true)}
-              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center space-x-1"
-            >
-              <Upload className="w-3.5 h-3.5" />
-              <span>Upload Bukti TF</span>
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-              <span className="text-[10px] text-slate-400 font-semibold block">Tagihan SPP:</span>
-              <span className="text-sm font-bold text-slate-800">
-                {currentChild.tagihan_spp > 0 ? `Rp ${currentChild.tagihan_spp.toLocaleString('id-ID')}` : 'Lunas'}
-              </span>
-              <span className="text-[10px] text-amber-600 block mt-0.5">{currentChild.spp_status}</span>
+        {!currentChild || childrenData.length === 0 ? (
+          <div className="space-y-4">
+            {/* Empty State Banner */}
+            <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm text-center space-y-3">
+              <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto shadow-xs">
+                <HeartHandshake className="w-7 h-7" />
+              </div>
+              <h2 className="font-bold text-slate-800 text-base">Belum Ada Data Santri Terhubung</h2>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+                Akun Wali Santri ini belum terhubung dengan data santri aktif di {tenant.name}. Silakan hubungi bagian Administrasi / Tata Usaha untuk penautan NIS ananda.
+              </p>
             </div>
 
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-              <span className="text-[10px] text-slate-400 font-semibold block">Saldo Uang Jajan:</span>
-              <span className="text-sm font-bold text-emerald-700">
-                Rp {currentChild.saldo_jajan.toLocaleString('id-ID')}
-              </span>
-              <span className="text-[10px] text-slate-400 block mt-0.5">Limit: Rp {currentChild.limit_harian.toLocaleString('id-ID')}/hr</span>
-            </div>
-          </div>
-        </div>
+            {/* Keuangan: SPP & Upload Bukti Transfer */}
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+              <div className="flex justify-between items-center">
+                <h3 className="font-bold text-slate-800 text-sm flex items-center space-x-2">
+                  <Wallet className="w-4 h-4 text-emerald-600" />
+                  <span>Keuangan &amp; Validasi Pembayaran</span>
+                </h3>
+                <button
+                  onClick={() => setUploadModal(true)}
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center space-x-1"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Upload Bukti TF</span>
+                </button>
+              </div>
 
-        {/* Kartu SPP Digital (Kuitansi Resmi Digital) */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
-          <h3 className="font-bold text-slate-800 text-sm flex items-center space-x-2">
-            <FileCheck2 className="w-4 h-4 text-emerald-600" />
-            <span>Kartu SPP Digital (Kuitansi Resmi Sah)</span>
-          </h3>
-
-          <div className="space-y-2">
-            {riwayatKuitansi.map((kwt, idx) => (
-              <div
-                key={idx}
-                onClick={() => setKuitansiModal(kwt)}
-                className="p-3 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/30 transition flex items-center justify-between cursor-pointer text-xs"
-              >
-                <div>
-                  <div className="font-bold text-slate-800">SPP Bulan {kwt.bulan}</div>
-                  <div className="text-[10px] text-slate-400 font-mono">{kwt.no_kuitansi} • {kwt.tanggal}</div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 font-semibold block">Tagihan SPP:</span>
+                  <span className="text-sm font-bold text-slate-800">Rp 0</span>
+                  <span className="text-[10px] text-emerald-600 block mt-0.5">Tidak ada tagihan aktif</span>
                 </div>
-                <div className="text-right">
-                  <span className="font-mono font-bold text-emerald-700 block">
-                    Rp {kwt.nominal.toLocaleString('id-ID')}
-                  </span>
-                  <span className="text-[10px] text-emerald-600 font-semibold">✓ {kwt.status}</span>
+
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 font-semibold block">Saldo Uang Jajan:</span>
+                  <span className="text-sm font-bold text-emerald-700">Rp 0</span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">Belum ada deposit jajan</span>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
 
-        {/* Tahfidz & Ibadah Section */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
-          <h3 className="font-bold text-slate-800 text-sm flex items-center space-x-2">
-            <BookOpen className="w-4 h-4 text-emerald-600" />
-            <span>Mutaba'ah Tahfidz & Sholat</span>
-          </h3>
+            {/* Kartu SPP Digital */}
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+              <h3 className="font-bold text-slate-800 text-sm flex items-center space-x-2">
+                <FileCheck2 className="w-4 h-4 text-emerald-600" />
+                <span>Kartu SPP Digital (Kuitansi Resmi Sah)</span>
+              </h3>
+              <p className="text-xs text-slate-400 italic">Belum ada riwayat pembayaran SPP tervalidasi.</p>
+            </div>
 
-          <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
-            <span className="text-[10px] text-slate-400 font-semibold uppercase">Setoran Terakhir:</span>
-            <p className="text-xs font-semibold text-slate-800">{currentChild.tahfidz_terakhir}</p>
+            {/* Tahfidz & Ibadah Section */}
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+              <h3 className="font-bold text-slate-800 text-sm flex items-center space-x-2">
+                <BookOpen className="w-4 h-4 text-emerald-600" />
+                <span>Mutaba'ah Tahfidz &amp; Sholat</span>
+              </h3>
+              <p className="text-xs text-slate-400 italic">Belum ada catatan mutaba'ah hafalan dan presensi sholat.</p>
+            </div>
           </div>
+        ) : (
+          <>
+            {/* Multi-Child Selector */}
+            <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2">
+              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                Pilih Ananda (Multi-Anak):
+              </label>
+              <div className="flex gap-2">
+                {childrenData.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => setSelectedChild(c.id)}
+                    className={`flex-1 py-2 px-3 rounded-xl text-left border transition text-xs ${
+                      selectedChild === c.id
+                        ? 'border-emerald-600 bg-emerald-50 text-emerald-900 font-semibold shadow-sm'
+                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="truncate">{c.nama.split(' ')[0]} {c.nama.split(' ')[1] || ''}</div>
+                    <div className="text-[10px] text-slate-400 truncate">NIS: {c.nis}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-          <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
-            <span className="text-[10px] text-slate-400 font-semibold uppercase">Presensi Sholat Berjamaah:</span>
-            <p className="text-xs font-semibold text-emerald-700 flex items-center space-x-1">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>{currentChild.status_sholat}</span>
-            </p>
-          </div>
-        </div>
+            {/* Child Identity Card */}
+            <div className="bg-gradient-to-br from-emerald-700 to-emerald-900 text-white rounded-2xl p-5 shadow-sm space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-emerald-600/80">
+                    Santri Aktif
+                  </span>
+                  <h2 className="text-lg font-bold mt-1">{currentChild.nama}</h2>
+                  <p className="text-xs text-emerald-200">NIS: {currentChild.nis} • {currentChild.unit}</p>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-emerald-800 border border-emerald-600 flex items-center justify-center font-bold text-sm">
+                  {currentChild.nama.substring(0, 2)}
+                </div>
+              </div>
+              <div className="pt-2 border-t border-emerald-600/60 text-xs text-emerald-100 flex items-center justify-between">
+                <span>{currentChild.kamar}</span>
+                <span className="px-2 py-0.5 rounded bg-emerald-950/60 text-[10px]">Asrama Penuh</span>
+              </div>
+            </div>
+
+            {/* Keuangan: SPP & Upload Bukti Transfer */}
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+              <div className="flex justify-between items-center">
+                <h3 className="font-bold text-slate-800 text-sm flex items-center space-x-2">
+                  <Wallet className="w-4 h-4 text-emerald-600" />
+                  <span>Keuangan &amp; Validasi Pembayaran</span>
+                </h3>
+                <button
+                  onClick={() => setUploadModal(true)}
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center space-x-1"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Upload Bukti TF</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 font-semibold block">Tagihan SPP:</span>
+                  <span className="text-sm font-bold text-slate-800">
+                    {currentChild.tagihan_spp > 0 ? `Rp ${currentChild.tagihan_spp.toLocaleString('id-ID')}` : 'Lunas'}
+                  </span>
+                  <span className="text-[10px] text-amber-600 block mt-0.5">{currentChild.spp_status}</span>
+                </div>
+
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 font-semibold block">Saldo Uang Jajan:</span>
+                  <span className="text-sm font-bold text-emerald-700">
+                    Rp {currentChild.saldo_jajan.toLocaleString('id-ID')}
+                  </span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">Limit: Rp {currentChild.limit_harian.toLocaleString('id-ID')}/hr</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Kartu SPP Digital (Kuitansi Resmi Digital) */}
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+              <h3 className="font-bold text-slate-800 text-sm flex items-center space-x-2">
+                <FileCheck2 className="w-4 h-4 text-emerald-600" />
+                <span>Kartu SPP Digital (Kuitansi Resmi Sah)</span>
+              </h3>
+
+              <div className="space-y-2">
+                {riwayatKuitansi.length > 0 ? (
+                  riwayatKuitansi.map((kwt, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => setKuitansiModal(kwt)}
+                      className="p-3 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/30 transition flex items-center justify-between cursor-pointer text-xs"
+                    >
+                      <div>
+                        <div className="font-bold text-slate-800">SPP Bulan {kwt.bulan}</div>
+                        <div className="text-[10px] text-slate-400 font-mono">{kwt.no_kuitansi} • {kwt.tanggal}</div>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-mono font-bold text-emerald-700 block">
+                          Rp {kwt.nominal.toLocaleString('id-ID')}
+                        </span>
+                        <span className="text-[10px] text-emerald-600 font-semibold">✓ {kwt.status}</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs text-slate-400 italic">Belum ada riwayat pembayaran SPP tervalidasi.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Tahfidz & Ibadah Section */}
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+              <h3 className="font-bold text-slate-800 text-sm flex items-center space-x-2">
+                <BookOpen className="w-4 h-4 text-emerald-600" />
+                <span>Mutaba'ah Tahfidz &amp; Sholat</span>
+              </h3>
+
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
+                <span className="text-[10px] text-slate-400 font-semibold uppercase">Setoran Terakhir:</span>
+                <p className="text-xs font-semibold text-slate-800">{currentChild.tahfidz_terakhir}</p>
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
+                <span className="text-[10px] text-slate-400 font-semibold uppercase">Presensi Sholat Berjamaah:</span>
+                <p className="text-xs font-semibold text-emerald-700 flex items-center space-x-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>{currentChild.status_sholat}</span>
+                </p>
+              </div>
+            </div>
+          </>
+        )}
       </main>
 
       {/* MODAL UPLOAD BUKTI TRANSFER DENGAN AUTO-KOMPRESI */}
@@ -362,8 +479,8 @@ export default function PortalWaliSantriPage() {
                   onChange={(e) => setFormDataUpload({ ...formDataUpload, bank: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium text-xs bg-slate-50"
                 >
-                  <option value="Bank Syariah Indonesia (BSI) - No. Rek: 7142098811 (Keuangan)">
-                    BSI • Rek. 7142098811 a.n. Yayasan KabarSantri (SPP & Operasional)
+                  <option value={`Bank Syariah Indonesia (BSI) - No. Rek: 7142098811 (Keuangan)`}>
+                    BSI • Rek. 7142098811 a.n. {tenant.name.replace('Pondok Pesantren ', '')} (SPP & Operasional)
                   </option>
                   <option value="Bank Muamalat - No. Rek: 1098445521 (Kesantrian)">
                     Bank Muamalat • Rek. 1098445521 a.n. Dompet Santri (Uang Jajan & Tabungan)
@@ -445,10 +562,10 @@ export default function PortalWaliSantriPage() {
           onClose={() => setKuitansiModal(null)}
           data={{
             nomor_kuitansi: kuitansiModal.no_kuitansi,
-            santri_nama: currentChild.nama,
-            nis: currentChild.nis,
-            kelas: currentChild.unit,
-            wali_nama: 'H. Syamsul Bahri (Wali Santri)',
+            santri_nama: currentChild ? currentChild.nama : 'Santri',
+            nis: currentChild ? currentChild.nis : '-',
+            kelas: currentChild ? currentChild.unit : '-',
+            wali_nama: 'Wali Santri Terdaftar',
             jenis_pembayaran: `SPP Bulan ${kwtBulan(kuitansiModal.bulan)}`,
             nominal: kuitansiModal.nominal,
             tanggal_bayar: kuitansiModal.tanggal,

@@ -22,7 +22,8 @@ import {
   ArrowRight,
   TrendingUp,
   AlertTriangle,
-  Calendar
+  Calendar,
+  Plus
 } from 'lucide-react';
 import { 
   getSharedLearningSessions, 
@@ -40,6 +41,7 @@ import {
 import { getActiveActor, MASTER_PILLAR_ACTORS, ActiveActor } from '@/lib/sessionStore';
 
 export default function LearningSessionKBMPage() {
+  const [mounted, setMounted] = useState(false);
   const [sessions, setSessions] = useState<LearningSession[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<string>('ls-1');
   const [genderFilter, setGenderFilter] = useState<'all' | 'ikhwan' | 'akhwat'>('all');
@@ -49,6 +51,7 @@ export default function LearningSessionKBMPage() {
 
   // Sinkronisasi data sesi KBM & Otomatis sesuaikan gender filter dengan Pengampu yang Login
   useEffect(() => {
+    setMounted(true);
     const actor = getActiveActor();
     setCurrentActor(actor);
     const loadedSessions = getSharedLearningSessions();
@@ -192,6 +195,14 @@ export default function LearningSessionKBMPage() {
     setTimeout(() => setNotif(''), 8000);
   };
 
+  if (!mounted) {
+    return (
+      <div className="p-8 text-center text-xs text-slate-400">
+        Memuat sesi pembelajaran...
+      </div>
+    );
+  }
+
   if (!currentSession) {
     return (
       <div className="space-y-6">
@@ -202,9 +213,15 @@ export default function LearningSessionKBMPage() {
             </span>
             <h1 className="text-xl font-bold mt-2">Sesi Pembelajaran &amp; Penilaian Akademik Guru</h1>
             <p className="text-xs text-emerald-200 mt-1">
-              {typeof window !== 'undefined' && isTenantMode() ? 'Jalur Tenant Live (0 Data Dummy)' : 'Jalur Demo Simulasi'}
+              Manajemen sesi belajar mengajar, presensi real-time, dan asesmen capaian santri
             </p>
           </div>
+          <Link
+            href="/dashboard/mudir"
+            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition self-start md:self-auto flex items-center space-x-1.5"
+          >
+            <span>+ Buat Jadwal di Dashboard Mudir</span>
+          </Link>
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center">
@@ -214,8 +231,17 @@ export default function LearningSessionKBMPage() {
             </div>
             <h3 className="font-bold text-slate-800 text-base">Belum Ada Sesi KBM Terjadwal</h3>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Belum ada data sesi pembelajaran untuk tenant ini. Sesi pembelajaran dan jurnal nilai akan muncul otomatis saat guru atau bagian akademik membuat jadwal KBM.
+              Belum ada mata pelajaran dan sesi pembelajaran untuk tenant ini. Sesi KBM dan jurnal nilai akan muncul otomatis saat Mudir / Kepala Sekolah menambahkan mata pelajaran ke kurikulum.
             </p>
+            <div className="pt-2">
+              <Link
+                href="/dashboard/mudir"
+                className="inline-flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition shadow-xs"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Buka Dashboard Mudir untuk Tambah Mapel</span>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
