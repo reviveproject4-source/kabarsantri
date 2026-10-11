@@ -525,7 +525,7 @@ export default function UnifiedRoleDashboardPage() {
                 SUBSCRIPTION STATUS
               </span>
               <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
-                Paket Layanan: {quotaStats.isFreeZakat ? 'KabarSantri Starter (50 Santri)' : 'Standar Pro Pesantren'}
+                Paket Layanan: {quotaStats.isFreeZakat ? 'Paket Gratis (Starter 50 Santri)' : 'Paket Enterprise (Pesantren Skala Penuh)'}
               </h3>
               <p className="text-xs text-slate-400">
                 Lisensi Resmi Pesantren &bull; Masa Aktif hingga 31 Desember 2026

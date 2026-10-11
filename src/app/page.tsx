@@ -8,32 +8,39 @@ import {
   Phone, 
   Mail, 
   MapPin, 
-  Users, 
   CheckCircle2, 
   ArrowRight, 
   Sparkles, 
   ShieldCheck, 
   Send,
-  BookOpen,
-  ChevronRight,
-  Clock
+  Clock,
+  Lock
 } from 'lucide-react';
-import { submitYayasanRegistration } from '@/lib/yayasanRegistrationStore';
+import { submitYayasanRegistration, PaketType } from '@/lib/yayasanRegistrationStore';
 
 export default function WelcomeScreenYayasanPage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [registeredData, setRegisteredData] = useState<any>(null);
 
-  // Form State
-  const [formData, setFormData] = useState({
+  // Form State: Paket HANYA 2 (Gratis dan Enterprise)
+  const [formData, setFormData] = useState<{
+    nama_yayasan: string;
+    nama_pimpinan: string;
+    no_whatsapp: string;
+    email: string;
+    kota: string;
+    estimasi_santri: string;
+    paket_pilihan: PaketType;
+    catatan: string;
+  }>({
     nama_yayasan: '',
     nama_pimpinan: '',
     no_whatsapp: '',
     email: '',
     kota: '',
     estimasi_santri: '50 - 200 Santri',
-    paket_pilihan: 'Standar Pro Pesantren',
+    paket_pilihan: 'Gratis',
     catatan: '',
   });
 
@@ -58,6 +65,11 @@ export default function WelcomeScreenYayasanPage() {
       });
 
       setRegisteredData(result);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('ks_pending_registration_id', result.id);
+        localStorage.setItem('ks_pending_registration_nama', result.nama_yayasan);
+        localStorage.setItem('ks_pending_registration_status', 'pending');
+      }
       setSubmitted(true);
     } catch (err) {
       console.error(err);
@@ -89,9 +101,9 @@ export default function WelcomeScreenYayasanPage() {
           <div className="flex items-center space-x-3">
             <Link
               href="/login"
-              className="inline-flex items-center space-x-1.5 px-4 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition border border-emerald-200 shadow-2xs"
+              className="inline-flex items-center space-x-1.5 px-4 py-2 text-xs font-bold text-slate-700 hover:text-emerald-700 bg-white hover:bg-emerald-50 rounded-xl transition border border-slate-200 shadow-2xs"
             >
-              <span>Masuk Portal</span>
+              <span>Masuk Akun Resmi</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -101,21 +113,21 @@ export default function WelcomeScreenYayasanPage() {
       {/* Konten Utama */}
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {submitted ? (
-          /* Konfirmasi Sukses Pendaftaran */
+          /* Konfirmasi Pendaftaran: Wajib ACC Super Admin */
           <div className="max-w-lg mx-auto bg-white rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-xl text-center space-y-6 animate-in fade-in duration-300">
-            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
-              <CheckCircle2 className="w-10 h-10" />
+            <div className="w-16 h-16 bg-amber-100 text-amber-700 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+              <Clock className="w-9 h-9" />
             </div>
 
             <div className="space-y-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200 inline-block">
-                Pendaftaran Berhasil Diterima
+              <span className="text-[11px] font-bold uppercase tracking-wider px-3 py-1 bg-amber-50 text-amber-800 rounded-full border border-amber-300 inline-block">
+                Menunggu Persetujuan Super Admin
               </span>
-              <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-                Alhamdulillah!
+              <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                Pendaftaran Berhasil Dikirim!
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Data pendaftaran <strong>{registeredData?.nama_yayasan}</strong> telah kami terima sebagai bahan referensi resmi bagi <strong>Super Admin</strong>.
+                Data pendaftaran <strong>{registeredData?.nama_yayasan}</strong> telah kami terima.
               </p>
             </div>
 
@@ -129,52 +141,63 @@ export default function WelcomeScreenYayasanPage() {
                 <span className="font-semibold text-emerald-700">{registeredData?.no_whatsapp}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-200/60">
-                <span className="text-slate-600 font-medium">Paket Langganan:</span>
-                <span className="font-semibold text-slate-800">{registeredData?.paket_pilihan}</span>
+                <span className="text-slate-600 font-medium">Paket Dipilih:</span>
+                <span className="font-bold text-slate-900">Paket {registeredData?.paket_pilihan}</span>
               </div>
               <div className="flex justify-between py-1">
-                <span className="text-slate-600 font-medium">Status Pengajuan:</span>
-                <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">Menunggu Aktivasi Super Admin</span>
+                <span className="text-slate-600 font-medium">Status Akun:</span>
+                <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                  ⏳ Menunggu ACC Super Admin
+                </span>
               </div>
             </div>
 
-            <div className="bg-blue-50 text-blue-900 rounded-2xl p-4 text-xs text-left border border-blue-200/80 space-y-1">
-              <div className="font-bold flex items-center space-x-1.5">
-                <Clock className="w-4 h-4 text-blue-600" />
-                <span>Langkah Selanjutnya:</span>
+            {/* Peringatan Kunci: Hanya bisa buka menu setelah ACC */}
+            <div className="bg-amber-50 text-amber-900 rounded-2xl p-4 text-xs text-left border border-amber-300 space-y-1.5">
+              <div className="font-bold flex items-center space-x-1.5 text-amber-900">
+                <Lock className="w-4 h-4 text-amber-700" />
+                <span>Pemberitahuan Aktivasi:</span>
               </div>
-              <p className="text-[11px] text-blue-700 leading-relaxed">
-                Super Admin akan memeriksa data lembaga Anda dan mengirimkan pesan aktivasi beserta kredensial akun administrator resmi ke nomor WhatsApp di atas.
+              <p className="text-[11px] text-amber-800 leading-relaxed">
+                Sesuai kebijakan keamanan, <strong>Yayasan hanya dapat membuka menu dan dashboard setelah mendapatkan persetujuan (ACC) resmi dari Super Admin</strong>. Kredensial login akan dikirimkan langsung ke nomor WhatsApp di atas setelah di-ACC.
               </p>
             </div>
 
-            <div className="pt-2 flex flex-col sm:flex-row gap-3">
+            <div className="pt-2 flex flex-col gap-2.5">
               <Link
-                href="/login"
-                className="w-full inline-flex items-center justify-center space-x-2 py-3 px-5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition"
+                href="/super-admin"
+                className="w-full inline-flex items-center justify-center space-x-2 py-3 px-5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs rounded-xl shadow-md transition"
               >
-                <span>Sudah Punya Akun? Masuk Portal</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>Buka Konsol Super Admin (Verifikasi / ACC Lembaga) ➔</span>
               </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  setSubmitted(false);
-                  setFormData({
-                    nama_yayasan: '',
-                    nama_pimpinan: '',
-                    no_whatsapp: '',
-                    email: '',
-                    kota: '',
-                    estimasi_santri: '50 - 200 Santri',
-                    paket_pilihan: 'Standar Pro Pesantren',
-                    catatan: '',
-                  });
-                }}
-                className="w-full py-3 px-4 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs rounded-xl border border-slate-300 transition"
-              >
-                Daftarkan Lembaga Lain
-              </button>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Link
+                  href="/login"
+                  className="w-full inline-flex items-center justify-center space-x-2 py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition"
+                >
+                  <span>Cek Halaman Login</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubmitted(false);
+                    setFormData({
+                      nama_yayasan: '',
+                      nama_pimpinan: '',
+                      no_whatsapp: '',
+                      email: '',
+                      kota: '',
+                      estimasi_santri: '50 - 200 Santri',
+                      paket_pilihan: 'Gratis',
+                      catatan: '',
+                    });
+                  }}
+                  className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs rounded-xl border border-slate-300 transition"
+                >
+                  Daftarkan Lembaga Lain
+                </button>
+              </div>
             </div>
           </div>
         ) : (
@@ -184,13 +207,13 @@ export default function WelcomeScreenYayasanPage() {
             <div className="text-center space-y-2 max-w-xl mx-auto">
               <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Portal Registrasi & Aktivasi Yayasan</span>
+                <span>Portal Registrasi Yayasan &amp; Pesantren</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                 Selamat Datang di KabarSantri
               </h1>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Lengkapi formulir di bawah ini sebagai bahan referensi resmi bagi Super Admin untuk proses aktivasi sistem dan pengelolaan langganan pesantren Anda.
+                Lengkapi formulir pendaftaran di bawah ini sebagai bahan referensi resmi bagi Super Admin untuk proses verifikasi, persetujuan (ACC), dan aktivasi paket pesantren Anda.
               </p>
             </div>
 
@@ -290,16 +313,16 @@ export default function WelcomeScreenYayasanPage() {
                         className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 text-xs sm:text-sm transition outline-hidden bg-slate-50/50 focus:bg-white font-medium"
                       />
                     </div>
-                    <p className="text-[10px] text-slate-600">Super Admin akan menghubungi via WhatsApp ini untuk aktivasi.</p>
+                    <p className="text-[10px] text-slate-600">Super Admin akan mengirim kredensial ke nomor WhatsApp ini setelah di-ACC.</p>
                   </div>
                 </div>
               </div>
 
-              {/* Seksi 3: Kebutuhan Sistem & Paket Langganan */}
+              {/* Seksi 3: Kebutuhan Sistem & Paket Langganan (HANYA 2 PAKET: GRATIS & ENTERPRISE) */}
               <div className="space-y-4 pt-2">
                 <div className="flex items-center space-x-2 pb-2 border-b border-slate-100">
                   <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">3. Kapasitas & Paket Langganan</h3>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">3. Kapasitas &amp; Pilihan Paket Langganan</h3>
                 </div>
 
                 {/* Estimasi Santri (Pills) */}
@@ -323,76 +346,85 @@ export default function WelcomeScreenYayasanPage() {
                   </div>
                 </div>
 
-                {/* Pilihan Paket Langganan */}
+                {/* Pilihan Paket Langganan: HANYA 2 PAKET (GRATIS & ENTERPRISE) */}
                 <div className="space-y-2 pt-2">
-                  <label className="text-xs font-semibold text-slate-700">Pilihan Paket Berlangganan:</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {/* Paket Starter */}
+                  <label className="text-xs font-semibold text-slate-700">Pilih Paket Layanan:</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Paket 1: GRATIS */}
                     <div
-                      onClick={() => setFormData({ ...formData, paket_pilihan: 'Starter (Gratis 50 Santri)' })}
-                      className={`cursor-pointer p-4 rounded-2xl border transition relative flex flex-col justify-between ${
-                        formData.paket_pilihan.includes('Starter')
-                          ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20'
+                      onClick={() => setFormData({ ...formData, paket_pilihan: 'Gratis' })}
+                      className={`cursor-pointer p-5 rounded-2xl border transition relative flex flex-col justify-between ${
+                        formData.paket_pilihan === 'Gratis'
+                          ? 'border-emerald-500 bg-emerald-50/50 ring-2 ring-emerald-500/20'
                           : 'border-slate-200 hover:border-slate-300 bg-white'
                       }`}
                     >
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                            Starter
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">
+                            PAKET GRATIS
                           </span>
-                          <span className="text-xs font-bold text-emerald-600">Gratis</span>
+                          <span className="text-sm font-black text-emerald-700">Rp 0 / Selamanya</span>
                         </div>
-                        <h4 className="font-bold text-xs text-slate-900 mt-2">Kapasitas 50 Santri</h4>
-                        <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
-                          Fokus Tahfidz, Pembinaan Adab, Poin Reward, & Portal Transparansi Wali Santri.
-                        </p>
+                        <h4 className="font-extrabold text-sm text-slate-900">Kapasitas 50 Santri</h4>
+                        <ul className="text-xs text-slate-600 space-y-1.5 pt-1">
+                          <li className="flex items-center space-x-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span>Setoran &amp; Mutaba'ah Tahfidz Al-Qur'an</span>
+                          </li>
+                          <li className="flex items-center space-x-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span>Pembinaan Adab &amp; Reward Prestasi</span>
+                          </li>
+                          <li className="flex items-center space-x-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span>Portal Transparansi Wali Santri Mandiri</span>
+                          </li>
+                        </ul>
+                      </div>
+                      <div className="mt-4 pt-3 border-t border-slate-200/60 text-[11px] font-bold text-emerald-700">
+                        {formData.paket_pilihan === 'Gratis' ? '✓ Paket Terpilih' : 'Pilih Paket Ini'}
                       </div>
                     </div>
 
-                    {/* Paket Standar Pro */}
+                    {/* Paket 2: ENTERPRISE */}
                     <div
-                      onClick={() => setFormData({ ...formData, paket_pilihan: 'Standar Pro Pesantren' })}
-                      className={`cursor-pointer p-4 rounded-2xl border transition relative flex flex-col justify-between ${
-                        formData.paket_pilihan.includes('Standar Pro')
-                          ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20'
+                      onClick={() => setFormData({ ...formData, paket_pilihan: 'Enterprise' })}
+                      className={`cursor-pointer p-5 rounded-2xl border transition relative flex flex-col justify-between ${
+                        formData.paket_pilihan === 'Enterprise'
+                          ? 'border-purple-500 bg-purple-50/50 ring-2 ring-purple-500/20'
                           : 'border-slate-200 hover:border-slate-300 bg-white'
                       }`}
                     >
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
-                            Populer
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-purple-800 bg-purple-100 px-2.5 py-0.5 rounded-full">
+                            PAKET ENTERPRISE
                           </span>
-                          <span className="text-xs font-bold text-blue-600">Pro</span>
+                          <span className="text-sm font-black text-purple-700">Solusi Lengkap</span>
                         </div>
-                        <h4 className="font-bold text-xs text-slate-900 mt-2">Standar Pro Pesantren</h4>
-                        <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
-                          Modul Akademik Lengkap, Tagihan SPP Digital, Presensi GPS Guru, & WhatsApp Blast.
-                        </p>
+                        <h4 className="font-extrabold text-sm text-slate-900">Pesantren Skala Penuh</h4>
+                        <ul className="text-xs text-slate-600 space-y-1.5 pt-1">
+                          <li className="flex items-center space-x-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                            <span>Seluruh Fitur Akademik, KBM &amp; Tahfidz</span>
+                          </li>
+                          <li className="flex items-center space-x-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                            <span>Tagihan SPP Digital &amp; Kuitansi WhatsApp</span>
+                          </li>
+                          <li className="flex items-center space-x-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                            <span>Presensi Mandiri GPS, Rumah Tangga &amp; Akuntansi</span>
+                          </li>
+                          <li className="flex items-center space-x-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                            <span>Kuota Santri Penuh &amp; Multi-Cabang</span>
+                          </li>
+                        </ul>
                       </div>
-                    </div>
-
-                    {/* Paket Enterprise */}
-                    <div
-                      onClick={() => setFormData({ ...formData, paket_pilihan: 'Enterprise Yayasan' })}
-                      className={`cursor-pointer p-4 rounded-2xl border transition relative flex flex-col justify-between ${
-                        formData.paket_pilihan.includes('Enterprise')
-                          ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20'
-                          : 'border-slate-200 hover:border-slate-300 bg-white'
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
-                            Lengkap
-                          </span>
-                          <span className="text-xs font-bold text-purple-600">Custom</span>
-                        </div>
-                        <h4 className="font-bold text-xs text-slate-900 mt-2">Enterprise Yayasan</h4>
-                        <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
-                          Multi-Cabang, Double-Entry General Ledger Akuntansi, Sarpras, & Kuota Santri Tak Terbatas.
-                        </p>
+                      <div className="mt-4 pt-3 border-t border-slate-200/60 text-[11px] font-bold text-purple-700">
+                        {formData.paket_pilihan === 'Enterprise' ? '✓ Paket Terpilih' : 'Pilih Paket Ini'}
                       </div>
                     </div>
                   </div>
@@ -401,11 +433,11 @@ export default function WelcomeScreenYayasanPage() {
                 {/* Catatan Tambahan */}
                 <div className="space-y-1.5 pt-1">
                   <label className="text-xs font-semibold text-slate-700">
-                    Catatan Khusus atau Kebutuhan Tambahan (Opsional)
+                    Catatan Kebutuhan Khusus Lembaga (Opsional)
                   </label>
                   <textarea
                     rows={2}
-                    placeholder="Contoh: Kami ingin pelatihan teknis untuk 10 guru dan migrasi data santri awal."
+                    placeholder="Contoh: Mohon aktivasi fitur SPP dan pelatihan untuk bendahara pondok."
                     value={formData.catatan}
                     onChange={(e) => setFormData({ ...formData, catatan: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 text-xs sm:text-sm transition outline-hidden bg-slate-50/50 focus:bg-white resize-none"
@@ -416,8 +448,8 @@ export default function WelcomeScreenYayasanPage() {
               {/* Tombol Kirim Pendaftaran */}
               <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="text-[11px] text-slate-600 text-center sm:text-left flex items-center space-x-1.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Data Anda aman dan terisolasi khusus untuk referensi aktivasi.</span>
+                  <Lock className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Akses sistem dibuka setelah disetujui (ACC) oleh Super Admin.</span>
                 </div>
 
                 <button
@@ -426,7 +458,7 @@ export default function WelcomeScreenYayasanPage() {
                   className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-7 py-3 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs sm:text-sm rounded-xl shadow-lg shadow-emerald-600/20 transition disabled:opacity-50"
                 >
                   {loading ? (
-                    <span>Memproses Pendaftaran...</span>
+                    <span>Mengirim Pendaftaran...</span>
                   ) : (
                     <>
                       <span>Kirim Pendaftaran Yayasan</span>
@@ -446,7 +478,7 @@ export default function WelcomeScreenYayasanPage() {
           <span>© 2026 KabarSantri v2.0 Platform. Solusi Digital Terpadu Pesantren Indonesia.</span>
           <div className="flex items-center space-x-4">
             <Link href="/login" className="hover:text-emerald-700 transition">
-              Masuk Portal
+              Masuk Akun Resmi
             </Link>
           </div>
         </div>

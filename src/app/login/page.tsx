@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Shield, KeyRound, User, Lock, ArrowRight, HeartHandshake, Eye, EyeOff, AlertCircle, Building2, Sun, Moon } from 'lucide-react';
 import { setAppMode, setActiveActorByRole } from '@/lib/sessionStore';
 import { useThemeMode } from '@/lib/themeStore';
+import { getYayasanRegistrations } from '@/lib/yayasanRegistrationStore';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -54,9 +55,57 @@ export default function LoginPage() {
       return;
     }
 
+    // Verifikasi Status ACC Super Admin
+    try {
+      const registrations = getYayasanRegistrations();
+      
+      // 1. Cek apakah ada pendaftaran pending di perangkat ini
+      const pendingDeviceId = typeof window !== 'undefined' ? localStorage.getItem('ks_pending_registration_id') : null;
+      if (pendingDeviceId) {
+        const pendingReg = registrations.find(r => r.id === pendingDeviceId);
+        if (pendingReg && pendingReg.status === 'pending') {
+          setTimeout(() => {
+            setAuthError({
+              isError: true,
+              generalMessage: `⚠️ Akses Belum Di-ACC: Lembaga "${pendingReg.nama_yayasan}" masih berstatus MENUNGGU PERSETUJUAN Super Admin. Seluruh menu dan backoffice terkunci hingga disetujui di Konsol Super Admin.`,
+            });
+            setLoading(false);
+          }, 400);
+          return;
+        }
+      }
+
+      // 2. Cek apakah email yang dimasukkan terdaftar dan masih pending
+      const matchedReg = registrations.find(r => 
+        r.email?.toLowerCase() === identifier.toLowerCase() ||
+        r.admin_email?.toLowerCase() === identifier.toLowerCase() ||
+        r.no_whatsapp === identifier
+      );
+
+      if (matchedReg && matchedReg.status === 'pending') {
+        setTimeout(() => {
+          setAuthError({
+            isError: true,
+            generalMessage: `⚠️ Akses Belum Di-ACC: Akun untuk yayasan "${matchedReg.nama_yayasan}" belum disetujui (ACC) oleh Super Admin. Harap tunggu aktivasi resmi.`,
+          });
+          setLoading(false);
+        }, 400);
+        return;
+      }
+    } catch {}
+
     setTimeout(() => {
       // Set Mode Tenant
-      const tenantId = 'tenant-rabu-001';
+      const registrations = getYayasanRegistrations();
+      const matchedActive = registrations.find(r => 
+        r.status === 'active' && (
+          r.email?.toLowerCase() === identifier.toLowerCase() ||
+          r.admin_email?.toLowerCase() === identifier.toLowerCase() ||
+          r.no_whatsapp === identifier
+        )
+      );
+
+      const tenantId = matchedActive?.activated_tenant_id || 'tenant-rabu-001';
       setAppMode('tenant', tenantId);
       setActiveActorByRole('tenant_admin_nh');
 
@@ -141,9 +190,22 @@ export default function LoginPage() {
         <div className="p-6">
           {/* Alert Error */}
           {authError.isError && (
-            <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-300 dark:border-red-900 text-red-700 dark:text-red-300 text-xs flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
-              <span>{authError.generalMessage || 'Kredensial tidak sesuai.'}</span>
+            <div className="mb-4 p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs space-y-2">
+              <div className="flex items-start space-x-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+                <span className="leading-relaxed">{authError.generalMessage || 'Kredensial tidak sesuai.'}</span>
+              </div>
+              {authError.generalMessage?.includes('ACC') && (
+                <div className="pt-1.5 border-t border-amber-200 dark:border-amber-800/60 flex items-center justify-between">
+                  <span className="text-[11px] text-amber-700 dark:text-amber-300">Aktivasi akun di Super Admin:</span>
+                  <Link
+                    href="/super-admin"
+                    className="font-bold text-amber-900 dark:text-amber-100 underline hover:no-underline text-[11px]"
+                  >
+                    Buka Konsol Super Admin ➔
+                  </Link>
+                </div>
+              )}
             </div>
           )}
 
