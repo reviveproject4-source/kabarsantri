@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { getFilteredNavigation, NavItem } from '@/config/navigation';
 import LockedFeatureModal from '@/components/common/LockedFeatureModal';
-import { APP_BRAND, useActiveTenant } from '@/lib/sessionStore';
+import { APP_BRAND, useActiveTenant, getActiveActor } from '@/lib/sessionStore';
 import { checkStudentQuota } from '@/lib/tenantEntitlementStore';
 import { isTenantMode } from '@/lib/sharedDataStore';
 
@@ -70,9 +70,19 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
     return `${baseHref}?mode=${mode}`;
   };
 
+  const activeActor = typeof window !== 'undefined' ? getActiveActor() : { role_key: 'yayasan' };
+  const activeRole = activeActor.role_key;
+
   // Yayasan tidak memerlukan fitur presensi harian. Filter berdasarkan Produk Entitlement Tenant.
-  const menuItems = getFilteredNavigation(tenant.id).filter(item => {
+  // Super Admin Onboarding terisolasi dari Jalur Tenant Live dan tidak pernah ditampilkan untuk tenant.
+  const menuItems = getFilteredNavigation(tenant.id, undefined, activeRole, isTenant).filter(item => {
     if (isYayasanExecutive && item.href.startsWith('/presensi')) {
+      return false;
+    }
+    if (isTenant && (item.href.startsWith('/super-admin') || item.superAdminOnly)) {
+      return false;
+    }
+    if (item.superAdminOnly && activeRole !== 'super_admin') {
       return false;
     }
     return true;

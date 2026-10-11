@@ -151,10 +151,19 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
     }
   };
 
-  // Sinkronkan Peran Aktif sesuai Rute
+  // Sinkronkan Peran Aktif sesuai Rute (Kecuali jika Jalur Tenant Live aktif)
   React.useEffect(() => {
     const current = getActiveActor();
     const currentKey = current.role_key;
+
+    if (isTenant) {
+      // Jalur Tenant Live terisolasi: Akun harus tetap Admin Lembaga Tenant (bukan Super Admin)
+      if (currentKey !== 'tenant_admin_nh') {
+        setActiveRole('tenant_admin_nh');
+        setActiveActorByRole('tenant_admin_nh');
+      }
+      return;
+    }
 
     if (pathname.startsWith('/rumah-tangga') && ['laundry', 'dapur', 'satpam', 'kepala_rumah_tangga'].includes(currentKey)) {
       return;

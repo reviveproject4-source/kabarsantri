@@ -36,8 +36,15 @@ import {
   TenantRecord, 
   SubscriptionTier 
 } from '@/lib/superAdminStore';
+import { useSearchParams } from 'next/navigation';
+import { useAppMode } from '@/lib/sessionStore';
+import { isTenantMode } from '@/lib/sharedDataStore';
 
 export default function SuperAdminOnboardingPage() {
+  const searchParams = useSearchParams();
+  const isTenantQuery = searchParams?.get('mode') === 'tenant';
+  const { isTenant } = useAppMode();
+  const isTenantActive = isTenantQuery || isTenant || (typeof window !== 'undefined' && isTenantMode());
   const [tenants, setTenants] = useState<TenantRecord[]>([]);
   const [activeFilter, setActiveFilter] = useState<'all' | 'tier1_free' | 'tier2_pro'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -133,6 +140,37 @@ export default function SuperAdminOnboardingPage() {
   const totalTenants = tenants.length;
   const tier1Count = tenants.filter(t => t.tier === 'tier1_free').length;
   const totalSantriManaged = tenants.reduce((acc, t) => acc + (t.current_santri || 0), 0);
+
+  if (isTenantActive) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 text-center space-y-4 shadow-xl">
+          <div className="w-16 h-16 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mx-auto border border-blue-200 dark:border-blue-900 shadow-inner">
+            <ShieldCheck className="w-8 h-8" />
+          </div>
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full border border-blue-200 dark:border-blue-800">
+              Isolasi Multi-Tenant
+            </span>
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 mt-2">
+              Konsol Super Admin Terisolasi
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+              Dashboard Super Admin hanya diperuntukkan bagi pengelola sistem platform KabarSantri untuk keperluan onboarding tenant baru, dan tidak dapat diakses dari Jalur Tenant Live. Seluruh data operasional lembaga Anda tetap terisolasi dan aman.
+            </p>
+          </div>
+          <div className="pt-2">
+            <Link
+              href="/dashboard?mode=tenant"
+              className="inline-flex items-center space-x-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition"
+            >
+              <span>← Kembali ke Dashboard Lembaga</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

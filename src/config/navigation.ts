@@ -11,6 +11,7 @@ export interface NavItem {
   featureFlag?: keyof TenantFeatureFlags;
   productCode?: ProductCode; // Modular Product Entitlement
   isLockedInFreeTier?: boolean;
+  superAdminOnly?: boolean; // Khusus konsol internal platform (terlarang untuk tenant live)
   children?: NavItem[];
 }
 
@@ -126,6 +127,7 @@ export const BACKOFFICE_NAVIGATION: NavItem[] = [
     title: 'Super Admin Onboarding',
     href: '/super-admin',
     icon: 'ShieldCheck',
+    superAdminOnly: true,
     children: [
       { title: 'Onboarding Tenant Baru (Rabu)', href: '/super-admin', badge: 'Super Admin' },
       { title: 'Daftar Tenant & Kuota Santri', href: '/super-admin?tab=tenants' },
@@ -144,13 +146,27 @@ export const BACKOFFICE_NAVIGATION: NavItem[] = [
 
 /**
  * Filter navigasi secara dinamis berdasarkan Feature Flags dan Tenant Product Entitlements.
+ * Jalur Tenant Live terisolasi 100% dan TIDAK PERNAH menampilkan menu Super Admin.
  */
 export function getFilteredNavigation(
   tenantId?: string,
-  customFlags?: Partial<TenantFeatureFlags>
+  customFlags?: Partial<TenantFeatureFlags>,
+  activeRole?: string,
+  isTenant?: boolean
 ): NavItem[] {
+  const isTenantActive = isTenant ?? (typeof window !== 'undefined' ? (window.location.search.includes('mode=tenant') || document.cookie.includes('ks_app_mode=tenant')) : false);
+
   return BACKOFFICE_NAVIGATION
     .filter(item => {
+      // 0. Super Admin Isolation: Terlarang di Jalur Tenant Live
+      if (item.superAdminOnly) {
+        if (isTenantActive || tenantId) {
+          return false;
+        }
+        if (activeRole && activeRole !== 'super_admin') {
+          return false;
+        }
+      }
       // 1. Feature flag check
       if (item.featureFlag && !isFeatureActive(item.featureFlag, customFlags)) {
         return false;
@@ -164,6 +180,10 @@ export function getFilteredNavigation(
     .map(item => {
       if (!item.children) return item;
       const filteredChildren = item.children.filter(child => {
+        // Child super admin check
+        if (child.superAdminOnly && (isTenantActive || tenantId || (activeRole && activeRole !== 'super_admin'))) {
+          return false;
+        }
         // Child feature flag
         if (child.featureFlag && !isFeatureActive(child.featureFlag, customFlags)) {
           return false;

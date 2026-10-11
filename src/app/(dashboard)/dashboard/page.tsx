@@ -2134,9 +2134,9 @@ export default function UnifiedRoleDashboardPage() {
           )}
 
           {/* ------------------------------------------------------------------------- */}
-          {/* SUPER ADMINISTRATOR & MULTI-TENANT CONSOLE                                */}
+          {/* SUPER ADMINISTRATOR & MULTI-TENANT CONSOLE (HANYA UNTUK INTERNAL PLATFORM)  */}
           {/* ------------------------------------------------------------------------- */}
-          {currentActor.role_key === 'super_admin' && (
+          {!isTenant && currentActor.role_key === 'super_admin' && (
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
