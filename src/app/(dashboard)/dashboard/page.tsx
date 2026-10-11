@@ -359,11 +359,11 @@ export default function UnifiedRoleDashboardPage() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-blue-100 dark:border-slate-800 pb-3">
             <div className="flex items-center space-x-3">
               <div className="w-11 h-11 rounded-xl bg-blue-700 text-white flex items-center justify-center font-black text-base shadow-sm">
-                NH
+                {tenant.name ? tenant.name.substring(0, 2).toUpperCase() : 'KS'}
               </div>
               <div>
                 <div className="flex items-center space-x-2">
-                  <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">{tenant.name}</h2>
+                  <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">{tenant.name || ''}</h2>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                     quotaStats.isFreeZakat
                       ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
@@ -373,7 +373,7 @@ export default function UnifiedRoleDashboardPage() {
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {tenant.city} • Pimpinan: <strong>Administrator Lembaga</strong>
+                  {tenant.city ? `${tenant.city} • ` : ''}Pimpinan: <strong>Administrator Lembaga</strong>
                 </p>
               </div>
             </div>
@@ -666,7 +666,7 @@ export default function UnifiedRoleDashboardPage() {
                   Daftar Santri Terdaftar ({tenantSantriCount} Santri)
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Data eksklusif tenant Pesantren Tahfidz Nurul Huda
+                  Data santri resmi terdaftar
                 </p>
               </div>
               <Link

@@ -187,7 +187,7 @@ export default function SPPBillingPage() {
         <div>
           <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">Tagihan &amp; Pembayaran SPP Pesantren</h1>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            {isTenant ? 'Mode Tenant Live (Pesantren Tahfidz Nurul Huda)' : 'Otomatisasi Invoice Bulanan, Virtual Account, QRIS & Pembukuan Buku Besar'}
+            {isTenant ? 'Otomatisasi Tagihan SPP, Rekonsiliasi Bank & Pembukuan Kas' : 'Otomatisasi Invoice Bulanan, Virtual Account, QRIS & Pembukuan Buku Besar'}
           </p>
         </div>
 

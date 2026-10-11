@@ -97,7 +97,7 @@ export default function TambahSantriPage() {
       nis: formData.nis,
       nama: formData.nama_lengkap,
       kelas_id: formData.unit_id,
-      kelas: formData.unit_id === 'unit-mts-putra' ? 'Kelas 7A Tahfidz Putra' : 'Kelas Tahfidz Nurul Huda',
+      kelas: formData.unit_id === 'unit-mts-putra' ? 'Kelas 7A Tahfidz Putra' : 'Kelas Tahfidz',
       kamar: formData.kamar_id === 'kamar-101' ? 'Kamar 101 - Asrama' : 'Kamar Asrama Santri',
       gender: formData.gender === 'P' ? 'akhwat' : 'ikhwan',
       wali_nama: formData.wali_nama || 'Wali Santri',
@@ -126,7 +126,7 @@ export default function TambahSantriPage() {
           <div>
             <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">Tambah Santri Baru</h1>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Pendaftaran Data Pokok Santri ({tenant.name})
+              Pendaftaran Data Pokok Santri{tenant.name ? ` (${tenant.name})` : ''}
             </p>
           </div>
         </div>
@@ -318,7 +318,7 @@ export default function TambahSantriPage() {
                 onChange={(e) => setFormData({ ...formData, unit_id: e.target.value })}
                 className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 disabled:opacity-50"
               >
-                <option value="unit-tahfidz-nh">Madrasah Tahfidz Nurul Huda</option>
+                <option value="unit-tahfidz-nh">Madrasah Tahfidz</option>
                 <option value="unit-mts-putra">MTs Tahfidz Sains (Putra)</option>
                 <option value="unit-ma-putra">MA Unggulan Al-Qur'an (Putra)</option>
                 <option value="unit-pondok-salaf">Pondok Pesantren Salafiyah</option>

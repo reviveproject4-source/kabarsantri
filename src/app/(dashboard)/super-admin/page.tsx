@@ -197,10 +197,10 @@ export default function SuperAdminOnboardingPage() {
           <button
             onClick={() => {
               setFormData({
-                name: 'Pesantren Tahfidz Nurul Huda',
-                leader_name: 'Ust. H. Fauzan Mansur, Lc.',
-                leader_wa: '081389012345',
-                city: 'Kediri, Jawa Timur',
+                name: '',
+                leader_name: '',
+                leader_wa: '',
+                city: '',
                 tier: 'tier1_free',
                 target_launch_date: 'Rabu, 07 Oktober 2026',
                 notes: 'Tenant perdana paket Starter 50 Santri - Onboarding Rabu.',
@@ -461,7 +461,7 @@ export default function SuperAdminOnboardingPage() {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Contoh: Pesantren Tahfidz Nurul Huda"
+                  placeholder="Contoh: Pondok Pesantren Tahfidz"
                   className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>

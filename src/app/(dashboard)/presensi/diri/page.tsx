@@ -32,7 +32,7 @@ import {
   PresensiPegawaiRecord,
   isTenantMode
 } from '@/lib/sharedDataStore';
-import { useActiveActor, ActiveActor, useAppMode } from '@/lib/sessionStore';
+import { useActiveActor, ActiveActor, useAppMode, useActiveTenant } from '@/lib/sessionStore';
 import { getEmployees } from '@/lib/kepegawaianStore';
 
 /**
@@ -181,6 +181,7 @@ export default function AbsenDiriPribadiPage() {
   const isTenantParam = searchParams?.get('mode') === 'tenant';
   const isTenantActive = isTenantParam || (mounted ? (isTenant || (typeof window !== 'undefined' && isTenantMode())) : false);
   const activeActor = useActiveActor();
+  const tenant = useActiveTenant();
 
   // Pos Kerja aktif (otomatis terpilih sesuai jabatan, fleksibel diganti jika tugas silang)
   const [selectedPos, setSelectedPos] = useState<PosKerjaPesantren>(DAFTAR_POS_KERJA_PESANTREN[0]);
@@ -466,8 +467,8 @@ export default function AbsenDiriPribadiPage() {
                 <span className="text-[11px] text-slate-600 block">
                   {isTenantActive
                     ? (tenantEmployees.length > 0 && selectedEmpId
-                        ? `${tenantEmployees.find(e => e.id === selectedEmpId)?.current_position || 'Pegawai'} • Pesantren Tahfidz Nurul Huda`
-                        : 'Administrator Lembaga • Pesantren Tahfidz Nurul Huda')
+                        ? `${tenantEmployees.find(e => e.id === selectedEmpId)?.current_position || 'Pegawai'}${tenant.name ? ` • ${tenant.name}` : ''}`
+                        : `Administrator Lembaga${tenant.name ? ` • ${tenant.name}` : ''}`)
                     : `${activeActor.title} • ${activeActor.dept}`}
                 </span>
               </div>
@@ -521,7 +522,7 @@ export default function AbsenDiriPribadiPage() {
 
             <div className="pt-2 border-t border-emerald-200/60 flex items-center justify-between text-[11px] text-slate-500 font-mono">
               <span>NIP: {isTenantActive ? (selectedEmpId ? tenantEmployees.find(e => e.id === selectedEmpId)?.nip || '-' : '-') : activeActor.nip}</span>
-              <span>Unit: {isTenantActive ? 'Pesantren Tahfidz Nurul Huda' : (activeActor.unit_name || 'Pesantren Tahfidz Nurul Huda')}</span>
+              <span>Unit: {isTenantActive ? (tenant.name || '-') : (activeActor.unit_name || tenant.name || '-')}</span>
             </div>
           </div>
 

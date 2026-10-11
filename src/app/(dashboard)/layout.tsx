@@ -276,7 +276,7 @@ export default function DashboardLayout({
                       </div>
                     )}
                     <div>
-                      <div className="font-extrabold text-xs text-slate-900 dark:text-slate-100">{tenant.name}</div>
+                      <div className="font-extrabold text-xs text-slate-900 dark:text-slate-100">{tenant.name || 'Portal Lembaga'}</div>
                       <div className="text-[10px] text-blue-700 dark:text-blue-300 font-semibold">{APP_BRAND.name} {APP_BRAND.version}</div>
                     </div>
                   </div>

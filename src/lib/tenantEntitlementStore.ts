@@ -38,12 +38,12 @@ const STORAGE_KEY = 'ks_tenant_entitlements_v2';
 
 /**
  * DEFAULT SEED ENTITLEMENTS FOR KEY TENANTS:
- * 1. tenant-rabu-001 (Pesantren Tahfidz Nurul Huda) -> KABARSANTRI FREE — ZAKAT
+ * 1. tenant-rabu-001 (Tenant Live Lembaga) -> KABARSANTRI FREE — ZAKAT
  *    Hafalan (ACTIVE), Presensi (ACTIVE), Other 6 products (INACTIVE).
  * 2. tenant-pesantren-001 (Pondok Al-Hikmah Demo) -> FULL BOS (All 8 Products ACTIVE).
  */
 const INITIAL_ENTITLEMENTS: TenantEntitlement[] = [
-  // Tenant Target Live: Pesantren Tahfidz Nurul Huda (Paket Zakat)
+  // Tenant Target Live: Tenant Baru (Paket Zakat)
   { tenant_id: 'tenant-rabu-001', product_code: 'hafalan', status: 'ACTIVE', activated_at: '2026-10-01T00:00:00Z', expires_at: null, source: 'ZAKAT' },
   { tenant_id: 'tenant-rabu-001', product_code: 'presensi', status: 'ACTIVE', activated_at: '2026-10-01T00:00:00Z', expires_at: null, source: 'ZAKAT' },
   { tenant_id: 'tenant-rabu-001', product_code: 'rapot', status: 'INACTIVE', activated_at: '2026-10-01T00:00:00Z', expires_at: null, source: 'COMMERCIAL' },

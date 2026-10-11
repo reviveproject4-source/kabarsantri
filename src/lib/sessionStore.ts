@@ -56,13 +56,13 @@ export const DEMO_TENANT = DEFAULT_TENANT;
 
 export const NURUL_HUDA_TENANT: TenantInfo = {
   id: 'tenant-rabu-001',
-  name: 'Pesantren Tahfidz Nurul Huda',
-  code: 'NURULHUDA',
-  city: 'Kediri, Jawa Timur',
+  name: '',
+  code: 'TENANT-LIVE',
+  city: '',
   logo_url: '',
   units: [
-    { id: 'unit-tahfidz-nh', name: 'Madrasah Tahfidz Nurul Huda', code: 'TAHFIDZ-NH', type: 'TAHFIDZ' },
-    { id: 'unit-asrama-nh', name: 'Asrama Santri Nurul Huda', code: 'ASRAMA-NH', type: 'KESANTRIAN' },
+    { id: 'unit-tahfidz-nh', name: 'Madrasah Tahfidz', code: 'TAHFIDZ', type: 'TAHFIDZ' },
+    { id: 'unit-asrama-nh', name: 'Asrama Santri', code: 'ASRAMA', type: 'KESANTRIAN' },
   ]
 };
 
@@ -320,12 +320,12 @@ export const MASTER_PILLAR_ACTORS: Record<string, ActiveActor> = {
     role_key: 'tenant_admin_nh',
     role_slug: 'tenant_admin',
     name: 'Administrator Pesantren',
-    nip: 'NIP.NH.2026.001',
+    nip: 'NIP.ADM.2026.001',
     title: 'Administrator Lembaga',
     dept: 'Sekretariat & Manajemen Pesantren',
     gender: 'ikhwan',
     tenant_id: 'tenant-rabu-001',
-    tenant_name: 'Pesantren Tahfidz Nurul Huda',
+    tenant_name: '',
     unit_name: 'Pusat Manajemen Pesantren'
   }
 };
@@ -389,7 +389,14 @@ export function getActiveTenant(): TenantInfo {
       const raw = localStorage.getItem(TENANT_STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed.id === 'tenant-rabu-001') return parsed;
+        if (parsed.id === 'tenant-rabu-001') {
+          if (parsed.name && parsed.name.toLowerCase().includes('nurul huda')) {
+            parsed.name = '';
+            parsed.city = '';
+            localStorage.setItem(TENANT_STORAGE_KEY, JSON.stringify(parsed));
+          }
+          return parsed;
+        }
       }
       return NURUL_HUDA_TENANT;
     }
@@ -399,7 +406,14 @@ export function getActiveTenant(): TenantInfo {
       const raw = localStorage.getItem(TENANT_STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed.id === 'tenant-rabu-001') return parsed;
+        if (parsed.id === 'tenant-rabu-001') {
+          if (parsed.name && parsed.name.toLowerCase().includes('nurul huda')) {
+            parsed.name = '';
+            parsed.city = '';
+            localStorage.setItem(TENANT_STORAGE_KEY, JSON.stringify(parsed));
+          }
+          return parsed;
+        }
       }
       return NURUL_HUDA_TENANT;
     }

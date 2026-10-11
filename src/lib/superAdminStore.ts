@@ -50,22 +50,22 @@ const DEFAULT_SUPER_TENANTS: TenantRecord[] = [
   },
   {
     id: 'tenant-rabu-001',
-    slug: 'nurul-huda',
-    name: 'Pesantren Tahfidz Nurul Huda',
-    leader_name: 'Ust. H. Fauzan Mansur, Lc.',
-    leader_wa: '081389012345',
-    city: 'Kediri, Jawa Timur',
+    slug: 'tenant-live',
+    name: '',
+    leader_name: 'Pimpinan Pesantren',
+    leader_wa: '081200000000',
+    city: '',
     tier: 'tier1_free',
     quota_santri: 50,
-    current_santri: 42,
+    current_santri: 0,
     status: 'active',
     created_at: '2026-10-05',
     target_launch_date: '2026-10-07 (Rabu Lusa)',
-    admin_email: 'admin@nurulhuda.kabarsantri.id',
+    admin_email: 'admin@pesantren.kabarsantri.id',
     admin_temp_password: 'SantriBaru2026#',
-    portal_subdomain: 'nurulhuda.kabarsantri.id',
+    portal_subdomain: 'live.kabarsantri.id',
     allowed_features: ['tahfidz', 'adab', 'reward', 'pelanggaran', 'santri_50', 'wali_portal'],
-    notes: 'Tenant Perdana Paket Tier 1 (Free Kuota 50 Santri) - Siap onboarding hari Rabu.',
+    notes: 'Tenant Perdana Paket Tier 1 (Free Kuota 50 Santri) - Siap onboarding.',
     welcome_wa_sent: false,
   }
 ];
@@ -81,7 +81,30 @@ export function getSuperAdminTenants(): TenantRecord[] {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_SUPER_TENANTS));
       return DEFAULT_SUPER_TENANTS;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      let changed = false;
+      const sanitized = parsed.map((t: TenantRecord) => {
+        if (t.id === 'tenant-rabu-001' && t.name && t.name.toLowerCase().includes('nurul huda')) {
+          changed = true;
+          return {
+            ...t,
+            name: '',
+            slug: 'tenant-live',
+            city: '',
+            current_santri: 0,
+            admin_email: 'admin@pesantren.kabarsantri.id',
+            portal_subdomain: 'live.kabarsantri.id'
+          };
+        }
+        return t;
+      });
+      if (changed) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
+      }
+      return sanitized;
+    }
+    return parsed;
   } catch {
     return DEFAULT_SUPER_TENANTS;
   }

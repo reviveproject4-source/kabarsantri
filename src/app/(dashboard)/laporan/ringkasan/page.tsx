@@ -52,7 +52,7 @@ export default function LaporanRingkasanEksekutifPage() {
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               {isTenant 
-                ? `Konsolidasi Data Pokok, SDM, dan Posisi Kas Resmi: ${tenant.name}` 
+                ? `Konsolidasi Data Pokok, SDM, dan Posisi Kas Resmi${tenant.name ? `: ${tenant.name}` : ''}` 
                 : 'Konsolidasi Data Akademik, Santri, dan Posisi Keuangan Pesantren (Simulasi)'}
             </p>
           </div>

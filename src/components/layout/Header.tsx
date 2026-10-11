@@ -293,34 +293,38 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
           </Link>
 
           {/* Desktop Institution Badge */}
-          <button
-            onClick={() => setTenantModalOpen(true)}
-            title="Klik untuk melihat Identitas Lembaga"
-            className="hidden xl:flex items-center space-x-2 text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 transition text-left shrink-0"
-          >
-            {tenant.logo_url ? (
-              <img src={tenant.logo_url} alt={tenant.name} className="w-4 h-4 rounded object-contain shrink-0" />
-            ) : (
-              <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-            )}
-            <span className="truncate max-w-[240px]">
-              <strong className="text-slate-800 dark:text-slate-100">{tenant.name.replace('Pondok Pesantren ', '')}</strong>
-            </span>
-          </button>
+          {tenant.name ? (
+            <button
+              onClick={() => setTenantModalOpen(true)}
+              title="Klik untuk melihat Identitas Lembaga"
+              className="hidden xl:flex items-center space-x-2 text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 transition text-left shrink-0"
+            >
+              {tenant.logo_url ? (
+                <img src={tenant.logo_url} alt={tenant.name} className="w-4 h-4 rounded object-contain shrink-0" />
+              ) : (
+                <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+              )}
+              <span className="truncate max-w-[240px]">
+                <strong className="text-slate-800 dark:text-slate-100">{tenant.name.replace('Pondok Pesantren ', '')}</strong>
+              </span>
+            </button>
+          ) : null}
 
           {/* Compact Institution Badge (Tablet / Mobile) */}
-          <button
-            onClick={() => setTenantModalOpen(true)}
-            title="Klik untuk Identitas Lembaga"
-            className="xl:hidden flex items-center space-x-1.5 text-[11px] font-bold text-blue-900 dark:text-blue-200 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 px-2 py-1 rounded-md border border-blue-200 dark:border-blue-900 transition shrink-0"
-          >
-            {tenant.logo_url ? (
-              <img src={tenant.logo_url} alt={tenant.name} className="w-3.5 h-3.5 rounded object-contain shrink-0" />
-            ) : (
-              <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-            )}
-            <span className="truncate max-w-[85px] sm:max-w-[130px]">{tenant.name.replace('Pondok Pesantren ', '')}</span>
-          </button>
+          {tenant.name ? (
+            <button
+              onClick={() => setTenantModalOpen(true)}
+              title="Klik untuk Identitas Lembaga"
+              className="xl:hidden flex items-center space-x-1.5 text-[11px] font-bold text-blue-900 dark:text-blue-200 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 px-2 py-1 rounded-md border border-blue-200 dark:border-blue-900 transition shrink-0"
+            >
+              {tenant.logo_url ? (
+                <img src={tenant.logo_url} alt={tenant.name} className="w-3.5 h-3.5 rounded object-contain shrink-0" />
+              ) : (
+                <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+              )}
+              <span className="truncate max-w-[85px] sm:max-w-[130px]">{tenant.name.replace('Pondok Pesantren ', '')}</span>
+            </button>
+          ) : null}
         </div>
 
         {/* Right Controls: Role Switcher, Dark/Light Mode, & Actions */}
@@ -631,7 +635,7 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
             <div className="p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold">
-                  Logo Pesantren ({tenant.name.replace('Pondok Pesantren ', '')})
+                  Logo Pesantren{tenant.name ? ` (${tenant.name.replace('Pondok Pesantren ', '')})` : ''}
                 </span>
               </div>
 

@@ -141,25 +141,27 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
       </div>
 
       {/* Identitas Lembaga / Pesantren (Tenant) */}
-      <div className="px-4 py-2 bg-slate-900/90 dark:bg-slate-950/90 border-b border-slate-800 flex items-center justify-between">
-        <div className="flex items-center space-x-2 min-w-0">
-          {tenant.logo_url ? (
-            <img src={tenant.logo_url} alt={tenant.name} className="w-4 h-4 rounded object-contain shrink-0" />
-          ) : (
-            <Building2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-          )}
-          <span className="text-xs font-medium text-slate-300 truncate" title={tenant.name}>
-            {tenant.name.replace('Pondok Pesantren ', '')}
+      {tenant.name ? (
+        <div className="px-4 py-2 bg-slate-900/90 dark:bg-slate-950/90 border-b border-slate-800 flex items-center justify-between">
+          <div className="flex items-center space-x-2 min-w-0">
+            {tenant.logo_url ? (
+              <img src={tenant.logo_url} alt={tenant.name} className="w-4 h-4 rounded object-contain shrink-0" />
+            ) : (
+              <Building2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+            )}
+            <span className="text-xs font-medium text-slate-300 truncate" title={tenant.name}>
+              {tenant.name.replace('Pondok Pesantren ', '')}
+            </span>
+          </div>
+          <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono shrink-0 border ${
+            quotaInfo.isFreeZakat 
+              ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800' 
+              : 'bg-blue-950 text-blue-300 border border-blue-900'
+          }`}>
+            {quotaInfo.isFreeZakat ? 'Starter' : 'Full BOS'}
           </span>
         </div>
-        <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono shrink-0 border ${
-          quotaInfo.isFreeZakat 
-            ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800' 
-            : 'bg-blue-950 text-blue-300 border border-blue-900'
-        }`}>
-          {quotaInfo.isFreeZakat ? 'Starter' : 'Full BOS'}
-        </span>
-      </div>
+      ) : null}
 
       {/* Nav List */}
       <nav className="flex-1 overflow-y-auto p-3 space-y-3">

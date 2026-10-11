@@ -224,7 +224,9 @@ export default function PortalWaliSantriPage() {
             />
             <div>
               <h1 className="font-bold text-sm leading-tight">Portal Wali Santri</h1>
-              <p className="text-[10px] text-emerald-200">{tenant.name.replace('Pondok Pesantren ', '')}</p>
+              {tenant.name ? (
+                <p className="text-[10px] text-emerald-200">{tenant.name.replace('Pondok Pesantren ', '')}</p>
+              ) : null}
             </div>
           </div>
           <Link href="/login" className="p-1.5 rounded-lg bg-emerald-700/60 hover:bg-emerald-700 text-emerald-100 text-xs flex items-center space-x-1">
@@ -251,7 +253,7 @@ export default function PortalWaliSantriPage() {
               </div>
               <h2 className="font-bold text-slate-800 text-base">Belum Ada Data Santri Terhubung</h2>
               <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-                Akun Wali Santri ini belum terhubung dengan data santri aktif di {tenant.name}. Silakan hubungi bagian Administrasi / Tata Usaha untuk penautan NIS ananda.
+                Akun Wali Santri ini belum terhubung dengan data santri aktif{tenant.name ? ` di ${tenant.name}` : ''}. Silakan hubungi bagian Administrasi / Tata Usaha untuk penautan NIS ananda.
               </p>
             </div>
 
@@ -480,7 +482,7 @@ export default function PortalWaliSantriPage() {
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium text-xs bg-slate-50"
                 >
                   <option value={`Bank Syariah Indonesia (BSI) - No. Rek: 7142098811 (Keuangan)`}>
-                    BSI • Rek. 7142098811 a.n. {tenant.name.replace('Pondok Pesantren ', '')} (SPP & Operasional)
+                    BSI • Rek. 7142098811 a.n. {tenant.name ? tenant.name.replace('Pondok Pesantren ', '') : 'Pesantren'} (SPP & Operasional)
                   </option>
                   <option value="Bank Muamalat - No. Rek: 1098445521 (Kesantrian)">
                     Bank Muamalat • Rek. 1098445521 a.n. Dompet Santri (Uang Jajan & Tabungan)

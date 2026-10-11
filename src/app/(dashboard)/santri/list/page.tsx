@@ -135,7 +135,7 @@ export default function DataIndukSantriPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">
-            {isTenant ? `Data Santri: ${tenant.name}` : 'Data Induk Santri (Master Kesiswaan)'}
+            {isTenant ? (tenant.name ? `Data Santri: ${tenant.name}` : 'Data Santri') : 'Data Induk Santri (Master Kesiswaan)'}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             {isTenant 
@@ -253,7 +253,7 @@ export default function DataIndukSantriPage() {
             <div>
               <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm">Belum Ada Santri Terdaftar</h4>
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto mt-1">
-                Database santri {tenant.name} masih bersih (0 data dummy). Mulai tambahkan santri pertama untuk mengisi kuota paket Tier 1 Starter (50 Kuota Santri).
+                Database santri{tenant.name ? ` ${tenant.name}` : ''} masih bersih (0 data dummy). Mulai tambahkan santri pertama untuk mengisi kuota paket Tier 1 Starter (50 Kuota Santri).
               </p>
             </div>
             <Link

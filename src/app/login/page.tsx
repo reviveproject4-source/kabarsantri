@@ -25,7 +25,7 @@ export default function LoginPage() {
   }>({ isError: false });
 
   // Tenant state
-  const [identifier, setIdentifier] = useState('admin@nurulhuda.kabarsantri.id');
+  const [identifier, setIdentifier] = useState('admin@pesantren.kabarsantri.id');
   const [password, setPassword] = useState('SantriBaru2026#');
 
   // Wali state
@@ -56,15 +56,9 @@ export default function LoginPage() {
 
     setTimeout(() => {
       // Set Mode Tenant
-      const isNurulHuda = identifier.includes('nurulhuda');
-      const tenantId = isNurulHuda ? 'tenant-rabu-001' : 'tenant-pesantren-001';
+      const tenantId = 'tenant-rabu-001';
       setAppMode('tenant', tenantId);
-      
-      if (isNurulHuda) {
-        setActiveActorByRole('tenant_admin_nh');
-      } else {
-        setActiveActorByRole('yayasan');
-      }
+      setActiveActorByRole('tenant_admin_nh');
 
       document.cookie = `sb-access-token=tenant-token; path=/; max-age=86400`;
       document.cookie = `ks_session=active; path=/; max-age=86400`;
@@ -219,18 +213,18 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {/* Preset Akun Nurul Huda */}
+              {/* Preset Akun Tenant Live */}
               <div className="bg-blue-50 dark:bg-blue-950/40 p-2.5 rounded-lg border border-blue-200 dark:border-blue-900 text-[11px] text-blue-900 dark:text-blue-200 flex items-center justify-between">
-                <span>Contoh Akun Resmi:</span>
+                <span>Contoh Akun Lembaga:</span>
                 <button
                   type="button"
                   onClick={() => {
-                    setIdentifier('admin@nurulhuda.kabarsantri.id');
+                    setIdentifier('admin@pesantren.kabarsantri.id');
                     setPassword('SantriBaru2026#');
                   }}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-2 py-0.5 rounded transition text-[10px]"
                 >
-                  Gunakan Nurul Huda
+                  Gunakan Akun Tenant
                 </button>
               </div>
 
