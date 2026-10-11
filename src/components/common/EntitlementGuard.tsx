@@ -150,7 +150,7 @@ export default function EntitlementGuard({
             <span>Arsitektur Modular KabarSantri BOS</span>
           </div>
           <p className="leading-relaxed text-[11px]">
-            Tenant Anda saat ini berada dalam paket <strong>KabarSantri Free — Zakat</strong> (Laporan Hafalan & Absensi Santri) atau belum mengaktifkan modul ini. KabarSantri dirancang modular sehingga setiap domain dapat diaktifkan sesuai kebutuhan tanpa merusak data atau merubah basis kode lembaga.
+            Tenant Anda saat ini berada dalam paket <strong>KabarSantri Starter (50 Santri)</strong> (Laporan Hafalan & Absensi Santri) atau belum mengaktifkan modul ini. KabarSantri dirancang modular sehingga setiap domain dapat diaktifkan sesuai kebutuhan tanpa merusak data atau merubah basis kode lembaga.
           </p>
         </div>
 

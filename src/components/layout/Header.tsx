@@ -280,10 +280,10 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
         <div className="bg-blue-950 dark:bg-slate-950 text-white px-3 sm:px-6 py-1.5 text-xs font-semibold flex items-center justify-between border-b border-blue-900 dark:border-slate-800 z-20">
           <div className="flex items-center space-x-2 truncate">
             <span className="bg-blue-600 text-white px-1.5 py-0.5 rounded text-[10px] font-black shrink-0 uppercase tracking-wide">
-              Jalur Tenant Live
+              Tenant Live
             </span>
             <span className="truncate text-blue-100 text-[11px] sm:text-xs">
-              {tenant.name} • Paket Zakat ({santriCount}/50 Santri · 0 Data Dummy)
+              {tenant.name} • Jalur Resmi ({santriCount}/50 Santri)
             </span>
           </div>
           <button 

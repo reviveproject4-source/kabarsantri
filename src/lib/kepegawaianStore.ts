@@ -873,7 +873,7 @@ let inMemoryState = {
 };
 
 function loadState() {
-  if (typeof window === 'undefined') return inMemoryState;
+  if (typeof window === 'undefined') return isTenantMode() ? INITIAL_TENANT_STATE : inMemoryState;
   try {
     const key = isTenantMode() ? TENANT_STORAGE_KEY : STORAGE_KEY;
     const raw = localStorage.getItem(key);
@@ -882,7 +882,21 @@ function loadState() {
       saveState(defaultState as any);
       return defaultState as any;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (isTenantMode()) {
+      // Sanitasi ketat: Data demo pegawai / mock pimpinan dilarang ada di tenant live
+      const demoNames = DEFAULT_EMPLOYEES.map(e => e.full_name.toLowerCase());
+      const cleaned = (parsed.employees || []).filter((e: any) => 
+        !demoNames.includes((e.full_name || '').toLowerCase()) &&
+        !e.full_name?.toLowerCase().includes('fauzan') &&
+        !e.full_name?.toLowerCase().includes('faqih')
+      );
+      if (cleaned.length !== (parsed.employees || []).length) {
+        parsed.employees = cleaned;
+        saveState(parsed);
+      }
+    }
+    return parsed;
   } catch (e) {
     return isTenantMode() ? INITIAL_TENANT_STATE : inMemoryState;
   }

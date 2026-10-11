@@ -365,10 +365,10 @@ export default function UnifiedRoleDashboardPage() {
                   <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">{tenant.name}</h2>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                     quotaStats.isFreeZakat
-                      ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800'
+                      ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
                       : 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
                   }`}>
-                    {quotaStats.isFreeZakat ? 'KabarSantri Free — Zakat (Maks 50 Santri)' : 'Full Modular BOS'}
+                    {quotaStats.isFreeZakat ? 'KabarSantri Starter (Kapasitas 50 Santri)' : 'Full Modular BOS'}
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -379,7 +379,7 @@ export default function UnifiedRoleDashboardPage() {
 
             <div className="flex items-center space-x-2">
               <span className="text-xs bg-blue-50 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-800 font-semibold">
-                ● Status: <strong>{quotaStats.isFreeZakat ? 'Paket Zakat Aktif' : 'Lisensi Aktif'}</strong>
+                ● Status: <strong>{quotaStats.isFreeZakat ? 'Langganan Aktif' : 'Lisensi Aktif'}</strong>
               </span>
             </div>
           </div>
@@ -403,7 +403,7 @@ export default function UnifiedRoleDashboardPage() {
             </div>
 
             <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
-              <span className="text-slate-500 dark:text-slate-400 block font-semibold">Produk Zakat Aktif:</span>
+              <span className="text-slate-500 dark:text-slate-400 block font-semibold">Produk Lembaga Aktif:</span>
               <div className="flex flex-wrap gap-1 text-[10px]">
                 <span className="bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded font-bold border border-blue-300 dark:border-blue-800">1. Laporan Hafalan</span>
                 <span className="bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded font-bold border border-blue-300 dark:border-blue-800">2. Absensi Santri</span>

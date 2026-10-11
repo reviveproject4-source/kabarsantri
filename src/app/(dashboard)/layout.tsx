@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
@@ -159,7 +159,9 @@ export default function DashboardLayout({
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-5 md:p-8 pb-24 md:pb-8 bg-slate-50 dark:bg-slate-950 w-full max-w-full transition-colors">
           <div className="max-w-7xl mx-auto space-y-5 w-full min-w-0">
-            {children}
+            <Suspense fallback={<div className="p-4 text-xs text-slate-400">Memuat modul...</div>}>
+              {children}
+            </Suspense>
           </div>
         </main>
 

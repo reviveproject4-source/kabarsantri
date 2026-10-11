@@ -143,10 +143,10 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
         </div>
         <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono shrink-0 border ${
           quotaInfo.isFreeZakat 
-            ? 'bg-amber-950/80 text-amber-300 border-amber-800' 
+            ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800' 
             : 'bg-blue-950 text-blue-300 border border-blue-900'
         }`}>
-          {quotaInfo.isFreeZakat ? 'Free Zakat' : 'Full BOS'}
+          {quotaInfo.isFreeZakat ? 'Starter' : 'Full BOS'}
         </span>
       </div>
 

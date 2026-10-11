@@ -20,6 +20,40 @@ export function isTenantMode(): boolean {
   }
 }
 
+// Automatic one-time purge of residual mock data in browser storage
+if (typeof window !== 'undefined') {
+  try {
+    const isTenant = isTenantMode();
+    const PURGE_FLAG = 'ks_tenant_live_clean_v6';
+    if (isTenant && !localStorage.getItem(PURGE_FLAG)) {
+      // 1. Purge legacy mock santri from tenant storage
+      const rawSantri = localStorage.getItem('ks_tenant_santri_list_v1');
+      if (rawSantri) {
+        const parsed = JSON.parse(rawSantri);
+        const demoKeywords = ['hasan', 'usamah', 'salman', 'fatih', 'zaki', 'bilal', 'fathimah', 'al-fatih'];
+        const cleaned = (parsed || []).filter((s: any) => {
+          const nameLower = (s.nama || '').toLowerCase();
+          return !demoKeywords.some(kw => nameLower.includes(kw)) && !s.nis?.startsWith('202601') && !s.nis?.startsWith('202602');
+        });
+        localStorage.setItem('ks_tenant_santri_list_v1', JSON.stringify(cleaned));
+      }
+      // 2. Purge legacy mock employee from tenant storage
+      const rawEmp = localStorage.getItem('ks_tenant_kepegawaian_store_v1');
+      if (rawEmp) {
+        const parsed = JSON.parse(rawEmp);
+        if (parsed.employees) {
+          parsed.employees = parsed.employees.filter((e: any) => 
+            !e.full_name?.toLowerCase().includes('fauzan') &&
+            !e.full_name?.toLowerCase().includes('faqih')
+          );
+          localStorage.setItem('ks_tenant_kepegawaian_store_v1', JSON.stringify(parsed));
+        }
+      }
+      localStorage.setItem(PURGE_FLAG, 'true');
+    }
+  } catch {}
+}
+
 // ============================================================================
 // 1. PENGAJUAN DANA RUMAH TANGGA & KBM
 // ============================================================================
@@ -555,15 +589,22 @@ export function getSharedSantriList(forceTenantMode?: boolean): SantriOption[] {
       const raw = localStorage.getItem('ks_tenant_santri_list_v1');
       if (!raw) return [];
       const parsed: SantriOption[] = JSON.parse(raw);
-      // Sanitasi ketat: Data dummy nama-nama santri demo sama sekali dilarang ada di tenant live
-      const DEMO_SANTRI_NAMES = [
-        'Muhammad Al-Fatih', 'Fathimah Az-Zahra', 'Ahmad Zaki Mubarak', 
-        'Bilal Habasyi', 'Fatih Al-Ayyubi', 'Umar Faruq', 'Ali Zainal Abidin',
-        'Thoriq bin Ziyad', 'Khalid bin Walid', 'Abdullah bin Mas\'ud',
-        'Mu\'adz bin Jabal', 'Zaid bin Tsabit', 'Maryam Al-Batul', 
-        'Aisyah Humaira', 'Hafshah binti Umar', 'Zainab Al-Kubra', 'Khadijah Al-Kubro'
-      ];
-      const cleaned = parsed.filter(s => !DEMO_SANTRI_NAMES.includes(s.nama));
+      // Sanitasi ketat: Seluruh 20 data dummy nama & NIS santri demo sama sekali dilarang ada di tenant live
+      const demoNames = MASTER_SANTRI.map(s => s.nama.toLowerCase());
+      const demoNis = MASTER_SANTRI.map(s => s.nis);
+      const cleaned = parsed.filter(s => {
+        const nameLower = (s.nama || '').trim().toLowerCase();
+        const isMasterName = demoNames.includes(nameLower);
+        const isMasterNis = demoNis.includes(s.nis);
+        const isDemoKeyword = nameLower.includes('al-fatih') || 
+          nameLower.includes('hasan al-banna') || 
+          nameLower.includes('usamah bin zaid') || 
+          nameLower.includes('salman al-farisi') ||
+          nameLower.includes('zaki') ||
+          nameLower.includes('bilal') ||
+          nameLower.includes('fathimah');
+        return !isMasterName && !isMasterNis && !isDemoKeyword;
+      });
       if (cleaned.length !== parsed.length) {
         localStorage.setItem('ks_tenant_santri_list_v1', JSON.stringify(cleaned));
       }
@@ -581,6 +622,7 @@ export function resetTenantStorageData(): void {
     localStorage.removeItem('ks_tenant_presensi_pegawai_v1');
     localStorage.removeItem('ks_tenant_master_kelas_v1');
     localStorage.removeItem('ks_tenant_tahfidz_records_v1');
+    localStorage.removeItem('ks_tenant_kepegawaian_store_v1');
     window.dispatchEvent(new CustomEvent('ks_tenant_santri_updated', { detail: [] }));
     window.dispatchEvent(new CustomEvent('ks_presensi_updated', { detail: null }));
   }

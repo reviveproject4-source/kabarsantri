@@ -37,7 +37,7 @@ export const BACKOFFICE_NAVIGATION: NavItem[] = [
     icon: 'BookOpen',
     productCode: 'hafalan',
     children: [
-      { title: 'Mutaba\'ah & Setoran Tahfidz', href: '/akademik/tahfidz', productCode: 'hafalan', badge: 'Zakat' },
+      { title: 'Mutaba\'ah & Setoran Tahfidz', href: '/akademik/tahfidz', productCode: 'hafalan' },
     ],
   },
   {
@@ -46,7 +46,7 @@ export const BACKOFFICE_NAVIGATION: NavItem[] = [
     icon: 'UserCheck',
     productCode: 'presensi',
     children: [
-      { title: 'Absen Santri (Musyrif/Guru)', href: '/presensi/santri', productCode: 'presensi', badge: 'Zakat' },
+      { title: 'Absen Santri (Musyrif/Guru)', href: '/presensi/santri', productCode: 'presensi' },
       { title: 'Absen Diri Pribadi', href: '/presensi/diri', productCode: 'presensi' },
     ],
   },
