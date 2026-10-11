@@ -71,7 +71,7 @@ export default function DashboardLayout({
   }, [pathname]);
 
   // ISOLASI KETAT SUPER ADMIN: TIDAK MENAMPILKAN MENU KABARSANTRI LAINNYA
-  if (pathname?.startsWith('/super-admin')) {
+  if (pathname?.startsWith('/super-admin') || pathname?.includes('/super-admin')) {
     return (
       <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col justify-between selection:bg-amber-400 selection:text-slate-950">
         <header className="bg-slate-950/90 border-b border-slate-800 px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-50">
