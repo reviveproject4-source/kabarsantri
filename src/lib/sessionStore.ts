@@ -446,12 +446,7 @@ export function useActiveTenant(): TenantInfo {
  * Automatically updates component when active actor changes in Header
  */
 export function useActiveActor(): ActiveActor {
-  const [actor, setActor] = useState<ActiveActor>(() => {
-    if (typeof window !== 'undefined') {
-      return getActiveActor();
-    }
-    return MASTER_PILLAR_ACTORS.yayasan;
-  });
+  const [actor, setActor] = useState<ActiveActor>(MASTER_PILLAR_ACTORS.yayasan);
 
   useEffect(() => {
     // Initial sync
@@ -546,15 +541,13 @@ export function useAppMode(): {
   setMode: (m: AppMode, tenantId?: string) => void;
   isDemo: boolean;
   isTenant: boolean;
+  mounted: boolean;
 } {
-  const [mode, setModeState] = useState<AppMode>(() => {
-    if (typeof window !== 'undefined') {
-      return getAppMode();
-    }
-    return 'demo';
-  });
+  const [mode, setModeState] = useState<AppMode>('demo');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     setModeState(getAppMode());
     const handler = (e: Event) => {
       const custom = e as CustomEvent<AppMode>;
@@ -573,6 +566,7 @@ export function useAppMode(): {
     mode,
     setMode,
     isDemo: mode === 'demo',
-    isTenant: mode === 'tenant'
+    isTenant: mode === 'tenant',
+    mounted
   };
 }

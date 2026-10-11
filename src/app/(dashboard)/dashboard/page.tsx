@@ -336,7 +336,8 @@ export default function UnifiedRoleDashboardPage() {
 
   const searchParams = useSearchParams();
   const { isDemo: modeIsDemo, isTenant: modeIsTenant, setMode: setAppModeState } = useAppMode();
-  const isTenant = searchParams?.get('mode') === 'tenant' || modeIsTenant || (typeof window !== 'undefined' && isTenantMode());
+  const isTenantParam = searchParams?.get('mode') === 'tenant';
+  const isTenant = isTenantParam || (mounted ? (modeIsTenant || (typeof window !== 'undefined' && isTenantMode())) : false);
   const isDemo = !isTenant;
   const tenant = useActiveTenant();
 
@@ -668,10 +669,10 @@ export default function UnifiedRoleDashboardPage() {
                 <UserCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="text-2xl font-black text-slate-900 dark:text-slate-100">
-                {getEmployees().length} <span className="text-xs font-normal text-slate-400">Pegawai</span>
+                {getEmployees(isTenant).length} <span className="text-xs font-normal text-slate-400">Pegawai</span>
               </div>
               <span className="text-[11px] text-blue-700 dark:text-blue-300 font-semibold block">
-                {getEmployees().length === 0 ? '0 Pegawai (Siap diinput)' : `${getEmployees().length} Pegawai Terdaftar`}
+                {getEmployees(isTenant).length === 0 ? '0 Pegawai (Siap diinput)' : `${getEmployees(isTenant).length} Pegawai Terdaftar`}
               </span>
             </div>
 

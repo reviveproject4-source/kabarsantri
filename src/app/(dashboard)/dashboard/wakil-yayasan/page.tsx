@@ -53,9 +53,11 @@ import { useSearchParams } from 'next/navigation';
 import { useAppMode } from '@/lib/sessionStore';
 
 export default function DashboardWakilYayasanPage() {
+  const [mounted, setMounted] = useState(false);
   const searchParams = useSearchParams();
   const { isTenant: modeIsTenant } = useAppMode();
-  const isTenant = searchParams?.get('mode') === 'tenant' || modeIsTenant || (typeof window !== 'undefined' && isTenantMode());
+  const isTenantParam = searchParams?.get('mode') === 'tenant';
+  const isTenant = isTenantParam || (mounted ? (modeIsTenant || (typeof window !== 'undefined' && isTenantMode())) : false);
 
   const [modalThreshold, setModalThreshold] = useState(false);
   const [modalRekening, setModalRekening] = useState(false);
@@ -132,6 +134,7 @@ export default function DashboardWakilYayasanPage() {
 
   // Sinkronisasi Live Data
   useEffect(() => {
+    setMounted(true);
     setThresholds(getSharedThresholds());
     setFormThresholds(getSharedThresholds());
     setRekeningList(getSharedRekeningList());

@@ -20,7 +20,8 @@ import { useActiveTenant } from '@/lib/sessionStore';
 export default function TambahSantriPage() {
   const router = useRouter();
   const tenant = useActiveTenant();
-  const isTenant = typeof window !== 'undefined' ? isTenantMode() : false;
+  const [mounted, setMounted] = useState(false);
+  const isTenant = mounted ? isTenantMode() : false;
   const listUrl = isTenant ? '/santri/list?mode=tenant' : '/santri/list';
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -66,6 +67,7 @@ export default function TambahSantriPage() {
   };
 
   useEffect(() => {
+    setMounted(true);
     refreshQuota();
     const handler = () => refreshQuota();
     window.addEventListener('ks_tenant_santri_updated', handler);

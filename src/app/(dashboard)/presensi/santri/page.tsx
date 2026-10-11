@@ -37,8 +37,10 @@ const INITIAL_SANTRI_AKHWAT: SantriPresensiItem[] = [
 
 export default function AbsenSantriRolePage() {
   const searchParams = useSearchParams();
+  const [mounted, setMounted] = useState(false);
   const { isTenant } = useAppMode();
-  const isTenantActive = searchParams?.get('mode') === 'tenant' || isTenant || (typeof window !== 'undefined' && isTenantMode());
+  const isTenantParam = searchParams?.get('mode') === 'tenant';
+  const isTenantActive = isTenantParam || (mounted ? (isTenant || (typeof window !== 'undefined' && isTenantMode())) : false);
 
   const [currentActor, setCurrentActor] = useState<ActiveActor>(MASTER_PILLAR_ACTORS.yayasan);
   const [notif, setNotif] = useState('');
@@ -48,6 +50,7 @@ export default function AbsenSantriRolePage() {
   const [santriList, setSantriList] = useState<SantriPresensiItem[]>([]);
 
   useEffect(() => {
+    setMounted(true);
     const actor = getActiveActor();
     setCurrentActor(actor);
 
@@ -311,7 +314,7 @@ export default function AbsenSantriRolePage() {
                       </p>
                       <p className="text-xs text-slate-400">Silakan daftarkan santri terlebih dahulu di menu Data Santri untuk mulai merekap presensi harian.</p>
                       <Link
-                        href={isTenantMode() ? "/santri/create?mode=tenant" : "/santri/create"}
+                        href={isTenantActive ? "/santri/create?mode=tenant" : "/santri/create"}
                         className="mt-2 inline-flex items-center space-x-1 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs transition"
                       >
                         <span>+ Daftarkan Santri Baru</span>

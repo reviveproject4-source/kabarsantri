@@ -51,7 +51,13 @@ interface HeaderProps {
 export default function Header({ onToggleMobileMenu }: HeaderProps) {
   const pathname = usePathname();
   const tenant = useActiveTenant();
-  const { mode: appMode, setMode: setAppModeState, isDemo, isTenant } = useAppMode();
+  const { mode: appMode, setMode: setAppModeState, isDemo, isTenant, mounted: modeMounted } = useAppMode();
+  const [mounted, setMounted] = useState(false);
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+  const isHydrated = mounted || modeMounted;
+  const isTenantActive = isHydrated ? isTenant : false;
   const { theme, isDark, toggleTheme } = useThemeMode();
 
   const [activeRole, setActiveRole] = useState<string>('yayasan');
@@ -365,7 +371,7 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
         {/* Right Controls: Role Switcher, Dark/Light Mode, & Actions */}
         <div className="flex items-center space-x-1 sm:space-x-2 shrink-0">
           {/* Point 1: Role Switcher Context (Demo) OR Tenant Badge (Tenant) */}
-          {isTenant ? (
+          {isTenantActive ? (
             <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-blue-50 dark:bg-blue-950/50 text-blue-900 dark:text-blue-200 rounded-lg border border-blue-200 dark:border-blue-800">
               <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
               <div className="flex flex-col text-left">
@@ -483,7 +489,7 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
           </button>
 
           {/* Desktop-Only: Super Admin Console Link (Demo-Only) */}
-          {!isTenant && (
+          {!isTenantActive && (
             <Link
               href="/super-admin"
               className="hidden sm:flex p-1.5 sm:px-2.5 text-blue-700 dark:text-blue-300 hover:text-blue-900 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg border border-blue-200 dark:border-blue-800 text-xs font-bold items-center space-x-1 transition shadow-2xs shrink-0"
@@ -516,7 +522,7 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
 
             {mobileActionsOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 p-1.5 z-50">
-                {!isTenant && (
+                {!isTenantActive && (
                   <Link
                     href="/super-admin"
                     onClick={() => setMobileActionsOpen(false)}
@@ -554,12 +560,12 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
           {/* Profile Avatar */}
           <div className="flex items-center space-x-1.5 sm:space-x-2 pl-1 sm:pl-2 border-l border-slate-200 dark:border-slate-800">
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-700 text-white flex items-center justify-center font-bold text-[11px] sm:text-xs shadow-xs uppercase shrink-0">
-              {isTenant ? 'NH' : currentRoleObj.name.split(' ').slice(0, 2).map((n: string) => n[0]).join('')}
+              {isTenantActive ? 'NH' : currentRoleObj.name.split(' ').slice(0, 2).map((n: string) => n[0]).join('')}
             </div>
             <div className="hidden lg:block text-left text-xs">
-              <div className="font-bold text-slate-800 dark:text-slate-200">{isTenant ? 'Administrator Lembaga' : currentRoleObj.name}</div>
+              <div className="font-bold text-slate-800 dark:text-slate-200">{isTenantActive ? 'Administrator Lembaga' : currentRoleObj.name}</div>
               <div className="text-[10px] text-slate-400">
-                {isTenant ? 'Admin Lembaga' : currentRoleObj.dept}
+                {isTenantActive ? 'Admin Lembaga' : currentRoleObj.dept}
               </div>
             </div>
             <Link 

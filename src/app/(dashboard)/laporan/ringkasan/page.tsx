@@ -21,29 +21,23 @@ import { useActiveTenant, useAppMode } from '@/lib/sessionStore';
 
 export default function LaporanRingkasanEksekutifPage() {
   const searchParams = useSearchParams();
+  const [mounted, setMounted] = useState(false);
   const { isTenant: modeIsTenant } = useAppMode();
   const tenant = useActiveTenant();
 
-  const isTenant = searchParams?.get('mode') === 'tenant' || modeIsTenant || (typeof window !== 'undefined' && isTenantMode());
-  const [santriCount, setSantriCount] = useState(() => {
-    if (typeof window !== 'undefined' && (isTenantMode() || modeIsTenant || searchParams?.get('mode') === 'tenant')) {
-      return getSharedSantriList(true).length;
-    }
-    return 0;
-  });
-  const [employeeCount, setEmployeeCount] = useState(() => {
-    if (typeof window !== 'undefined' && (isTenantMode() || modeIsTenant || searchParams?.get('mode') === 'tenant')) {
-      return getEmployees().length;
-    }
-    return 0;
-  });
+  const isTenantParam = searchParams?.get('mode') === 'tenant';
+  const isTenant = isTenantParam || (mounted ? (modeIsTenant || (typeof window !== 'undefined' && isTenantMode())) : false);
+  const [santriCount, setSantriCount] = useState(0);
+  const [employeeCount, setEmployeeCount] = useState(0);
 
   useEffect(() => {
-    if (isTenant) {
+    setMounted(true);
+    const isLive = isTenantParam || modeIsTenant || (typeof window !== 'undefined' && isTenantMode());
+    if (isLive) {
       setSantriCount(getSharedSantriList(true).length);
       setEmployeeCount(getEmployees().length);
     }
-  }, [isTenant]);
+  }, [modeIsTenant, isTenantParam]);
 
   return (
     <div className="space-y-6">

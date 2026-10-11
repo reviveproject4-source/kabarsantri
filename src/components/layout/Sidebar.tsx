@@ -57,14 +57,20 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
     return () => window.removeEventListener('ks_entitlements_updated', handleUpdate);
   }, []);
 
+  const [mounted, setMounted] = useState(false);
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const quotaInfo = checkStudentQuota(tenant.id);
 
   const isYayasanExecutive = Boolean(pathname?.startsWith('/dashboard/yayasan') || pathname?.startsWith('/dashboard/wakil-yayasan'));
 
-  const { isTenant } = useAppMode();
-  const isTenantActive = isTenant || (typeof window !== 'undefined' && isTenantMode());
+  const { isTenant, mounted: modeMounted } = useAppMode();
+  const isHydrated = mounted || modeMounted;
+  const isTenantActive = isHydrated ? (isTenant || (typeof window !== 'undefined' && isTenantMode())) : false;
   const getHrefWithMode = (baseHref: string) => {
-    if (isTenantActive) {
+    if (isHydrated && isTenantActive) {
       if (baseHref.includes('?')) {
         return `${baseHref}&mode=tenant`;
       }
@@ -73,16 +79,21 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
     return baseHref;
   };
 
-  const activeActor = typeof window !== 'undefined' ? getActiveActor() : { role_key: 'yayasan' };
+  const activeActor = isHydrated && typeof window !== 'undefined' ? getActiveActor() : { role_key: 'yayasan' };
   const activeRole = activeActor.role_key;
 
   // Yayasan tidak memerlukan fitur presensi harian. Filter berdasarkan Produk Entitlement Tenant.
   // Super Admin Onboarding terisolasi dari Jalur Tenant Live dan tidak pernah ditampilkan untuk tenant.
-  const menuItems = getFilteredNavigation(tenant.id, undefined, activeRole, isTenant).filter(item => {
+  const menuItems = getFilteredNavigation(
+    isHydrated ? tenant.id : undefined,
+    undefined,
+    isHydrated ? activeRole : 'yayasan',
+    isHydrated ? isTenantActive : false
+  ).filter(item => {
     if (isYayasanExecutive && item.href.startsWith('/presensi')) {
       return false;
     }
-    if (isTenant && (item.href.startsWith('/super-admin') || item.superAdminOnly)) {
+    if (isTenantActive && (item.href.startsWith('/super-admin') || item.superAdminOnly)) {
       return false;
     }
     if (item.superAdminOnly && activeRole !== 'super_admin') {

@@ -42,9 +42,10 @@ import { isTenantMode } from '@/lib/sharedDataStore';
 
 export default function SuperAdminOnboardingPage() {
   const searchParams = useSearchParams();
+  const [mounted, setMounted] = useState(false);
   const isTenantQuery = searchParams?.get('mode') === 'tenant';
   const { isTenant } = useAppMode();
-  const isTenantActive = isTenantQuery || isTenant || (typeof window !== 'undefined' && isTenantMode());
+  const isTenantActive = isTenantQuery || (mounted ? (isTenant || (typeof window !== 'undefined' && isTenantMode())) : false);
   const [tenants, setTenants] = useState<TenantRecord[]>([]);
   const [activeFilter, setActiveFilter] = useState<'all' | 'tier1_free' | 'tier2_pro'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -71,6 +72,7 @@ export default function SuperAdminOnboardingPage() {
   };
 
   useEffect(() => {
+    setMounted(true);
     refreshTenants();
     const handleUpdate = () => refreshTenants();
     window.addEventListener('ks_tenants_updated', handleUpdate);

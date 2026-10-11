@@ -89,9 +89,15 @@ export const DATA_6_BULAN: DataBulanKeuangan[] = [
 ];
 
 export default function Laporan6BulanChart() {
+  const [mounted, setMounted] = useState(false);
   const [viewMode, setViewMode] = useState<'grafik' | 'tabel'>('grafik');
   const [selectedBulanIdx, setSelectedBulanIdx] = useState(5); // Default Oktober
-  const isTenant = typeof window !== 'undefined' && isTenantMode();
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isTenant = mounted && isTenantMode();
 
   if (isTenant) {
     return (

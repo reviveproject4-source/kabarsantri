@@ -20,35 +20,22 @@ import { getSharedSantriList, isTenantMode } from '@/lib/sharedDataStore';
 
 export default function DataIndukSantriPage() {
   const searchParams = useSearchParams();
+  const [mounted, setMounted] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterKelas, setFilterKelas] = useState('semua');
   const { isTenant } = useAppMode();
   const tenant = useActiveTenant();
 
-  const isTenantActive = searchParams?.get('mode') === 'tenant' || isTenant || (typeof window !== 'undefined' && isTenantMode());
+  const isTenantParam = searchParams?.get('mode') === 'tenant';
+  const isTenantActive = isTenantParam || (mounted ? (isTenant || (typeof window !== 'undefined' && isTenantMode())) : false);
 
-  const [tenantSantri, setTenantSantri] = useState<any[]>(() => {
-    if (typeof window !== 'undefined' && (isTenantMode() || isTenant || searchParams?.get('mode') === 'tenant')) {
-      const list = getSharedSantriList(true);
-      return list.map((s, idx) => ({
-        id: `ts-${idx + 1}`,
-        nis: s.nis,
-        nama: s.nama,
-        gender: s.gender === 'akhwat' ? 'Perempuan' : 'Laki-laki',
-        kelas: s.kelas || s.kelas_id || '-',
-        asrama: s.kamar || '-',
-        wali: s.wali_nama || '-',
-        no_hp_wali: s.wali_kontak || '-',
-        status: s.status || 'Aktif',
-        hafalan: '0 Juz'
-      }));
-    }
-    return [];
-  });
+  const [tenantSantri, setTenantSantri] = useState<any[]>([]);
 
   useEffect(() => {
+    setMounted(true);
     const refreshTenant = () => {
-      if (isTenantActive) {
+      const isLive = isTenantParam || isTenant || (typeof window !== 'undefined' && isTenantMode());
+      if (isLive) {
         const list = getSharedSantriList(true);
         setTenantSantri(list.map((s, idx) => ({
           id: `ts-${idx + 1}`,
@@ -68,7 +55,7 @@ export default function DataIndukSantriPage() {
     refreshTenant();
     window.addEventListener('ks_tenant_santri_updated', refreshTenant);
     return () => window.removeEventListener('ks_tenant_santri_updated', refreshTenant);
-  }, [isTenantActive]);
+  }, [isTenant, isTenantParam, mounted]);
 
   const demoSantriList = [
     {

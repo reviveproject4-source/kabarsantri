@@ -176,8 +176,10 @@ function getDistanceFromLatLonInMeters(lat1: number, lon1: number, lat2: number,
 
 export default function AbsenDiriPribadiPage() {
   const searchParams = useSearchParams();
+  const [mounted, setMounted] = useState(false);
   const { isTenant } = useAppMode();
-  const isTenantActive = searchParams?.get('mode') === 'tenant' || isTenant || (typeof window !== 'undefined' && isTenantMode());
+  const isTenantParam = searchParams?.get('mode') === 'tenant';
+  const isTenantActive = isTenantParam || (mounted ? (isTenant || (typeof window !== 'undefined' && isTenantMode())) : false);
   const activeActor = useActiveActor();
 
   // Pos Kerja aktif (otomatis terpilih sesuai jabatan, fleksibel diganti jika tugas silang)
@@ -208,6 +210,7 @@ export default function AbsenDiriPribadiPage() {
 
   // Otomatis tentukan Pos Kerja sesuai Akun Aktif & Muat Pegawai Tenant
   useEffect(() => {
+    setMounted(true);
     const defaultPos = isTenantActive ? DAFTAR_POS_KERJA_PESANTREN[5] : detectDefaultPosKerja(activeActor);
     setSelectedPos(defaultPos);
     setTempat(`${defaultPos.nama} (${defaultPos.gedung})`);

@@ -66,9 +66,11 @@ export default function DashboardKetuaYayasanPage() {
   // 3. Tab Grafik
   const [activeGrafikTab, setActiveGrafikTab] = useState<'semua' | 'spp' | 'jajan' | 'tabungan' | 'donasi' | 'tunggakan'>('semua');
 
+  const [mounted, setMounted] = useState(false);
   const searchParams = useSearchParams();
   const { isTenant: modeIsTenant } = useAppMode();
-  const isTenant = searchParams?.get('mode') === 'tenant' || modeIsTenant || (typeof window !== 'undefined' && isTenantMode());
+  const isTenantParam = searchParams?.get('mode') === 'tenant';
+  const isTenant = isTenantParam || (mounted ? (modeIsTenant || (typeof window !== 'undefined' && isTenantMode())) : false);
 
   // Ringkasan Eksekutif Keuangan & Margin (Zero Dummy Data on Tenant Live)
   const pendapatan = isTenant ? {
@@ -119,6 +121,7 @@ export default function DashboardKetuaYayasanPage() {
 
   // Sinkronisasi Data
   useEffect(() => {
+    setMounted(true);
     setThresholds(getSharedThresholds());
     setFormThresholds(getSharedThresholds());
     setRekeningList(getSharedRekeningList());

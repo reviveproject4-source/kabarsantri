@@ -872,18 +872,19 @@ let inMemoryState = {
   auditLogs: DEFAULT_AUDIT_LOGS
 };
 
-function loadState() {
-  if (typeof window === 'undefined') return isTenantMode() ? INITIAL_TENANT_STATE : inMemoryState;
+function loadState(forceTenantMode?: boolean) {
+  const isTenant = forceTenantMode !== undefined ? forceTenantMode : isTenantMode();
+  if (typeof window === 'undefined') return isTenant ? INITIAL_TENANT_STATE : inMemoryState;
   try {
-    const key = isTenantMode() ? TENANT_STORAGE_KEY : STORAGE_KEY;
+    const key = isTenant ? TENANT_STORAGE_KEY : STORAGE_KEY;
     const raw = localStorage.getItem(key);
     if (!raw) {
-      const defaultState = isTenantMode() ? INITIAL_TENANT_STATE : inMemoryState;
+      const defaultState = isTenant ? INITIAL_TENANT_STATE : inMemoryState;
       saveState(defaultState as any);
       return defaultState as any;
     }
     const parsed = JSON.parse(raw);
-    if (isTenantMode()) {
+    if (isTenant) {
       // Sanitasi ketat: Data demo pegawai / mock pimpinan dilarang ada di tenant live
       const demoNames = DEFAULT_EMPLOYEES.map(e => e.full_name.toLowerCase());
       const cleaned = (parsed.employees || []).filter((e: any) => 
@@ -898,7 +899,7 @@ function loadState() {
     }
     return parsed;
   } catch (e) {
-    return isTenantMode() ? INITIAL_TENANT_STATE : inMemoryState;
+    return isTenant ? INITIAL_TENANT_STATE : inMemoryState;
   }
 }
 
@@ -918,8 +919,8 @@ function saveState(state: typeof inMemoryState) {
 // PUBLIC STORE APIS
 // ============================================================================
 
-export function getEmployees(): Employee[] {
-  return loadState().employees;
+export function getEmployees(forceTenantMode?: boolean): Employee[] {
+  return loadState(forceTenantMode).employees;
 }
 
 export function getEmployeeById(id: string): Employee | undefined {
