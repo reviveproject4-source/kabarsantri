@@ -92,7 +92,11 @@ export default function SuperAdminDashboardPage() {
     };
 
     window.addEventListener('ks_yayasan_registered', handleUpdate);
-    return () => window.removeEventListener('ks_yayasan_registered', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('ks_yayasan_registered', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
   }, []);
 
   // Update selected features ketika yayasan yang dipilih di tab Fitur berubah

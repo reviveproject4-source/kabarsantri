@@ -8,9 +8,9 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://fugqdiuxnjw
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1Z3FkaXV4bmp3Zmd4cHZ4cXN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjgxODYsImV4cCI6MjA5OTYwNDE4Nn0.3uoylCk9Y4zocDimhvSfCw5_U0JP0Kx9lz1mPkfmyDk';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Fallback local persistence file in cache
-const CACHE_DIR = path.join(process.cwd(), '.next');
-const DATA_FILE = path.join(CACHE_DIR, 'yayasan_registrations_cache.json');
+// File penyimpanan persisten di src/data
+const DATA_DIR = path.join(process.cwd(), 'src', 'data');
+const DATA_FILE = path.join(DATA_DIR, 'registrations.json');
 
 // In-memory store fallback
 let memoryStore: any[] = [
@@ -63,8 +63,8 @@ function loadLocalFile(): any[] {
 
 function saveLocalFile(data: any[]) {
   try {
-    if (!fs.existsSync(CACHE_DIR)) {
-      fs.mkdirSync(CACHE_DIR, { recursive: true });
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
     }
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
   } catch {}

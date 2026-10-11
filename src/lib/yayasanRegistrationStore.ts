@@ -44,7 +44,13 @@ export interface YayasanRegistration {
   admin_temp_password?: string;
 }
 
-const STORAGE_KEY = 'ks_yayasan_registrations_v3';
+const PRIMARY_STORAGE_KEY = 'ks_yayasan_registrations_v3';
+const ALL_STORAGE_KEYS = [
+  'ks_yayasan_registrations_v3',
+  'ks_yayasan_registrations_v2',
+  'ks_yayasan_registrations_v1',
+  'ks_yayasan_registrations',
+];
 const EVENT_NAME = 'ks_yayasan_registered';
 
 const DEFAULT_REGISTRATIONS: YayasanRegistration[] = [
@@ -84,18 +90,57 @@ const DEFAULT_REGISTRATIONS: YayasanRegistration[] = [
 export function getYayasanRegistrations(): YayasanRegistration[] {
   if (typeof window === 'undefined') return DEFAULT_REGISTRATIONS;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_REGISTRATIONS));
-      // Trigger background sync dari API server
-      syncRegistrationsFromServer();
-      return DEFAULT_REGISTRATIONS;
+    const map = new Map<string, YayasanRegistration>();
+
+    // 1. Masukkan default registrations sebagai baseline
+    DEFAULT_REGISTRATIONS.forEach(item => map.set(item.id, item));
+
+    // 2. Scan SEMUA versi key localStorage (v3, v2, v1, legacy) agar input yayasan tidak pernah hilang!
+    for (const key of ALL_STORAGE_KEYS) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            parsed.forEach((item: YayasanRegistration) => {
+              if (item && item.id && item.nama_yayasan) {
+                map.set(item.id, item);
+              }
+            });
+          }
+        }
+      } catch {}
     }
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed;
-    }
-    return DEFAULT_REGISTRATIONS;
+
+    // 3. Cek cadangan data registrasi tersimpan di perangkat
+    try {
+      const backupRaw = localStorage.getItem('ks_pending_registration_data');
+      if (backupRaw) {
+        const backupItem = JSON.parse(backupRaw);
+        if (backupItem && backupItem.id && backupItem.nama_yayasan) {
+          map.set(backupItem.id, backupItem);
+        }
+      }
+    } catch {}
+
+    const list = Array.from(map.values());
+
+    // Urutkan: Yayasan yang statusnya pending atau baru mendaftar tampil di PALING ATAS!
+    list.sort((a, b) => {
+      if (a.status === 'pending' && b.status !== 'pending') return -1;
+      if (a.status !== 'pending' && b.status === 'pending') return 1;
+      return (b.created_at || '').localeCompare(a.created_at || '');
+    });
+
+    // Sinkronkan kembali ke semua key
+    try {
+      const payload = JSON.stringify(list);
+      for (const key of ALL_STORAGE_KEYS) {
+        localStorage.setItem(key, payload);
+      }
+    } catch {}
+
+    return list;
   } catch {
     return DEFAULT_REGISTRATIONS;
   }
@@ -104,7 +149,12 @@ export function getYayasanRegistrations(): YayasanRegistration[] {
 export function saveYayasanRegistrations(list: YayasanRegistration[]): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    const payload = JSON.stringify(list);
+    for (const key of ALL_STORAGE_KEYS) {
+      localStorage.setItem(key, payload);
+    }
+    // Ping cross-tab / cross-window storage event
+    localStorage.setItem('ks_reg_timestamp', Date.now().toString());
     window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: list }));
   } catch (err) {
     console.error('Failed to save yayasan registrations:', err);
@@ -122,12 +172,21 @@ export async function syncRegistrationsFromServer(): Promise<YayasanRegistration
       const serverList: YayasanRegistration[] = json.data;
       const localList = getYayasanRegistrations();
       
-      // Gabungkan berdasarkan id
       const map = new Map<string, YayasanRegistration>();
-      localList.forEach(item => map.set(item.id, item));
+      // Baseline default
+      DEFAULT_REGISTRATIONS.forEach(item => map.set(item.id, item));
+      // Server list
       serverList.forEach(item => map.set(item.id, item));
+      // Local list (INPUT USER DI WELCOME SCREEN) MENDAPAT PRIORITAS UTAMA DAN TIDAK BOLEH TERTELAN!
+      localList.forEach(item => map.set(item.id, item));
       
       const merged = Array.from(map.values());
+      merged.sort((a, b) => {
+        if (a.status === 'pending' && b.status !== 'pending') return -1;
+        if (a.status !== 'pending' && b.status === 'pending') return 1;
+        return (b.created_at || '').localeCompare(a.created_at || '');
+      });
+
       saveYayasanRegistrations(merged);
       return merged;
     }
@@ -176,8 +235,20 @@ export async function submitYayasanRegistration(data: {
     }),
   };
 
-  const updated = [newReg, ...current];
+  // Tambahkan pendaftaran baru di baris PALING DEPAN
+  const updated = [newReg, ...current.filter(r => r.id !== newReg.id)];
   saveYayasanRegistrations(updated);
+
+  // Simpan slot cadangan di perangkat
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('ks_pending_registration_data', JSON.stringify(newReg));
+      localStorage.setItem('ks_pending_registration_id', newReg.id);
+      localStorage.setItem('ks_pending_registration_nama', newReg.nama_yayasan);
+      localStorage.setItem('ks_pending_registration_status', 'pending');
+      localStorage.setItem('ks_reg_timestamp', Date.now().toString());
+    } catch {}
+  }
 
   // Simpan ke API Server terpusat
   try {

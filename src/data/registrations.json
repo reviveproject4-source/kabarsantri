@@ -1,0 +1,64 @@
+[
+  {
+    "id": "reg-707374",
+    "nama_yayasan": "Pondok Pesantren Al-Ikhlas Nusantara",
+    "nama_pimpinan": "K.H. Musthofa Bisri",
+    "no_whatsapp": "081298765432",
+    "email": "alikhlas@pesantren.id",
+    "kota": "Rembang, Jawa Tengah",
+    "estimasi_santri": "200 - 500 Santri",
+    "paket_pilihan": "Enterprise",
+    "catatan": "",
+    "status": "pending",
+    "features": [
+      "tahfidz",
+      "spp",
+      "presensi",
+      "wali",
+      "rumah_tangga",
+      "akuntansi"
+    ],
+    "created_at": "11/10/2026, 21.41"
+  },
+  {
+    "id": "reg-001",
+    "nama_yayasan": "Yayasan Pondok Pesantren Bina Insan Qurani",
+    "nama_pimpinan": "KH. Dr. Muhammad Syamsul Ma'arif",
+    "no_whatsapp": "081234567890",
+    "email": "sekretariat@binainsan.sch.id",
+    "kota": "Bandung, Jawa Barat",
+    "estimasi_santri": "100 - 300 Santri",
+    "paket_pilihan": "Enterprise",
+    "catatan": "Prioritas aktivasi modul SPP online dan mutaba'ah tahfidz asrama.",
+    "status": "pending",
+    "features": [
+      "tahfidz",
+      "spp",
+      "presensi",
+      "wali",
+      "rumah_tangga",
+      "akuntansi"
+    ],
+    "created_at": "2026-10-10 14:30"
+  },
+  {
+    "id": "reg-002",
+    "nama_yayasan": "Pesantren Tahfidz Darul Hikmah",
+    "nama_pimpinan": "Ustadz Ahmad Fauzan, Lc.",
+    "no_whatsapp": "085712345678",
+    "email": "info@darulhikmah.id",
+    "kota": "Sleman, D.I. Yogyakarta",
+    "estimasi_santri": "< 50 Santri",
+    "paket_pilihan": "Gratis",
+    "catatan": "Pesantren baru rintisan, fokus 30 juz dan adab santri.",
+    "status": "active",
+    "features": [
+      "tahfidz",
+      "wali"
+    ],
+    "created_at": "2026-10-09 09:15",
+    "activated_tenant_id": "tenant-darul-hikmah-001",
+    "admin_email": "admin@darulhikmah.kabarsantri.id",
+    "admin_temp_password": "Fauzan2026!"
+  }
+]
