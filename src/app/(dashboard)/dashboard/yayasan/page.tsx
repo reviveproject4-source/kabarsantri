@@ -38,6 +38,8 @@ import {
 } from '@/lib/sharedDataStore';
 import { supabase } from '@/lib/supabaseClient';
 import Laporan6BulanChart from '@/components/finance/Laporan6BulanChart';
+import { useSearchParams } from 'next/navigation';
+import { useAppMode } from '@/lib/sessionStore';
 
 export default function DashboardKetuaYayasanPage() {
   const [tier, setTier] = useState<'gratis' | 'premium'>('premium');
@@ -64,11 +66,9 @@ export default function DashboardKetuaYayasanPage() {
   // 3. Tab Grafik
   const [activeGrafikTab, setActiveGrafikTab] = useState<'semua' | 'spp' | 'jajan' | 'tabungan' | 'donasi' | 'tunggakan'>('semua');
 
-  const [isTenant, setIsTenant] = useState(false);
-
-  useEffect(() => {
-    setIsTenant(isTenantMode());
-  }, []);
+  const searchParams = useSearchParams();
+  const { isTenant: modeIsTenant } = useAppMode();
+  const isTenant = searchParams?.get('mode') === 'tenant' || modeIsTenant || (typeof window !== 'undefined' && isTenantMode());
 
   // Ringkasan Eksekutif Keuangan & Margin (Zero Dummy Data on Tenant Live)
   const pendapatan = isTenant ? {

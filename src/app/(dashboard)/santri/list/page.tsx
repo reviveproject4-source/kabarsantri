@@ -14,20 +14,22 @@ import {
   FileText,
   UserPlus
 } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import { useAppMode, useActiveTenant } from '@/lib/sessionStore';
 import { getSharedSantriList, isTenantMode } from '@/lib/sharedDataStore';
 
 export default function DataIndukSantriPage() {
+  const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterKelas, setFilterKelas] = useState('semua');
   const { isTenant } = useAppMode();
   const tenant = useActiveTenant();
 
-  const isTenantActive = typeof window !== 'undefined' ? (isTenantMode() || isTenant) : isTenant;
+  const isTenantActive = searchParams?.get('mode') === 'tenant' || isTenant || (typeof window !== 'undefined' && isTenantMode());
 
   const [tenantSantri, setTenantSantri] = useState<any[]>(() => {
-    if (typeof window !== 'undefined' && (isTenantMode() || isTenant)) {
-      const list = getSharedSantriList();
+    if (typeof window !== 'undefined' && (isTenantMode() || isTenant || searchParams?.get('mode') === 'tenant')) {
+      const list = getSharedSantriList(true);
       return list.map((s, idx) => ({
         id: `ts-${idx + 1}`,
         nis: s.nis,
@@ -46,8 +48,8 @@ export default function DataIndukSantriPage() {
 
   useEffect(() => {
     const refreshTenant = () => {
-      if (isTenantMode() || isTenant) {
-        const list = getSharedSantriList();
+      if (isTenantActive) {
+        const list = getSharedSantriList(true);
         setTenantSantri(list.map((s, idx) => ({
           id: `ts-${idx + 1}`,
           nis: s.nis,
@@ -66,7 +68,7 @@ export default function DataIndukSantriPage() {
     refreshTenant();
     window.addEventListener('ks_tenant_santri_updated', refreshTenant);
     return () => window.removeEventListener('ks_tenant_santri_updated', refreshTenant);
-  }, [isTenant]);
+  }, [isTenantActive]);
 
   const demoSantriList = [
     {

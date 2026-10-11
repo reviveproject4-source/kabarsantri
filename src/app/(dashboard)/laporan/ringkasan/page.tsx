@@ -14,24 +14,36 @@ import {
   UserCheck,
   AlertCircle
 } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import { isTenantMode, getSharedSantriList } from '@/lib/sharedDataStore';
 import { getEmployees } from '@/lib/kepegawaianStore';
-import { useActiveTenant } from '@/lib/sessionStore';
+import { useActiveTenant, useAppMode } from '@/lib/sessionStore';
 
 export default function LaporanRingkasanEksekutifPage() {
+  const searchParams = useSearchParams();
+  const { isTenant: modeIsTenant } = useAppMode();
   const tenant = useActiveTenant();
-  const [isTenant, setIsTenant] = useState(false);
-  const [santriCount, setSantriCount] = useState(0);
-  const [employeeCount, setEmployeeCount] = useState(0);
+
+  const isTenant = searchParams?.get('mode') === 'tenant' || modeIsTenant || (typeof window !== 'undefined' && isTenantMode());
+  const [santriCount, setSantriCount] = useState(() => {
+    if (typeof window !== 'undefined' && (isTenantMode() || modeIsTenant || searchParams?.get('mode') === 'tenant')) {
+      return getSharedSantriList(true).length;
+    }
+    return 0;
+  });
+  const [employeeCount, setEmployeeCount] = useState(() => {
+    if (typeof window !== 'undefined' && (isTenantMode() || modeIsTenant || searchParams?.get('mode') === 'tenant')) {
+      return getEmployees().length;
+    }
+    return 0;
+  });
 
   useEffect(() => {
-    const tenantActive = isTenantMode();
-    setIsTenant(tenantActive);
-    if (tenantActive) {
-      setSantriCount(getSharedSantriList().length);
+    if (isTenant) {
+      setSantriCount(getSharedSantriList(true).length);
       setEmployeeCount(getEmployees().length);
     }
-  }, []);
+  }, [isTenant]);
 
   return (
     <div className="space-y-6">

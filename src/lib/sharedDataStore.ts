@@ -391,11 +391,24 @@ const DEFAULT_PRESENSI_HISTORY: PresensiPegawaiRecord[] = [
   },
 ];
 
-export function getSharedPresensiList(): PresensiPegawaiRecord[] {
-  if (isTenantMode()) {
+export function getSharedPresensiList(forceTenantMode?: boolean): PresensiPegawaiRecord[] {
+  const isTenant = forceTenantMode ?? isTenantMode();
+  if (isTenant) {
     try {
       const raw = localStorage.getItem('ks_tenant_presensi_pegawai_v1');
-      return raw ? JSON.parse(raw) : [];
+      if (!raw) return [];
+      const parsed: PresensiPegawaiRecord[] = JSON.parse(raw);
+      // Sanitasi ketat: Data dummy demo sama sekali dilarang ada di tenant live
+      const DEMO_STAFF_NAMES = [
+        'Ust. Lukman Hakim, S.Pd.I.', 'Pak Maryono', 'Pak Subandi', 
+        'Ibu Sumiati', 'Ust. Hamzah, Lc.', 'Usth. Maryam S.Pd', 
+        'KH. Abdullah Faqih, Lc.', 'Ust. H. Fauzan Mansur, Lc.'
+      ];
+      const cleaned = parsed.filter(p => !DEMO_STAFF_NAMES.includes(p.pegawai_nama));
+      if (cleaned.length !== parsed.length) {
+        localStorage.setItem('ks_tenant_presensi_pegawai_v1', JSON.stringify(cleaned));
+      }
+      return cleaned;
     } catch {
       return [];
     }
@@ -535,16 +548,42 @@ export const MASTER_SANTRI: SantriOption[] = [
   { nis: '202602035', nama: 'Khadijah Al-Kubro', kelas_id: 'k-9b', gender: 'akhwat' },
 ];
 
-export function getSharedSantriList(): SantriOption[] {
-  if (isTenantMode()) {
+export function getSharedSantriList(forceTenantMode?: boolean): SantriOption[] {
+  const isTenant = forceTenantMode ?? isTenantMode();
+  if (isTenant) {
     try {
       const raw = localStorage.getItem('ks_tenant_santri_list_v1');
-      return raw ? JSON.parse(raw) : [];
+      if (!raw) return [];
+      const parsed: SantriOption[] = JSON.parse(raw);
+      // Sanitasi ketat: Data dummy nama-nama santri demo sama sekali dilarang ada di tenant live
+      const DEMO_SANTRI_NAMES = [
+        'Muhammad Al-Fatih', 'Fathimah Az-Zahra', 'Ahmad Zaki Mubarak', 
+        'Bilal Habasyi', 'Fatih Al-Ayyubi', 'Umar Faruq', 'Ali Zainal Abidin',
+        'Thoriq bin Ziyad', 'Khalid bin Walid', 'Abdullah bin Mas\'ud',
+        'Mu\'adz bin Jabal', 'Zaid bin Tsabit', 'Maryam Al-Batul', 
+        'Aisyah Humaira', 'Hafshah binti Umar', 'Zainab Al-Kubra', 'Khadijah Al-Kubro'
+      ];
+      const cleaned = parsed.filter(s => !DEMO_SANTRI_NAMES.includes(s.nama));
+      if (cleaned.length !== parsed.length) {
+        localStorage.setItem('ks_tenant_santri_list_v1', JSON.stringify(cleaned));
+      }
+      return cleaned;
     } catch {
       return [];
     }
   }
   return MASTER_SANTRI;
+}
+
+export function resetTenantStorageData(): void {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('ks_tenant_santri_list_v1');
+    localStorage.removeItem('ks_tenant_presensi_pegawai_v1');
+    localStorage.removeItem('ks_tenant_master_kelas_v1');
+    localStorage.removeItem('ks_tenant_tahfidz_records_v1');
+    window.dispatchEvent(new CustomEvent('ks_tenant_santri_updated', { detail: [] }));
+    window.dispatchEvent(new CustomEvent('ks_presensi_updated', { detail: null }));
+  }
 }
 
 export function saveTenantSantri(santri: SantriOption): SantriOption[] {

@@ -66,8 +66,10 @@ import {
   issueGatePass,
   PermissionRequest,
   MASTER_SANTRI,
-  getSharedSantriList
+  getSharedSantriList,
+  isTenantMode
 } from '@/lib/sharedDataStore';
+import { useSearchParams } from 'next/navigation';
 import { 
   getLeaveRequests, 
   submitLeaveRequest,
@@ -332,10 +334,13 @@ export default function UnifiedRoleDashboardPage() {
     (currentActor.gender === 'akhwat' ? s.gender_target === 'akhwat' : s.gender_target === 'ikhwan')
   );
 
-  const { isDemo, isTenant, setMode: setAppModeState } = useAppMode();
+  const searchParams = useSearchParams();
+  const { isDemo: modeIsDemo, isTenant: modeIsTenant, setMode: setAppModeState } = useAppMode();
+  const isTenant = searchParams?.get('mode') === 'tenant' || modeIsTenant || (typeof window !== 'undefined' && isTenantMode());
+  const isDemo = !isTenant;
   const tenant = useActiveTenant();
 
-  const tenantSantriList = isTenant ? getSharedSantriList() : [];
+  const tenantSantriList = isTenant ? getSharedSantriList(true) : [];
   const quotaStats = checkStudentQuota(tenant.id, isTenant ? tenantSantriList : undefined);
   const tenantSantriCount = quotaStats.currentActive;
   const tenantCapacity = quotaStats.maxAllowed;

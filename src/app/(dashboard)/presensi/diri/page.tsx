@@ -25,13 +25,14 @@ import {
   Layers,
   Car
 } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import { 
   getSharedPresensiList, 
   saveSharedPresensi, 
   PresensiPegawaiRecord,
   isTenantMode
 } from '@/lib/sharedDataStore';
-import { useActiveActor, ActiveActor } from '@/lib/sessionStore';
+import { useActiveActor, ActiveActor, useAppMode } from '@/lib/sessionStore';
 import { getEmployees } from '@/lib/kepegawaianStore';
 
 /**
@@ -174,6 +175,9 @@ function getDistanceFromLatLonInMeters(lat1: number, lon1: number, lat2: number,
 }
 
 export default function AbsenDiriPribadiPage() {
+  const searchParams = useSearchParams();
+  const { isTenant } = useAppMode();
+  const isTenantActive = searchParams?.get('mode') === 'tenant' || isTenant || (typeof window !== 'undefined' && isTenantMode());
   const activeActor = useActiveActor();
 
   // Pos Kerja aktif (otomatis terpilih sesuai jabatan, fleksibel diganti jika tugas silang)
@@ -204,19 +208,22 @@ export default function AbsenDiriPribadiPage() {
 
   // Otomatis tentukan Pos Kerja sesuai Akun Aktif & Muat Pegawai Tenant
   useEffect(() => {
-    const defaultPos = detectDefaultPosKerja(activeActor);
+    const defaultPos = isTenantActive ? DAFTAR_POS_KERJA_PESANTREN[5] : detectDefaultPosKerja(activeActor);
     setSelectedPos(defaultPos);
     setTempat(`${defaultPos.nama} (${defaultPos.gedung})`);
 
-    if (isTenantMode()) {
+    if (isTenantActive) {
       const emps = getEmployees();
       setTenantEmployees(emps);
       if (emps.length > 0) {
         setSelectedEmpId(emps[0].id);
         setInputNamaPegawai(emps[0].full_name);
+      } else {
+        setSelectedEmpId('');
+        setInputNamaPegawai('');
       }
     }
-  }, [activeActor]);
+  }, [activeActor, isTenantActive]);
 
   // Fungsi Deteksi Titik GPS Geolocation via Browser/HP
   const handleDetectGpsLocation = (targetPos = selectedPos) => {
@@ -282,7 +289,7 @@ export default function AbsenDiriPribadiPage() {
 
   // Sinkronisasi data presensi dan deteksi otomatis lokasi saat halaman dibuka
   useEffect(() => {
-    setHistoryList(getSharedPresensiList());
+    setHistoryList(getSharedPresensiList(isTenantActive));
     handleDetectGpsLocation(selectedPos);
 
     const updateClock = () => {
@@ -295,7 +302,7 @@ export default function AbsenDiriPribadiPage() {
     const timer = setInterval(updateClock, 1000);
 
     const handleUpdate = () => {
-      setHistoryList(getSharedPresensiList());
+      setHistoryList(getSharedPresensiList(isTenantActive));
     };
     window.addEventListener('ks_presensi_updated', handleUpdate);
 
@@ -303,7 +310,7 @@ export default function AbsenDiriPribadiPage() {
       clearInterval(timer);
       window.removeEventListener('ks_presensi_updated', handleUpdate);
     };
-  }, []);
+  }, [isTenantActive]);
 
   const googleMapsUrl = gpsCoords 
     ? `https://www.google.com/maps?q=${gpsCoords.lat},${gpsCoords.lng}` 
@@ -324,15 +331,15 @@ export default function AbsenDiriPribadiPage() {
     const mappedStatus = selectedStatus === 'tugas_luar' ? 'ijin' : selectedStatus;
 
     const chosenEmp = tenantEmployees.find(e => e.id === selectedEmpId);
-    const isTenant = isTenantMode();
+    const isTenant = isTenantActive;
     const namaPencatat = isTenant
-      ? (chosenEmp ? chosenEmp.full_name : inputNamaPegawai.trim() || activeActor.name)
+      ? (chosenEmp ? chosenEmp.full_name : inputNamaPegawai.trim() || 'Administrator Lembaga')
       : activeActor.name;
     const nipPencatat = isTenant
-      ? (chosenEmp ? chosenEmp.nip : activeActor.nip)
+      ? (chosenEmp ? chosenEmp.nip : '-')
       : activeActor.nip;
     const jabatanPencatat = isTenant
-      ? (chosenEmp ? chosenEmp.current_position : activeActor.title)
+      ? (chosenEmp ? chosenEmp.current_position : 'Administrator Lembaga')
       : activeActor.title;
 
     saveSharedPresensi({
@@ -449,10 +456,16 @@ export default function AbsenDiriPribadiPage() {
                   Identitas Pegawai Anda:
                 </span>
                 <span className="font-extrabold text-sm text-slate-900 block mt-0.5">
-                  {isTenantMode() ? (inputNamaPegawai.trim() || activeActor.name) : activeActor.name}
+                  {isTenantActive
+                    ? (inputNamaPegawai.trim() || (tenantEmployees.length > 0 ? tenantEmployees[0].full_name : 'Administrator Lembaga'))
+                    : activeActor.name}
                 </span>
                 <span className="text-[11px] text-slate-600 block">
-                  {activeActor.title} • {activeActor.dept}
+                  {isTenantActive
+                    ? (tenantEmployees.length > 0 && selectedEmpId
+                        ? `${tenantEmployees.find(e => e.id === selectedEmpId)?.current_position || 'Pegawai'} • Pesantren Tahfidz Nurul Huda`
+                        : 'Administrator Lembaga • Pesantren Tahfidz Nurul Huda')
+                    : `${activeActor.title} • ${activeActor.dept}`}
                 </span>
               </div>
               <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white font-bold text-[10px] shrink-0">
@@ -460,7 +473,7 @@ export default function AbsenDiriPribadiPage() {
               </span>
             </div>
 
-            {isTenantMode() && (
+            {isTenantActive && (
               <div className="pt-2 border-t border-emerald-200/60 space-y-1.5">
                 {tenantEmployees.length > 0 ? (
                   <div>
@@ -504,8 +517,8 @@ export default function AbsenDiriPribadiPage() {
             )}
 
             <div className="pt-2 border-t border-emerald-200/60 flex items-center justify-between text-[11px] text-slate-500 font-mono">
-              <span>NIP: {activeActor.nip}</span>
-              <span>Unit: {activeActor.unit_name || 'Pesantren Tahfidz Nurul Huda'}</span>
+              <span>NIP: {isTenantActive ? (selectedEmpId ? tenantEmployees.find(e => e.id === selectedEmpId)?.nip || '-' : '-') : activeActor.nip}</span>
+              <span>Unit: {isTenantActive ? 'Pesantren Tahfidz Nurul Huda' : (activeActor.unit_name || 'Pesantren Tahfidz Nurul Huda')}</span>
             </div>
           </div>
 

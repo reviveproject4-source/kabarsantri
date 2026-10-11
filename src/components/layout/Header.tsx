@@ -263,7 +263,12 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
           <button 
             onClick={() => {
               setAppModeState('tenant', 'tenant-rabu-001');
-              window.location.reload();
+              if (typeof window !== 'undefined') {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('mode');
+                url.searchParams.set('mode', 'tenant');
+                window.location.href = url.toString();
+              }
             }}
             className="ml-2 bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-md transition shrink-0 whitespace-nowrap shadow-xs"
             title="Masuk ke Jalur Tenant Lembaga Resmi"
@@ -284,7 +289,12 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
           <button 
             onClick={() => {
               setAppModeState('demo');
-              window.location.reload();
+              if (typeof window !== 'undefined') {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('mode');
+                url.searchParams.set('mode', 'demo');
+                window.location.href = url.toString();
+              }
             }}
             className="ml-2 bg-blue-800/80 hover:bg-blue-700 border border-blue-600/50 text-blue-100 text-[11px] font-bold px-2.5 py-1 rounded-md transition shrink-0 whitespace-nowrap"
             title="Beralih ke Demo 6-Pilar"
@@ -472,15 +482,17 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
             )}
           </button>
 
-          {/* Desktop-Only: Super Admin Console Link */}
-          <Link
-            href="/super-admin"
-            className="hidden sm:flex p-1.5 sm:px-2.5 text-blue-700 dark:text-blue-300 hover:text-blue-900 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg border border-blue-200 dark:border-blue-800 text-xs font-bold items-center space-x-1 transition shadow-2xs shrink-0"
-            title="Super Admin: Onboarding Tenant & Kuota"
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-            <span className="text-[11px]">Super Admin</span>
-          </Link>
+          {/* Desktop-Only: Super Admin Console Link (Demo-Only) */}
+          {!isTenant && (
+            <Link
+              href="/super-admin"
+              className="hidden sm:flex p-1.5 sm:px-2.5 text-blue-700 dark:text-blue-300 hover:text-blue-900 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg border border-blue-200 dark:border-blue-800 text-xs font-bold items-center space-x-1 transition shadow-2xs shrink-0"
+              title="Super Admin: Onboarding Tenant & Kuota"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+              <span className="text-[11px]">Super Admin</span>
+            </Link>
+          )}
 
           {/* Desktop-Only: Multi-Device Sync */}
           <button
@@ -504,14 +516,16 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
 
             {mobileActionsOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 p-1.5 z-50">
-                <Link
-                  href="/super-admin"
-                  onClick={() => setMobileActionsOpen(false)}
-                  className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg flex items-center space-x-2"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Super Admin</span>
-                </Link>
+                {!isTenant && (
+                  <Link
+                    href="/super-admin"
+                    onClick={() => setMobileActionsOpen(false)}
+                    className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg flex items-center space-x-2"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Super Admin</span>
+                  </Link>
+                )}
                 <button
                   onClick={() => {
                     setMobileActionsOpen(false);
@@ -543,7 +557,7 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
               {isTenant ? 'NH' : currentRoleObj.name.split(' ').slice(0, 2).map((n: string) => n[0]).join('')}
             </div>
             <div className="hidden lg:block text-left text-xs">
-              <div className="font-bold text-slate-800 dark:text-slate-200">{isTenant ? 'Ust. H. Fauzan Mansur' : currentRoleObj.name}</div>
+              <div className="font-bold text-slate-800 dark:text-slate-200">{isTenant ? 'Administrator Lembaga' : currentRoleObj.name}</div>
               <div className="text-[10px] text-slate-400">
                 {isTenant ? 'Admin Lembaga' : currentRoleObj.dept}
               </div>

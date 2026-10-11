@@ -446,7 +446,12 @@ export function useActiveTenant(): TenantInfo {
  * Automatically updates component when active actor changes in Header
  */
 export function useActiveActor(): ActiveActor {
-  const [actor, setActor] = useState<ActiveActor>(MASTER_PILLAR_ACTORS.yayasan);
+  const [actor, setActor] = useState<ActiveActor>(() => {
+    if (typeof window !== 'undefined') {
+      return getActiveActor();
+    }
+    return MASTER_PILLAR_ACTORS.yayasan;
+  });
 
   useEffect(() => {
     // Initial sync
@@ -461,9 +466,15 @@ export function useActiveActor(): ActiveActor {
       }
     };
 
+    const handleModeChanged = () => {
+      setActor(getActiveActor());
+    };
+
     window.addEventListener(SESSION_EVENT_NAME, handleActorChanged);
+    window.addEventListener(APP_MODE_EVENT, handleModeChanged);
     return () => {
       window.removeEventListener(SESSION_EVENT_NAME, handleActorChanged);
+      window.removeEventListener(APP_MODE_EVENT, handleModeChanged);
     };
   }, []);
 
@@ -536,7 +547,12 @@ export function useAppMode(): {
   isDemo: boolean;
   isTenant: boolean;
 } {
-  const [mode, setModeState] = useState<AppMode>('demo');
+  const [mode, setModeState] = useState<AppMode>(() => {
+    if (typeof window !== 'undefined') {
+      return getAppMode();
+    }
+    return 'demo';
+  });
 
   useEffect(() => {
     setModeState(getAppMode());

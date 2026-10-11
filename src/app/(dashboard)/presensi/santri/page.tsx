@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { UserCheck, CheckCircle2, Search, Building2, School, ShieldCheck, MapPin, Sparkles, AlertCircle } from 'lucide-react';
-import { getActiveActor, MASTER_PILLAR_ACTORS, ActiveActor } from '@/lib/sessionStore';
+import { getActiveActor, MASTER_PILLAR_ACTORS, ActiveActor, useAppMode } from '@/lib/sessionStore';
 import { MASTER_SANTRI, validateIslamicSegregation, isTenantMode, getSharedSantriList } from '@/lib/sharedDataStore';
 
 interface SantriPresensiItem {
@@ -35,6 +36,10 @@ const INITIAL_SANTRI_AKHWAT: SantriPresensiItem[] = [
 ];
 
 export default function AbsenSantriRolePage() {
+  const searchParams = useSearchParams();
+  const { isTenant } = useAppMode();
+  const isTenantActive = searchParams?.get('mode') === 'tenant' || isTenant || (typeof window !== 'undefined' && isTenantMode());
+
   const [currentActor, setCurrentActor] = useState<ActiveActor>(MASTER_PILLAR_ACTORS.yayasan);
   const [notif, setNotif] = useState('');
   const [kampus, setKampus] = useState<'ikhwan' | 'akhwat'>('ikhwan');
@@ -46,9 +51,8 @@ export default function AbsenSantriRolePage() {
     const actor = getActiveActor();
     setCurrentActor(actor);
 
-    const isTenant = isTenantMode();
-    if (isTenant) {
-      const shared = getSharedSantriList();
+    if (isTenantActive) {
+      const shared = getSharedSantriList(true);
       const filtered = shared.filter(s => s.gender === kampus);
       const mapped: SantriPresensiItem[] = filtered.map(s => ({
         id: s.id || s.nis,
@@ -73,8 +77,8 @@ export default function AbsenSantriRolePage() {
     const handleActorChange = () => {
       const updated = getActiveActor();
       setCurrentActor(updated);
-      if (isTenantMode()) {
-        const shared = getSharedSantriList();
+      if (isTenantActive) {
+        const shared = getSharedSantriList(true);
         const filtered = shared.filter(s => s.gender === kampus);
         setSantriList(filtered.map(s => ({
           id: s.id || s.nis,
@@ -102,7 +106,7 @@ export default function AbsenSantriRolePage() {
       window.removeEventListener('ks_session_actor_changed', handleActorChange);
       window.removeEventListener('ks_tenant_santri_updated', handleActorChange);
     };
-  }, [kampus]);
+  }, [kampus, isTenantActive]);
 
   const handleSwitchKampus = (newKampus: 'ikhwan' | 'akhwat') => {
     if (currentActor.gender && currentActor.gender !== newKampus) {
@@ -115,8 +119,8 @@ export default function AbsenSantriRolePage() {
     }
 
     setKampus(newKampus);
-    if (isTenantMode()) {
-      const shared = getSharedSantriList();
+    if (isTenantActive) {
+      const shared = getSharedSantriList(true);
       const filtered = shared.filter(s => s.gender === newKampus);
       setSantriList(filtered.map(s => ({
         id: s.id || s.nis,

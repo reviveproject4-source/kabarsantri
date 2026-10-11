@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { getFilteredNavigation, NavItem } from '@/config/navigation';
 import LockedFeatureModal from '@/components/common/LockedFeatureModal';
-import { APP_BRAND, useActiveTenant, getActiveActor } from '@/lib/sessionStore';
+import { APP_BRAND, useActiveTenant, getActiveActor, useAppMode } from '@/lib/sessionStore';
 import { checkStudentQuota } from '@/lib/tenantEntitlementStore';
 import { isTenantMode } from '@/lib/sharedDataStore';
 
@@ -61,13 +61,16 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
 
   const isYayasanExecutive = Boolean(pathname?.startsWith('/dashboard/yayasan') || pathname?.startsWith('/dashboard/wakil-yayasan'));
 
-  const isTenant = typeof window !== 'undefined' ? isTenantMode() : false;
+  const { isTenant } = useAppMode();
+  const isTenantActive = isTenant || (typeof window !== 'undefined' && isTenantMode());
   const getHrefWithMode = (baseHref: string) => {
-    const mode = isTenant ? 'tenant' : 'demo';
-    if (baseHref.includes('?')) {
-      return `${baseHref}&mode=${mode}`;
+    if (isTenantActive) {
+      if (baseHref.includes('?')) {
+        return `${baseHref}&mode=tenant`;
+      }
+      return `${baseHref}?mode=tenant`;
     }
-    return `${baseHref}?mode=${mode}`;
+    return baseHref;
   };
 
   const activeActor = typeof window !== 'undefined' ? getActiveActor() : { role_key: 'yayasan' };

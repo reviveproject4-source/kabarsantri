@@ -49,8 +49,14 @@ import { HrDashboardMetrics } from '@/types/kepegawaian';
 import { getRtDashboardMetrics } from '@/lib/rumahTanggaStore';
 import { RtDashboardMetrics } from '@/types/rumahtangga';
 import Laporan6BulanChart from '@/components/finance/Laporan6BulanChart';
+import { useSearchParams } from 'next/navigation';
+import { useAppMode } from '@/lib/sessionStore';
 
 export default function DashboardWakilYayasanPage() {
+  const searchParams = useSearchParams();
+  const { isTenant: modeIsTenant } = useAppMode();
+  const isTenant = searchParams?.get('mode') === 'tenant' || modeIsTenant || (typeof window !== 'undefined' && isTenantMode());
+
   const [modalThreshold, setModalThreshold] = useState(false);
   const [modalRekening, setModalRekening] = useState(false);
   const [pengajuanOpen, setPengajuanOpen] = useState(true); // Terbuka secara default agar daftar persetujuan langsung terlihat
@@ -76,8 +82,6 @@ export default function DashboardWakilYayasanPage() {
 
   // 3. Daftar Pengajuan yang Memerlukan ACC / Monitoring Wakil Ketua Yayasan (Live Shared Data)
   const [pengajuanList, setPengajuanList] = useState<PengajuanItem[]>([]);
-
-  const [isTenant, setIsTenant] = useState(false);
 
   // Ringkasan Eksekutif Keuangan & Margin (Zero Dummy Data on Tenant Live)
   const pendapatan = isTenant ? {
@@ -128,7 +132,6 @@ export default function DashboardWakilYayasanPage() {
 
   // Sinkronisasi Live Data
   useEffect(() => {
-    setIsTenant(isTenantMode());
     setThresholds(getSharedThresholds());
     setFormThresholds(getSharedThresholds());
     setRekeningList(getSharedRekeningList());
