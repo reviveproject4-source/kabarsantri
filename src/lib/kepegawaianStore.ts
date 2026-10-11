@@ -33,8 +33,8 @@ export const DEFAULT_EMPLOYEES: Employee[] = [
     tenant_id: 'tenant-pesantren-001',
     nip: 'NIP.YYS.2015.001',
     nik: '3201011001700001',
-    full_name: 'KH. Abdullah Faqih, Lc.',
-    email: 'kh.faqih@pesantren.id',
+    full_name: 'Pimpinan Yayasan',
+    email: 'yayasan@pesantren.id',
     phone_number: '08112233001',
     gender: 'L',
     date_of_birth: '1970-01-10',
@@ -83,7 +83,7 @@ export const DEFAULT_EMPLOYEES: Employee[] = [
     current_position: 'Wakil Ketua Yayasan (Pengawas Operasional)',
     current_role_slug: 'wakil_yayasan',
     supervisor_id: 'emp-yys-001',
-    supervisor_name: 'KH. Abdullah Faqih, Lc.',
+    supervisor_name: 'Pimpinan Yayasan',
     job_description: [
       'Mengawasi operasional harian seluruh unit pesantren (Control Tower)',
       'Menangani eskalasi SLA dan konflik lintas divisi',
@@ -101,7 +101,7 @@ export const DEFAULT_EMPLOYEES: Employee[] = [
         job_title: 'Wakil Ketua Yayasan',
         role_slug: 'wakil_yayasan',
         supervisor_id: 'emp-yys-001',
-        supervisor_name: 'KH. Abdullah Faqih, Lc.',
+        supervisor_name: 'Pimpinan Yayasan',
         start_date: '2018-01-15',
         reason: 'INITIAL_APPOINTMENT',
         sk_number: 'SK/YYS/2018/010'

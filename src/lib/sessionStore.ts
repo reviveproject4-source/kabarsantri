@@ -85,7 +85,7 @@ export const MASTER_PILLAR_ACTORS: Record<string, ActiveActor> = {
     id: 'emp-yys-001',
     role_key: 'yayasan',
     role_slug: 'ketua_yayasan',
-    name: 'KH. Abdullah Faqih, Lc.',
+    name: 'Pimpinan Yayasan',
     nip: 'PEG-YYS-001',
     title: 'Pimpinan Yayasan',
     dept: 'Yayasan & Manajemen Eksekutif',

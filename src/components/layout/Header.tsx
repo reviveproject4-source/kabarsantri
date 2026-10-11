@@ -226,7 +226,7 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
       id: 'yayasan',
       label: 'Yayasan',
       title: 'Pimpinan Yayasan',
-      name: 'KH. Abdullah Faqih, Lc.',
+      name: '',
       nip: 'PEG-YYS-001',
       dept: 'Yayasan & Manajemen Eksekutif',
       icon: '🏛️'
@@ -365,7 +365,7 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
                           {activeRole === r.id && <Check className="w-3.5 h-3.5 text-white" />}
                         </div>
                         <span className={`text-[10px] block truncate ${activeRole === r.id ? 'text-blue-100' : 'text-slate-400'}`}>
-                          {r.title} • {r.name}
+                          {r.name ? `${r.title} • ${r.name}` : r.title}
                         </span>
                       </div>
                     </button>
@@ -448,9 +448,11 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
             </div>
             <div className="hidden lg:block text-left text-xs">
               <div className="font-bold text-slate-800 dark:text-slate-200">{currentRoleObj?.title}</div>
-              <div className="text-[10px] text-slate-400">
-                {currentRoleObj?.name}
-              </div>
+              {currentRoleObj?.name ? (
+                <div className="text-[10px] text-slate-400">
+                  {currentRoleObj.name}
+                </div>
+              ) : null}
             </div>
             <Link 
               href="/login" 
