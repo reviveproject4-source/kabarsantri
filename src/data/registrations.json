@@ -1,5 +1,26 @@
 [
   {
+    "id": "reg-843085",
+    "nama_yayasan": "Pesantren Modern Darussalam",
+    "nama_pimpinan": "KH. Abdullah Syukri",
+    "no_whatsapp": "081299887766",
+    "email": "",
+    "kota": "Ponorogo",
+    "estimasi_santri": "> 500 Santri",
+    "paket_pilihan": "Enterprise",
+    "catatan": "",
+    "status": "pending",
+    "features": [
+      "tahfidz",
+      "spp",
+      "presensi",
+      "wali",
+      "rumah_tangga",
+      "akuntansi"
+    ],
+    "created_at": "12/10/2026, 07.44"
+  },
+  {
     "id": "reg-707374",
     "nama_yayasan": "Pondok Pesantren Al-Ikhlas Nusantara",
     "nama_pimpinan": "K.H. Musthofa Bisri",
