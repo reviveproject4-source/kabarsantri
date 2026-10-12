@@ -169,6 +169,9 @@ export default function SuperAdminDashboardPage() {
 
   useEffect(() => {
     setMounted(true);
+    if (typeof document !== 'undefined') {
+      document.title = 'Super Admin KabarSantri - Pusat Lisensi & Tenant';
+    }
     loadData();
 
     // Sesi clock timer
@@ -401,9 +404,9 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
               <Shield className="w-5 h-5 text-amber-400 shrink-0" />
               <div>
                 <span className="font-extrabold text-sm tracking-wider text-white uppercase block leading-none">
-                  PILIN PLATFORM
+                  KABARSANTRI
                 </span>
-                <span className="text-[10px] text-slate-400 font-mono">KabarSantri v2.0</span>
+                <span className="text-[10px] text-amber-400 font-mono font-bold">SUPER ADMIN v2.0</span>
               </div>
             </div>
             <button 
@@ -503,7 +506,7 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
               <Menu className="w-5 h-5" />
             </button>
             <h2 className="font-bold text-sm sm:text-base text-white tracking-tight">
-              Super Admin Dashboard
+              Super Admin KabarSantri
             </h2>
           </div>
 
@@ -621,7 +624,7 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
 
                 <div className="bg-[#091122] border border-[#1e2c4d] rounded-xl p-4 font-mono text-xs text-slate-300 space-y-2">
                   <p>
-                    Dashboard Super Admin berhasil diinisialisasi. Hubungkan API / database trigger untuk mulai mempopulasikan metrik secara real-time.
+                    Dashboard Super Admin KabarSantri berhasil diinisialisasi. Hubungkan API / database trigger untuk mulai mempopulasikan metrik secara real-time.
                   </p>
                   <div className="pt-2 flex flex-wrap gap-2 text-[11px]">
                     <span className="text-slate-400">Status Platform: <strong className="text-white">Siap Beroperasi</strong></span>
