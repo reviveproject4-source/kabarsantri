@@ -14,10 +14,9 @@ import {
   ShieldCheck, 
   Send,
   Clock,
-  Lock,
-  LayoutDashboard
+  Lock
 } from 'lucide-react';
-import { submitYayasanRegistration, PaketType, clearPendingRegistrationLock } from '@/lib/yayasanRegistrationStore';
+import { submitYayasanRegistration, PaketType } from '@/lib/yayasanRegistrationStore';
 
 export default function WelcomeScreenYayasanPage() {
   const [submitted, setSubmitted] = useState(false);
@@ -59,13 +58,6 @@ export default function WelcomeScreenYayasanPage() {
         ...prev,
         paket_pilihan: 'Enterprise',
       }));
-    }
-  };
-
-  const handleBypassPreview = () => {
-    clearPendingRegistrationLock();
-    if (typeof window !== 'undefined') {
-      window.location.href = '/dashboard';
     }
   };
 
@@ -123,28 +115,12 @@ export default function WelcomeScreenYayasanPage() {
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold text-slate-700 hover:text-emerald-700 bg-white hover:bg-emerald-50 rounded-xl transition border border-slate-200 shadow-2xs"
-            >
-              <LayoutDashboard className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="hidden sm:inline">Lihat Dashboard</span>
-            </Link>
-
-            <Link
-              href="/super-admin"
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 rounded-xl transition border border-amber-300 shadow-2xs"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
-              <span>Super Admin</span>
-            </Link>
-
+          <div className="flex items-center space-x-3">
             <Link
               href="/login"
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition shadow-2xs"
+              className="inline-flex items-center space-x-1.5 px-4 py-2 text-xs font-bold text-slate-700 hover:text-emerald-700 bg-white hover:bg-emerald-50 rounded-xl transition border border-slate-200 shadow-2xs"
             >
-              <span>Login</span>
+              <span>Masuk Akun Resmi</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -204,33 +180,15 @@ export default function WelcomeScreenYayasanPage() {
               </p>
             </div>
 
-            <div className="pt-2 flex flex-col gap-2.5">
+            <div className="pt-2 flex flex-col sm:flex-row gap-2">
               <Link
-                href="/super-admin"
-                className="w-full inline-flex items-center justify-center space-x-2 py-3 px-5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs rounded-xl shadow-md transition"
+                href="/login"
+                className="w-full inline-flex items-center justify-center space-x-2 py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition shadow-xs"
               >
-                <ShieldCheck className="w-4 h-4" />
-                <span>Buka Konsol Super Admin (Verifikasi / ACC Lembaga) ➔</span>
+                <span>Cek Halaman Login</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </Link>
-
               <button
-                type="button"
-                onClick={handleBypassPreview}
-                className="w-full inline-flex items-center justify-center space-x-2 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition"
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                <span>Buka Akses Dashboard (Mode Peninjauan / Preview)</span>
-              </button>
-
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Link
-                  href="/login"
-                  className="w-full inline-flex items-center justify-center space-x-2 py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition"
-                >
-                  <span>Cek Halaman Login</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-                <button
                   type="button"
                   onClick={() => {
                     setSubmitted(false);
@@ -251,7 +209,6 @@ export default function WelcomeScreenYayasanPage() {
                 </button>
               </div>
             </div>
-          </div>
         ) : (
           /* Formulir Onboarding Yayasan */
           <div className="space-y-6 sm:space-y-8">
