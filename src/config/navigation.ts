@@ -140,6 +140,14 @@ export const BACKOFFICE_NAVIGATION: NavItem[] = [
     ],
   },
   {
+    title: 'Pengaturan & Kata Sandi',
+    href: '/pengaturan',
+    icon: 'Settings',
+    children: [
+      { title: 'Pengaturan & Ganti Password', href: '/pengaturan' },
+    ],
+  },
+  {
     title: 'Konsol Super Admin',
     href: '/super-admin',
     icon: 'ShieldCheck',

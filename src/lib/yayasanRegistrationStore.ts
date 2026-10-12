@@ -55,6 +55,23 @@ const EVENT_NAME = 'ks_yayasan_registered';
 
 const DEFAULT_REGISTRATIONS: YayasanRegistration[] = [
   {
+    id: 'reg-498363',
+    nama_yayasan: 'Yayasan Al Kausar',
+    nama_pimpinan: 'Ust. Raynd',
+    no_whatsapp: '081280320505',
+    email: 'admin@al-kausar.kabarsantri.id',
+    kota: 'Cibuntu',
+    estimasi_santri: '< 50 Santri',
+    paket_pilihan: 'Gratis',
+    catatan: 'Tenant live resmi teraktivasi.',
+    status: 'active',
+    features: ['tahfidz', 'wali'],
+    created_at: '2026-10-12 02:01',
+    activated_tenant_id: 'tenant-al-kausar-9033',
+    admin_email: 'admin@al-kausar.kabarsantri.id',
+    admin_temp_password: 'Raynd6304!',
+  },
+  {
     id: 'reg-001',
     nama_yayasan: 'Yayasan Pondok Pesantren Bina Insan Qurani',
     nama_pimpinan: 'KH. Dr. Muhammad Syamsul Ma\'arif',
@@ -511,4 +528,45 @@ export function clearPendingRegistrationLock(): void {
   localStorage.removeItem('ks_pending_registration_nama');
   localStorage.removeItem('ks_pending_registration_status');
   window.dispatchEvent(new CustomEvent(EVENT_NAME));
+}
+
+/**
+ * Ganti Password Yayasan (Digunakan di Menu Pengaturan Akun)
+ */
+export async function updateYayasanPassword(tenantIdOrEmail: string, newPassword: string): Promise<boolean> {
+  const current = getYayasanRegistrations();
+  const cleanKey = tenantIdOrEmail.toLowerCase().trim();
+  let found = false;
+
+  const updated = current.map(r => {
+    if (
+      (r.activated_tenant_id && r.activated_tenant_id.toLowerCase() === cleanKey) ||
+      (r.admin_email && r.admin_email.toLowerCase() === cleanKey) ||
+      (r.email && r.email.toLowerCase() === cleanKey) ||
+      (r.id && r.id.toLowerCase() === cleanKey)
+    ) {
+      found = true;
+      return {
+        ...r,
+        admin_temp_password: newPassword,
+      };
+    }
+    return r;
+  });
+
+  if (found) {
+    saveYayasanRegistrations(updated);
+    try {
+      await fetch('/api/registrations', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          admin_email: cleanKey,
+          admin_temp_password: newPassword,
+        }),
+      });
+    } catch {}
+    return true;
+  }
+  return false;
 }

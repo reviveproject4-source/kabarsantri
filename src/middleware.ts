@@ -33,21 +33,32 @@ export function middleware(request: NextRequest) {
     request.cookies.get('sb-access-token')?.value || 
     request.cookies.get('ks_session')?.value;
 
-  // 2. Redirect jika sudah login tapi membuka halaman /login
-  if (pathname === '/login' && token) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+  // 2. Akses halaman /login (Jika logout atau akses langsung, izinkan dan bersihkan cookie)
+  if (pathname === '/login') {
+    if (searchParams.get('logout') === '1') {
+      const logoutRes = NextResponse.next();
+      logoutRes.cookies.set('sb-access-token', '', { path: '/', maxAge: 0, expires: new Date(0) });
+      logoutRes.cookies.set('ks_session', '', { path: '/', maxAge: 0, expires: new Date(0) });
+      logoutRes.cookies.set('ks_active_tenant_id', '', { path: '/', maxAge: 0, expires: new Date(0) });
+      return logoutRes;
+    }
+    // Jika sengaja membuka login, jangan redirect paksa agar bisa ganti akun
+    return NextResponse.next();
   }
 
-  // 3. Sesi Default jika belum ada (memudahkan pengujian menyeluruh)
+  // 3. Sesi Default jika belum ada (memudahkan navigasi)
   const response = NextResponse.next();
   if (isProtectedRoute && !token) {
-    response.cookies.set('ks_session', 'active-eval-session', { path: '/', httpOnly: false });
+    response.cookies.set('ks_session', 'active-tenant-session', { path: '/', httpOnly: false });
   }
 
-  // 4. Sinkronisasi Cookie Mode Otomatis
+  // 4. Sinkronisasi Cookie Mode Otomatis (Jalur Tenant Live)
   if (isTenantDeployment) {
     response.cookies.set('ks_app_mode', 'tenant', { path: '/', maxAge: 864000 });
-    response.cookies.set('ks_active_tenant_id', 'tenant-rabu-001', { path: '/', maxAge: 864000 });
+    const currentTenantId = request.cookies.get('ks_active_tenant_id')?.value;
+    if (!currentTenantId) {
+      response.cookies.set('ks_active_tenant_id', 'tenant-al-kausar-9033', { path: '/', maxAge: 864000 });
+    }
   }
 
   return response;

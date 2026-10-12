@@ -56,17 +56,21 @@ export const DEFAULT_TENANT: TenantInfo = {
 
 export const DEMO_TENANT = DEFAULT_TENANT;
 
-export const NURUL_HUDA_TENANT: TenantInfo = {
-  id: 'tenant-rabu-001',
-  name: '',
-  code: 'TENANT-LIVE',
-  city: '',
+export const AL_KAUSAR_TENANT: TenantInfo = {
+  id: 'tenant-al-kausar-9033',
+  name: 'Yayasan Al Kausar',
+  code: 'AL-KAUSAR',
+  city: 'Cibuntu',
   logo_url: '',
+  leader_name: 'Ust. Raynd',
+  leader_wa: '081280320505',
   units: [
-    { id: 'unit-tahfidz-nh', name: 'Madrasah Tahfidz', code: 'TAHFIDZ', type: 'TAHFIDZ' },
-    { id: 'unit-asrama-nh', name: 'Asrama Santri', code: 'ASRAMA', type: 'KESANTRIAN' },
+    { id: 'unit-tahfidz', name: 'Madrasah Tahfidz', code: 'TAHFIDZ', type: 'TAHFIDZ' },
+    { id: 'unit-asrama', name: 'Asrama Santri', code: 'ASRAMA', type: 'KESANTRIAN' },
   ]
 };
+
+export const NURUL_HUDA_TENANT: TenantInfo = AL_KAUSAR_TENANT;
 
 export interface ActiveActor {
   id: string;

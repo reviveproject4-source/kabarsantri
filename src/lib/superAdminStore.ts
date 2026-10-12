@@ -29,6 +29,26 @@ export interface TenantRecord {
 
 const DEFAULT_SUPER_TENANTS: TenantRecord[] = [
   {
+    id: 'tenant-al-kausar-9033',
+    slug: 'al-kausar',
+    name: 'Yayasan Al Kausar',
+    leader_name: 'Ust. Raynd',
+    leader_wa: '081280320505',
+    city: 'Cibuntu',
+    tier: 'tier1_free',
+    quota_santri: 50,
+    current_santri: 0,
+    status: 'active',
+    created_at: '2026-10-12',
+    target_launch_date: 'Aktif Live',
+    admin_email: 'admin@al-kausar.kabarsantri.id',
+    admin_temp_password: 'Raynd6304!',
+    portal_subdomain: 'al-kausar.kabarsantri.id',
+    allowed_features: ['tahfidz', 'adab', 'reward', 'pelanggaran', 'santri_50', 'wali_portal'],
+    notes: 'Tenant Live Resmi Al Kausar (Ust. Raynd).',
+    welcome_wa_sent: true,
+  },
+  {
     id: 'tenant-pesantren-001',
     slug: 'al-hikmah',
     name: 'Pondok Pesantren Al-Hikmah',

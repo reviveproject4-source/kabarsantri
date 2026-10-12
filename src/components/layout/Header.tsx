@@ -22,7 +22,8 @@ import {
   Sun,
   Moon,
   MoreVertical,
-  Check
+  Check,
+  Settings
 } from 'lucide-react';
 
 import { 
@@ -106,6 +107,24 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
     setInputPesantrenLogo('');
     setTenantSaveSuccess(true);
     setTimeout(() => setTenantSaveSuccess(false), 2500);
+  };
+
+  const handleLogout = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    if (typeof window !== 'undefined') {
+      document.cookie = 'sb-access-token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      document.cookie = 'ks_session=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      document.cookie = 'ks_app_mode=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      document.cookie = 'ks_active_tenant_id=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      try {
+        localStorage.removeItem('ks_active_tenant_info_v1');
+        localStorage.removeItem('ks_active_session_actor_v1');
+        localStorage.removeItem('ks_active_tenant_id');
+        localStorage.removeItem('ks_pending_registration_id');
+        localStorage.removeItem('ks_pending_registration_status');
+      } catch {}
+      window.location.href = '/login?logout=1';
+    }
   };
 
   // Cross-Tab Listener
@@ -415,7 +434,7 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
             </button>
 
             {mobileActionsOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 p-1.5 z-50">
+              <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 p-1.5 z-50">
                 <button
                   onClick={() => {
                     setMobileActionsOpen(false);
@@ -427,18 +446,33 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
                   <span>Sinkronisasi Data</span>
                 </button>
                 <Link
-                  href="/login"
-                  onClick={() => {
-                    setMobileActionsOpen(false);
-                  }}
-                  className="w-full text-left px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-slate-800 rounded-lg flex items-center space-x-2 border-t border-slate-100 dark:border-slate-800 mt-1"
+                  href="/pengaturan"
+                  onClick={() => setMobileActionsOpen(false)}
+                  className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg flex items-center space-x-2"
+                >
+                  <Settings className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Pengaturan &amp; Ganti Password</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="w-full text-left px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-slate-800 rounded-lg flex items-center space-x-2 border-t border-slate-100 dark:border-slate-800 mt-1 cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5" />
-                  <span>Keluar</span>
-                </Link>
+                  <span>Keluar Akun</span>
+                </button>
               </div>
             )}
           </div>
+
+          {/* Settings Shortcut (Desktop) */}
+          <Link
+            href="/pengaturan"
+            className="hidden sm:flex p-1.5 text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 rounded-lg transition"
+            title="Pengaturan Akun & Ganti Password"
+          >
+            <Settings className="w-4 h-4" />
+          </Link>
 
           {/* Profile Avatar */}
           <div className="flex items-center space-x-1.5 sm:space-x-2 pl-1 sm:pl-2 border-l border-slate-200 dark:border-slate-800">
@@ -453,16 +487,14 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
                 </div>
               ) : null}
             </div>
-            <Link 
-              href="/login" 
-              onClick={() => {
-                if (isTenant) setAppModeState('demo');
-              }}
-              className="hidden sm:flex p-1.5 text-slate-400 hover:text-rose-600 transition" 
-              title="Keluar"
+            <button 
+              type="button"
+              onClick={handleLogout}
+              className="hidden sm:flex p-1.5 text-slate-400 hover:text-rose-600 transition cursor-pointer" 
+              title="Keluar Akun"
             >
               <LogOut className="w-4 h-4" />
-            </Link>
+            </button>
           </div>
         </div>
       </header>

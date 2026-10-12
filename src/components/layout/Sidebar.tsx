@@ -16,7 +16,8 @@ import {
   Utensils,
   Users,
   X,
-  Building2
+  Building2,
+  Settings
 } from 'lucide-react';
 import { getFilteredNavigation, NavItem } from '@/config/navigation';
 import LockedFeatureModal from '@/components/common/LockedFeatureModal';
@@ -33,6 +34,7 @@ const ICON_MAP: Record<string, any> = {
   UserCheck,
   Utensils,
   Users,
+  Settings,
 };
 
 interface SidebarProps {
