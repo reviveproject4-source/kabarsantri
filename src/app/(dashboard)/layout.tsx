@@ -92,12 +92,6 @@ export default function DashboardLayout({
           </div>
           <div className="flex items-center space-x-3">
             <Link
-              href="/super-admin"
-              className="text-amber-400 hover:text-amber-300 font-medium transition"
-            >
-              Super Admin ➔
-            </Link>
-            <Link
               href="/"
               className="text-slate-400 hover:text-white transition"
             >
@@ -113,13 +107,13 @@ export default function DashboardLayout({
 
           <div className="space-y-1">
             <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 bg-amber-400/20 text-amber-300 rounded-full border border-amber-400/30 inline-block">
-              MENUNGGU ACC
+              MENUNGGU VERIFIKASI
             </span>
             <h2 className="text-lg font-bold text-white tracking-tight">
-              Akses Menunggu Persetujuan
+              Akses Menunggu Verifikasi
             </h2>
             <p className="text-xs text-slate-300">
-              Pendaftaran <strong>{pendingRegData.nama_yayasan}</strong> telah kami terima. Menu aktif setelah disetujui Super Admin.
+              Pendaftaran <strong>{pendingRegData.nama_yayasan}</strong> telah kami terima. Menu aktif setelah diverifikasi oleh tim pengelola.
             </p>
           </div>
 
@@ -151,14 +145,6 @@ export default function DashboardLayout({
               <LayoutDashboard className="w-4 h-4" />
               <span>Buka Akses Dashboard (Mode Peninjauan / Uji Coba)</span>
             </button>
-
-            <Link
-              href="/super-admin"
-              className="w-full inline-flex items-center justify-center space-x-2 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-xl shadow transition"
-            >
-              <ShieldCheck className="w-4 h-4" />
-              <span>Buka Super Admin untuk ACC Yayasan ➔</span>
-            </Link>
 
             <button
               type="button"

@@ -67,7 +67,7 @@ export default function LoginPage() {
           setTimeout(() => {
             setAuthError({
               isError: true,
-              generalMessage: `⚠️ Akses Belum Di-ACC: Lembaga "${pendingReg.nama_yayasan}" masih berstatus MENUNGGU PERSETUJUAN Super Admin. Seluruh menu dan backoffice terkunci hingga disetujui di Konsol Super Admin.`,
+              generalMessage: `⚠️ Pendaftaran lembaga "${pendingReg.nama_yayasan}" sedang dalam proses verifikasi aktivasi tim pengelola. Harap tunggu konfirmasi resmi.`,
             });
             setLoading(false);
           }, 400);
@@ -86,7 +86,7 @@ export default function LoginPage() {
         setTimeout(() => {
           setAuthError({
             isError: true,
-            generalMessage: `⚠️ Akses Belum Di-ACC: Akun untuk yayasan "${matchedReg.nama_yayasan}" belum disetujui (ACC) oleh Super Admin. Harap tunggu aktivasi resmi.`,
+            generalMessage: `⚠️ Akun lembaga "${matchedReg.nama_yayasan}" sedang dalam proses verifikasi aktivasi. Harap tunggu konfirmasi resmi.`,
           });
           setLoading(false);
         }, 400);
@@ -95,17 +95,6 @@ export default function LoginPage() {
     } catch {}
 
     setTimeout(() => {
-      // 0. Akses Khusus Super Admin Platform
-      if (identifier.toLowerCase().includes('superadmin') || identifier.toLowerCase().includes('super_admin')) {
-        setAppMode('demo');
-        setActiveActorByRole('super_admin');
-        document.cookie = `sb-access-token=superadmin-token; path=/; max-age=86400`;
-        document.cookie = `ks_session=active; path=/; max-age=86400`;
-        setLoading(false);
-        router.push('/super-admin');
-        return;
-      }
-
       // Set Mode Tenant
       const registrations = getYayasanRegistrations();
       const matchedActive = registrations.find(r => 
@@ -206,14 +195,8 @@ export default function LoginPage() {
                 <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
                 <span className="leading-relaxed">{authError.generalMessage || 'Kredensial tidak sesuai.'}</span>
               </div>
-              {authError.generalMessage?.includes('ACC') && (
-                <div className="pt-2 border-t border-amber-200 dark:border-amber-800/60 flex flex-col sm:flex-row items-center justify-between gap-2">
-                  <Link
-                    href="/super-admin"
-                    className="font-bold text-amber-900 dark:text-amber-100 underline hover:no-underline text-[11px]"
-                  >
-                    Buka Konsol Super Admin (ACC Lembaga) ➔
-                  </Link>
+              {authError.generalMessage?.includes('verifikasi') && (
+                <div className="pt-2 border-t border-amber-200 dark:border-amber-800/60 flex items-center justify-end">
                   <button
                     type="button"
                     onClick={() => {

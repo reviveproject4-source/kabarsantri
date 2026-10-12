@@ -164,7 +164,7 @@ export default function WelcomeScreenYayasanPage() {
               <div className="flex justify-between py-1">
                 <span className="text-slate-600 font-medium">Status Akun:</span>
                 <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-                  ⏳ Menunggu ACC Super Admin
+                  ⏳ Menunggu Verifikasi Aktivasi
                 </span>
               </div>
             </div>
@@ -176,7 +176,7 @@ export default function WelcomeScreenYayasanPage() {
                 <span>Petunjuk Akses:</span>
               </div>
               <p className="text-[11px] text-amber-800">
-                Akses menu terbuka setelah di-ACC Super Admin. Kredensial login dikirimkan ke WhatsApp pimpinan.
+                Akses menu aktif setelah diverifikasi. Kredensial login dikirimkan ke WhatsApp pimpinan.
               </p>
             </div>
 
@@ -322,7 +322,7 @@ export default function WelcomeScreenYayasanPage() {
                         className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 text-xs sm:text-sm transition outline-hidden bg-slate-50/50 focus:bg-white font-medium"
                       />
                     </div>
-                    <p className="text-[10px] text-slate-600">Super Admin akan mengirim kredensial ke nomor WhatsApp ini setelah di-ACC.</p>
+                    <p className="text-[10px] text-slate-600">Kredensial akun resmi akan dikirimkan ke nomor WhatsApp ini setelah aktivasi.</p>
                   </div>
                 </div>
               </div>
@@ -507,7 +507,7 @@ export default function WelcomeScreenYayasanPage() {
               <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="text-[11px] text-slate-600 text-center sm:text-left flex items-center space-x-1.5">
                   <Lock className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Akses sistem dibuka setelah disetujui (ACC) oleh Super Admin.</span>
+                  <span>Akses sistem dibuka setelah verifikasi data lembaga selesai.</span>
                 </div>
 
                 <button
