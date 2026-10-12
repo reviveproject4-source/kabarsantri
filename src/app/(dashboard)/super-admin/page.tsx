@@ -29,7 +29,11 @@ import {
   UserCheck,
   HeartHandshake,
   Home,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Plus,
+  Database,
+  ExternalLink,
+  Code2
 } from 'lucide-react';
 import { 
   getYayasanRegistrations, 
@@ -37,6 +41,7 @@ import {
   updateYayasanFeatures,
   updateYayasanPaket,
   deleteYayasanRegistration, 
+  submitYayasanRegistration,
   YayasanRegistration,
   AVAILABLE_YAYASAN_FEATURES,
   PaketType,
@@ -46,6 +51,41 @@ import { getWhatsAppWebUrl } from '@/lib/superAdminStore';
 
 type SuperAdminTab = 'tenants' | 'fitur' | 'subscription';
 
+const SQL_SCRIPT = `-- ==============================================================================
+-- KABARSANTRI v2.0 - TABEL REGISTRASI YAYASAN DARI WELCOME SCREEN
+-- Jalankan skrip ini langsung di Supabase SQL Editor:
+-- https://supabase.com/dashboard/project/fugqdiuxnjwfgxpvxqsy/sql
+-- ==============================================================================
+
+CREATE TABLE IF NOT EXISTS public.yayasan_registrations (
+    id VARCHAR(64) PRIMARY KEY,
+    nama_yayasan VARCHAR(255) NOT NULL,
+    nama_pimpinan VARCHAR(255) NOT NULL,
+    no_whatsapp VARCHAR(64) NOT NULL,
+    email VARCHAR(255),
+    kota VARCHAR(255),
+    estimasi_santri VARCHAR(64),
+    paket_pilihan VARCHAR(64) NOT NULL DEFAULT 'Gratis',
+    catatan TEXT,
+    status VARCHAR(32) NOT NULL DEFAULT 'pending',
+    features JSONB NOT NULL DEFAULT '["tahfidz", "wali"]'::jsonb,
+    activated_tenant_id VARCHAR(128),
+    admin_email VARCHAR(255),
+    admin_temp_password VARCHAR(255),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.yayasan_registrations ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY allow_public_all_yayasan_registrations 
+ON public.yayasan_registrations 
+FOR ALL 
+TO anon, authenticated 
+USING (true) 
+WITH CHECK (true);
+`;
+
 export default function SuperAdminDashboardPage() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<SuperAdminTab>('tenants');
@@ -53,6 +93,23 @@ export default function SuperAdminDashboardPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'active'>('all');
   
+  // State Cloud Sync Status
+  const [supabaseStatus, setSupabaseStatus] = useState<'checking' | 'connected' | 'not_found'>('checking');
+  const [showSqlModal, setShowSqlModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  // Form Input Yayasan Manual
+  const [addForm, setAddForm] = useState({
+    nama_yayasan: '',
+    nama_pimpinan: '',
+    no_whatsapp: '',
+    email: '',
+    kota: '',
+    estimasi_santri: '50 - 200 Santri',
+    paket_pilihan: 'Gratis' as PaketType,
+    catatan: '',
+  });
+
   // State untuk Tab Fitur
   const [selectedFeatureRegId, setSelectedFeatureRegId] = useState<string>('');
   const [currentSelectedFeatures, setCurrentSelectedFeatures] = useState<string[]>([]);
@@ -66,7 +123,22 @@ export default function SuperAdminDashboardPage() {
     credentials: { email: string; pass: string; tenantId: string };
   } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedSql, setCopiedSql] = useState(false);
   const [notif, setNotif] = useState('');
+
+  const checkSupabaseStatus = async () => {
+    try {
+      const res = await fetch('/api/registrations');
+      const json = await res.json();
+      if (json.source === 'supabase') {
+        setSupabaseStatus('connected');
+      } else {
+        setSupabaseStatus('not_found');
+      }
+    } catch {
+      setSupabaseStatus('not_found');
+    }
+  };
 
   const loadData = async () => {
     const list = getYayasanRegistrations();
@@ -75,7 +147,7 @@ export default function SuperAdminDashboardPage() {
       setSelectedFeatureRegId(list[0].id);
       setCurrentSelectedFeatures(list[0].features || []);
     }
-    // Lakukan background sync dari server
+    checkSupabaseStatus();
     try {
       const serverSynced = await syncRegistrationsFromServer();
       setRegistrations(serverSynced);
@@ -199,10 +271,39 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
     showNotification(`✓ Paket langganan "${target.nama_yayasan}" diubah menjadi Paket ${paketBaru}!`);
   };
 
+  // 7. Submit Form Tambah Yayasan Manual
+  const handleManualSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addForm.nama_yayasan || !addForm.nama_pimpinan || !addForm.no_whatsapp) {
+      alert('Nama Yayasan, Pimpinan, dan No. WhatsApp wajib diisi.');
+      return;
+    }
+    await submitYayasanRegistration(addForm);
+    setShowAddModal(false);
+    setAddForm({
+      nama_yayasan: '',
+      nama_pimpinan: '',
+      no_whatsapp: '',
+      email: '',
+      kota: '',
+      estimasi_santri: '50 - 200 Santri',
+      paket_pilihan: 'Gratis',
+      catatan: '',
+    });
+    loadData();
+    showNotification(`✓ Yayasan baru berhasil ditambahkan dan siap di-ACC!`);
+  };
+
   const handleCopyText = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 3000);
+  };
+
+  const handleCopySql = () => {
+    navigator.clipboard.writeText(SQL_SCRIPT);
+    setCopiedSql(true);
+    setTimeout(() => setCopiedSql(false), 3000);
   };
 
   // Filter List Tenant
@@ -238,15 +339,33 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
       )}
 
       {/* Header Utama Super Admin */}
-      <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-800 space-y-4">
+      <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-800 space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
+          <div className="space-y-1.5">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-slate-950 uppercase tracking-wider">
                 SUPER ADMIN
               </span>
               <span className="text-xs text-slate-400">• Pusat Kendali Lisensi &amp; Tenant</span>
+
+              {/* Status Supabase Cloud */}
+              {supabaseStatus === 'connected' ? (
+                <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 text-[10px] font-bold border border-emerald-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span>Supabase Cloud Sinkron</span>
+                </span>
+              ) : (
+                <button
+                  onClick={() => setShowSqlModal(true)}
+                  className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-amber-950 text-amber-300 hover:text-white text-[10px] font-bold border border-amber-800 transition"
+                  title="Klik untuk membuka skrip SQL 1-klik di Supabase"
+                >
+                  <Database className="w-3 h-3 text-amber-400" />
+                  <span>Tabel Cloud Belum Dibuat (Klik Skrip SQL)</span>
+                </button>
+              )}
             </div>
+
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
               Konsol Manajemen Tenant KabarSantri
             </h1>
@@ -255,13 +374,25 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
             </p>
           </div>
 
-          <button
-            onClick={loadData}
-            className="self-start sm:self-auto inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Muat Ulang Data</span>
-          </button>
+          {/* Quick Actions Header */}
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md transition"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>+ Input Yayasan Baru</span>
+            </button>
+
+            <button
+              onClick={loadData}
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition"
+              title="Muat ulang data dari server"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Refresh</span>
+            </button>
+          </div>
         </div>
 
         {/* 3 TAB UTAMA SUPER ADMIN (HANYA DAFTAR TENANT, FITUR, SUBSCRIPTION) */}
@@ -411,6 +542,13 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
                 <p className="text-xs text-slate-500 max-w-sm mx-auto">
                   Data pendaftaran yayasan baru dari formulir Welcome Screen akan otomatis masuk ke sini untuk verifikasi &amp; aktivasi.
                 </p>
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="inline-flex items-center space-x-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Input Yayasan Manual Sekarang</span>
+                </button>
               </div>
             ) : (
               filteredTenants.map((reg) => (
@@ -877,7 +1015,7 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL AKTIVASI & KREDENSIAL AKUN                                          */}
+      {/* MODAL 1: AKTIVASI & KREDENSIAL AKUN                                       */}
       {/* ========================================================================= */}
       {activeModalData && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -942,6 +1080,214 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
                 <span>{copied ? 'Tersalin!' : 'Salin Kredensial'}</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 2: SKRIP SQL 1-KLIK SUPABASE                                       */}
+      {/* ========================================================================= */}
+      {showSqlModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-4 border border-slate-200 shadow-2xl animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center space-x-2">
+                <Database className="w-5 h-5 text-amber-500" />
+                <h3 className="font-extrabold text-base text-slate-900">Skrip SQL 1-Klik Supabase</h3>
+              </div>
+              <button
+                onClick={() => setShowSqlModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Jalankan skrip SQL ini di <strong>Supabase SQL Editor</strong> untuk mengaktifkan tabel cloud <code>yayasan_registrations</code> agar setiap pendaftaran dari Vercel otomatis tersinkronisasi secara real-time:
+            </p>
+
+            <div className="relative">
+              <pre className="bg-slate-950 text-emerald-400 p-4 rounded-2xl text-[11px] font-mono overflow-x-auto max-h-56 leading-relaxed border border-slate-800">
+                {SQL_SCRIPT}
+              </pre>
+              <button
+                onClick={handleCopySql}
+                className="absolute top-3 right-3 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1"
+              >
+                {copiedSql ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedSql ? 'Tersalin!' : 'Salin SQL'}</span>
+              </button>
+            </div>
+
+            <div className="pt-2 flex flex-col sm:flex-row gap-2">
+              <a
+                href="https://supabase.com/dashboard/project/fugqdiuxnjwfgxpvxqsy/sql"
+                target="_blank"
+                rel="noreferrer"
+                className="w-full inline-flex items-center justify-center space-x-2 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition"
+              >
+                <span>Buka Supabase SQL Editor</span>
+                <ExternalLink className="w-4 h-4" />
+              </a>
+
+              <button
+                onClick={() => {
+                  checkSupabaseStatus();
+                  showNotification('Memeriksa status koneksi tabel Supabase...');
+                }}
+                className="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition"
+              >
+                Periksa Status Ulang
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 3: INPUT YAYASAN BARU MANUAL DI SUPER ADMIN                        */}
+      {/* ========================================================================= */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-4 border border-slate-200 shadow-2xl animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center space-x-2">
+                <Plus className="w-5 h-5 text-emerald-600" />
+                <h3 className="font-extrabold text-base text-slate-900">Input Yayasan / Lembaga Baru</h3>
+              </div>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleManualSubmit} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Nama Yayasan / Pesantren <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Contoh: Pondok Pesantren Al-Falah"
+                  value={addForm.nama_yayasan}
+                  onChange={(e) => setAddForm({ ...addForm, nama_yayasan: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Nama Pimpinan / Pengasuh <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Contoh: KH. Ahmad Dahlan"
+                    value={addForm.nama_pimpinan}
+                    onChange={(e) => setAddForm({ ...addForm, nama_pimpinan: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    No. WhatsApp Pimpinan <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="Contoh: 081234567890"
+                    value={addForm.no_whatsapp}
+                    onChange={(e) => setAddForm({ ...addForm, no_whatsapp: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Kota / Domisili</label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: Jombang, Jawa Timur"
+                    value={addForm.kota}
+                    onChange={(e) => setAddForm({ ...addForm, kota: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Email Lembaga</label>
+                  <input
+                    type="email"
+                    placeholder="info@pesantren.id"
+                    value={addForm.email}
+                    onChange={(e) => setAddForm({ ...addForm, email: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Paket Layanan</label>
+                  <select
+                    value={addForm.paket_pilihan}
+                    onChange={(e) => setAddForm({ ...addForm, paket_pilihan: e.target.value as PaketType })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                  >
+                    <option value="Gratis">Paket Gratis (50 Santri)</option>
+                    <option value="Enterprise">Paket Enterprise (Skala Penuh)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Estimasi Santri</label>
+                  <select
+                    value={addForm.estimasi_santri}
+                    onChange={(e) => setAddForm({ ...addForm, estimasi_santri: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                  >
+                    <option value="< 50 Santri">&lt; 50 Santri</option>
+                    <option value="50 - 200 Santri">50 - 200 Santri</option>
+                    <option value="200 - 500 Santri">200 - 500 Santri</option>
+                    <option value="> 500 Santri">&gt; 500 Santri</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Catatan Kebutuhan (Opsional)</label>
+                <textarea
+                  rows={2}
+                  placeholder="Catatan aktivasi awal..."
+                  value={addForm.catatan}
+                  onChange={(e) => setAddForm({ ...addForm, catatan: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                />
+              </div>
+
+              <div className="pt-2 flex flex-col sm:flex-row gap-2">
+                <button
+                  type="submit"
+                  className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition"
+                >
+                  Simpan &amp; Tampilkan di Daftar Tenant
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition"
+                >
+                  Batal
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
