@@ -4,10 +4,16 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Building2, 
-  User, 
-  Phone, 
-  Mail, 
-  MapPin, 
+  Users, 
+  CreditCard, 
+  Layers, 
+  Wallet, 
+  Activity, 
+  FileText, 
+  Settings, 
+  LayoutGrid, 
+  Shield, 
+  LogOut, 
   CheckCircle2, 
   Clock, 
   Search, 
@@ -18,38 +24,40 @@ import {
   ShieldCheck, 
   AlertCircle, 
   RefreshCw, 
-  Sparkles, 
   MessageCircle, 
-  X,
-  Sliders,
-  CreditCard,
-  Layers,
-  BookOpen,
-  Wallet,
-  UserCheck,
-  HeartHandshake,
-  Home,
-  FileSpreadsheet,
-  Plus,
-  Database,
-  ExternalLink,
-  Code2
+  X, 
+  Plus, 
+  Database, 
+  ExternalLink, 
+  Menu,
+  ChevronRight,
+  Terminal,
+  Zap
 } from 'lucide-react';
 import { 
   getYayasanRegistrations, 
   activateYayasanRegistration, 
-  updateYayasanFeatures,
-  updateYayasanPaket,
+  updateYayasanFeatures, 
+  updateYayasanPaket, 
   deleteYayasanRegistration, 
-  submitYayasanRegistration,
-  YayasanRegistration,
-  AVAILABLE_YAYASAN_FEATURES,
-  PaketType,
-  syncRegistrationsFromServer
+  submitYayasanRegistration, 
+  YayasanRegistration, 
+  AVAILABLE_YAYASAN_FEATURES, 
+  PaketType, 
+  syncRegistrationsFromServer 
 } from '@/lib/yayasanRegistrationStore';
 import { getWhatsAppWebUrl } from '@/lib/superAdminStore';
 
-type SuperAdminTab = 'tenants' | 'fitur' | 'subscription';
+export type SuperAdminNavMenu = 
+  | 'dashboard' 
+  | 'tenants' 
+  | 'users' 
+  | 'subscriptions' 
+  | 'modules' 
+  | 'billing' 
+  | 'usage' 
+  | 'audit' 
+  | 'settings';
 
 const SQL_SCRIPT = `-- ==============================================================================
 -- KABARSANTRI v2.0 - TABEL REGISTRASI YAYASAN DARI WELCOME SCREEN
@@ -88,17 +96,25 @@ WITH CHECK (true);
 
 export default function SuperAdminDashboardPage() {
   const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState<SuperAdminTab>('tenants');
+  const [activeMenu, setActiveMenu] = useState<SuperAdminNavMenu>('dashboard');
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [registrations, setRegistrations] = useState<YayasanRegistration[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'active'>('all');
+  const [tenantFilter, setTenantFilter] = useState<'all' | 'pending' | 'active'>('all');
+  const [subFilter, setSubFilter] = useState<'all' | 'pending' | 'active'>('all');
   
-  // State Cloud Sync Status
+  // Simulation vs Live Mode toggle
+  const [isSimulasiMode, setIsSimulasiMode] = useState(true);
+  
+  // Timer Sesi (format hh:mm:ss)
+  const [sessionSeconds, setSessionSeconds] = useState(7);
+
+  // Cloud Sync Status
   const [supabaseStatus, setSupabaseStatus] = useState<'checking' | 'connected' | 'not_found'>('checking');
   const [showSqlModal, setShowSqlModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
 
-  // Form Input Yayasan Manual
+  // Form Tambah Yayasan Manual
   const [addForm, setAddForm] = useState({
     nama_yayasan: '',
     nama_pimpinan: '',
@@ -110,14 +126,11 @@ export default function SuperAdminDashboardPage() {
     catatan: '',
   });
 
-  // State untuk Tab Fitur
-  const [selectedFeatureRegId, setSelectedFeatureRegId] = useState<string>('');
+  // State Tab Modules
+  const [selectedModuleRegId, setSelectedModuleRegId] = useState<string>('');
   const [currentSelectedFeatures, setCurrentSelectedFeatures] = useState<string[]>([]);
-  
-  // State untuk Tab Subscription
-  const [subFilterStatus, setSubFilterStatus] = useState<'all' | 'pending' | 'active'>('all');
 
-  // Modal Aktivasi
+  // Modal Aktivasi & Kredensial
   const [activeModalData, setActiveModalData] = useState<{
     registration: YayasanRegistration;
     credentials: { email: string; pass: string; tenantId: string };
@@ -143,8 +156,8 @@ export default function SuperAdminDashboardPage() {
   const loadData = async () => {
     const list = getYayasanRegistrations();
     setRegistrations(list);
-    if (!selectedFeatureRegId && list.length > 0) {
-      setSelectedFeatureRegId(list[0].id);
+    if (!selectedModuleRegId && list.length > 0) {
+      setSelectedModuleRegId(list[0].id);
       setCurrentSelectedFeatures(list[0].features || []);
     }
     checkSupabaseStatus();
@@ -158,6 +171,11 @@ export default function SuperAdminDashboardPage() {
     setMounted(true);
     loadData();
 
+    // Sesi clock timer
+    const timer = setInterval(() => {
+      setSessionSeconds(prev => prev + 1);
+    }, 1000);
+
     const handleUpdate = () => {
       const list = getYayasanRegistrations();
       setRegistrations(list);
@@ -166,33 +184,41 @@ export default function SuperAdminDashboardPage() {
     window.addEventListener('ks_yayasan_registered', handleUpdate);
     window.addEventListener('storage', handleUpdate);
     return () => {
+      clearInterval(timer);
       window.removeEventListener('ks_yayasan_registered', handleUpdate);
       window.removeEventListener('storage', handleUpdate);
     };
   }, []);
 
-  // Update selected features ketika yayasan yang dipilih di tab Fitur berubah
+  // Update modul saat yayasan yang dipilih berubah
   useEffect(() => {
-    if (selectedFeatureRegId) {
-      const target = registrations.find(r => r.id === selectedFeatureRegId);
+    if (selectedModuleRegId) {
+      const target = registrations.find(r => r.id === selectedModuleRegId);
       if (target) {
         setCurrentSelectedFeatures(target.features || []);
       }
     }
-  }, [selectedFeatureRegId, registrations]);
+  }, [selectedModuleRegId, registrations]);
+
+  const formatTimer = (totalSec: number) => {
+    const h = String(Math.floor(totalSec / 3600)).padStart(2, '0');
+    const m = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+    const s = String(totalSec % 60).padStart(2, '0');
+    return `${h}:${m}:${s}`;
+  };
 
   const showNotification = (msg: string) => {
     setNotif(msg);
-    setTimeout(() => setNotif(''), 5000);
+    setTimeout(() => setNotif(''), 4000);
   };
 
-  // 1. Aksi Aktivasi Tenant (ACC Super Admin)
+  // 1. Aksi ACC & Aktivasi Tenant
   const handleAktivasi = async (reg: YayasanRegistration) => {
     const result = await activateYayasanRegistration(reg.id);
     if (result) {
       setActiveModalData(result);
       loadData();
-      showNotification(`✓ Yayasan "${reg.nama_yayasan}" berhasil di-ACC & diaktivasi!`);
+      showNotification(`Yayasan "${reg.nama_yayasan}" berhasil di-ACC.`);
     }
   };
 
@@ -215,7 +241,7 @@ Alhamdulillah, pendaftaran yayasan Anda di *KabarSantri v2.0* telah kami verifik
 • Status Akun: *Aktif & Berlangganan*
 
 🔑 *KREDENSIAL LOGIN ADMINISTRATOR:*
-• Link Portal: https://app.kabarsantri.id (atau localhost)
+• Link Portal: https://app.kabarsantri.id
 • Email Login: *${adminEmail}*
 • Password Sementara: *${adminPass}*
 
@@ -224,7 +250,7 @@ Silakan login dan mulai kelola data profil santri & asatidz perdana Anda. Tim ka
 _Jazakumullahu Khairan Katsiran._
 Wassalamu'alaikum Warahmatullahi Wabarakatuh.
 
-*Super Admin KabarSantri Indonesia*`;
+*Super Admin KabarSantri Platform*`;
 
     const url = getWhatsAppWebUrl(reg.no_whatsapp, pesan);
     window.open(url, '_blank');
@@ -232,14 +258,14 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
 
   // 3. Aksi Hapus Registrasi
   const handleHapus = async (id: string, nama: string) => {
-    if (confirm(`Apakah Anda yakin ingin menghapus data pengajuan "${nama}"?`)) {
+    if (confirm(`Hapus data pengajuan "${nama}"?`)) {
       await deleteYayasanRegistration(id);
       loadData();
-      showNotification(`Data pengajuan "${nama}" telah dihapus.`);
+      showNotification(`Data "${nama}" dihapus.`);
     }
   };
 
-  // 4. Toggle Fitur Modul
+  // 4. Toggle Modul
   const handleToggleFeature = (featureId: string) => {
     let next: string[];
     if (currentSelectedFeatures.includes(featureId)) {
@@ -250,32 +276,32 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
     setCurrentSelectedFeatures(next);
   };
 
-  // 5. Simpan Konfigurasi Fitur
-  const handleSimpanFitur = async () => {
-    if (!selectedFeatureRegId) return;
-    const target = registrations.find(r => r.id === selectedFeatureRegId);
+  // 5. Simpan Modul
+  const handleSimpanModul = async () => {
+    if (!selectedModuleRegId) return;
+    const target = registrations.find(r => r.id === selectedModuleRegId);
     if (!target) return;
 
-    await updateYayasanFeatures(selectedFeatureRegId, currentSelectedFeatures);
+    await updateYayasanFeatures(selectedModuleRegId, currentSelectedFeatures);
     loadData();
-    showNotification(`✓ Fitur berhasil diperbarui untuk "${target.nama_yayasan}"!`);
+    showNotification(`Modul "${target.nama_yayasan}" berhasil disimpan.`);
   };
 
-  // 6. Ganti Paket Langganan (Gratis ↔ Enterprise)
+  // 6. Ubah Paket (Gratis ↔ Enterprise)
   const handleUbahPaket = async (regId: string, paketBaru: PaketType) => {
     const target = registrations.find(r => r.id === regId);
     if (!target) return;
 
     await updateYayasanPaket(regId, paketBaru);
     loadData();
-    showNotification(`✓ Paket langganan "${target.nama_yayasan}" diubah menjadi Paket ${paketBaru}!`);
+    showNotification(`Paket "${target.nama_yayasan}" diubah ke Paket ${paketBaru}.`);
   };
 
-  // 7. Submit Form Tambah Yayasan Manual
+  // 7. Input Manual Yayasan
   const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!addForm.nama_yayasan || !addForm.nama_pimpinan || !addForm.no_whatsapp) {
-      alert('Nama Yayasan, Pimpinan, dan No. WhatsApp wajib diisi.');
+      alert('Nama Yayasan, Pimpinan, dan WhatsApp wajib diisi.');
       return;
     }
     await submitYayasanRegistration(addForm);
@@ -291,24 +317,30 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
       catatan: '',
     });
     loadData();
-    showNotification(`✓ Yayasan baru berhasil ditambahkan dan siap di-ACC!`);
+    showNotification(`Yayasan berhasil ditambahkan ke antrean.`);
   };
 
   const handleCopyText = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
-    setTimeout(() => setCopied(false), 3000);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   const handleCopySql = () => {
     navigator.clipboard.writeText(SQL_SCRIPT);
     setCopiedSql(true);
-    setTimeout(() => setCopiedSql(false), 3000);
+    setTimeout(() => setCopiedSql(false), 2500);
   };
 
-  // Filter List Tenant
+  // Metrik Platform
+  const totalTenants = registrations.length;
+  const activeTenants = registrations.filter(r => r.status === 'active').length;
+  const pendingTenants = registrations.filter(r => r.status === 'pending').length;
+  const activeSubscriptions = activeTenants;
+
+  // Filter Tenants
   const filteredTenants = registrations.filter(r => {
-    const matchStatus = filterStatus === 'all' ? true : r.status === filterStatus;
+    const matchStatus = tenantFilter === 'all' ? true : r.status === tenantFilter;
     const matchSearch = 
       r.nama_yayasan.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.nama_pimpinan.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -317,767 +349,867 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
     return matchStatus && matchSearch;
   });
 
-  // Filter List Subscription
-  const filteredSubscriptions = registrations.filter(r => {
-    if (subFilterStatus === 'all') return true;
-    return r.status === subFilterStatus;
+  // Filter Subscriptions
+  const filteredSubs = registrations.filter(r => {
+    if (subFilter === 'all') return true;
+    return r.status === subFilter;
   });
 
-  const totalPending = registrations.filter(r => r.status === 'pending').length;
-  const totalActive = registrations.filter(r => r.status === 'active').length;
+  const selectedYayasanForModule = registrations.find(r => r.id === selectedModuleRegId);
 
-  const selectedYayasanData = registrations.find(r => r.id === selectedFeatureRegId);
+  // Navigasi Menu Items (Sesuai Tampilan PILIN PLATFORM pada Foto Monitor)
+  interface NavItem {
+    id: SuperAdminNavMenu;
+    label: string;
+    icon: any;
+    badge?: string;
+  }
+
+  const navItems: NavItem[] = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid },
+    { id: 'tenants', label: 'Tenants', icon: Building2, badge: pendingTenants > 0 ? String(pendingTenants) : undefined },
+    { id: 'users', label: 'Users & Roles', icon: Users },
+    { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
+    { id: 'modules', label: 'Modules', icon: Layers },
+    { id: 'billing', label: 'Billing & Balance', icon: Wallet },
+    { id: 'usage', label: 'Usage', icon: Activity },
+    { id: 'audit', label: 'Audit Log', icon: FileText },
+    { id: 'settings', label: 'System Settings', icon: Settings },
+  ];
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-[#070d1e] text-slate-100 flex flex-col lg:flex-row antialiased selection:bg-rose-500 selection:text-white">
       {/* Toast Notifikasi Terapung */}
       {notif && (
-        <div className="fixed top-20 right-4 z-50 bg-emerald-600 text-white text-xs font-bold py-3 px-5 rounded-2xl shadow-xl flex items-center space-x-2 animate-in slide-in-from-top duration-200">
+        <div className="fixed top-4 right-4 z-50 bg-emerald-600 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-2xl flex items-center space-x-2 animate-in fade-in duration-200">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>{notif}</span>
         </div>
       )}
 
-      {/* Header Utama Super Admin */}
-      <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-800 space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-slate-950 uppercase tracking-wider">
-                SUPER ADMIN
-              </span>
-              <span className="text-xs text-slate-400">• Pusat Kendali Lisensi &amp; Tenant</span>
-
-              {/* Status Supabase Cloud */}
-              {supabaseStatus === 'connected' ? (
-                <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 text-[10px] font-bold border border-emerald-800">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span>Supabase Cloud Sinkron</span>
+      {/* ========================================================================= */}
+      {/* SIDEBAR KIRI (SEPERTI PILIN PLATFORM PADA FOTO PENGGUNA)                  */}
+      {/* ========================================================================= */}
+      <aside className={`
+        fixed inset-y-0 left-0 z-40 w-64 bg-[#0a1226] border-r border-[#19243e] flex flex-col justify-between transition-transform duration-200 lg:static lg:translate-x-0
+        ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-0 max-lg:-translate-x-full'}
+      `}>
+        <div className="flex flex-col flex-1 overflow-y-auto">
+          {/* Brand Header */}
+          <div className="h-16 px-5 border-b border-[#19243e] flex items-center justify-between">
+            <div className="flex items-center space-x-2.5">
+              <Shield className="w-5 h-5 text-amber-400 shrink-0" />
+              <div>
+                <span className="font-extrabold text-sm tracking-wider text-white uppercase block leading-none">
+                  PILIN PLATFORM
                 </span>
-              ) : (
-                <button
-                  onClick={() => setShowSqlModal(true)}
-                  className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-amber-950 text-amber-300 hover:text-white text-[10px] font-bold border border-amber-800 transition"
-                  title="Klik untuk membuka skrip SQL 1-klik di Supabase"
-                >
-                  <Database className="w-3 h-3 text-amber-400" />
-                  <span>Tabel Cloud Belum Dibuat (Klik Skrip SQL)</span>
-                </button>
-              )}
+                <span className="text-[10px] text-slate-400 font-mono">KabarSantri v2.0</span>
+              </div>
             </div>
-
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-              Konsol Manajemen Tenant KabarSantri
-            </h1>
-            <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
-              Verifikasi pendaftaran yayasan baru dari Welcome Screen, sesuaikan modul fitur per lembaga, dan kelola status langganan pesantren (Gratis &amp; Enterprise).
-            </p>
-          </div>
-
-          {/* Quick Actions Header */}
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md transition"
+            <button 
+              onClick={() => setMobileSidebarOpen(false)}
+              className="lg:hidden text-slate-400 hover:text-white p-1"
             >
-              <Plus className="w-3.5 h-3.5" />
-              <span>+ Input Yayasan Baru</span>
-            </button>
-
-            <button
-              onClick={loadData}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition"
-              title="Muat ulang data dari server"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Refresh</span>
+              <X className="w-5 h-5" />
             </button>
           </div>
-        </div>
 
-        {/* 3 TAB UTAMA SUPER ADMIN (HANYA DAFTAR TENANT, FITUR, SUBSCRIPTION) */}
-        <div className="pt-2 border-t border-slate-800/80 flex flex-wrap gap-2">
-          <button
-            onClick={() => setActiveTab('tenants')}
-            className={`inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl font-bold text-xs transition ${
-              activeTab === 'tenants'
-                ? 'bg-amber-400 text-slate-950 shadow-md'
-                : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white'
-            }`}
-          >
-            <Building2 className="w-4 h-4" />
-            <span>Daftar Tenant</span>
-            <span className={`px-2 py-0.2 rounded-full text-[10px] ${
-              activeTab === 'tenants' ? 'bg-slate-900 text-amber-300' : 'bg-slate-700 text-slate-300'
-            }`}>
-              {registrations.length}
-            </span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('fitur')}
-            className={`inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl font-bold text-xs transition ${
-              activeTab === 'fitur'
-                ? 'bg-amber-400 text-slate-950 shadow-md'
-                : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white'
-            }`}
-          >
-            <Sliders className="w-4 h-4" />
-            <span>Fitur (Seleksi Modul)</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('subscription')}
-            className={`inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl font-bold text-xs transition ${
-              activeTab === 'subscription'
-                ? 'bg-amber-400 text-slate-950 shadow-md'
-                : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white'
-            }`}
-          >
-            <CreditCard className="w-4 h-4" />
-            <span>Subscription (Langganan)</span>
-            {totalPending > 0 && (
-              <span className="px-2 py-0.2 rounded-full text-[10px] bg-amber-500 text-slate-950 font-black animate-pulse">
-                {totalPending} Menunggu
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 1. TAB DAFTAR TENANT                                                     */}
-      {/* ========================================================================= */}
-      {activeTab === 'tenants' && (
-        <div className="space-y-5 animate-in fade-in duration-200">
-          {/* Metrik Ringkas Tenant */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex items-center justify-between">
-              <div>
-                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Lembaga Terdaftar</p>
-                <h3 className="text-2xl font-black text-slate-900 mt-1">{registrations.length}</h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">Pendaftar dari Welcome Screen</p>
-              </div>
-              <div className="w-11 h-11 bg-slate-100 text-slate-700 rounded-xl flex items-center justify-center">
-                <Building2 className="w-5 h-5" />
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl p-5 border border-amber-200 shadow-xs flex items-center justify-between">
-              <div>
-                <p className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">Menunggu Aktivasi (ACC)</p>
-                <h3 className="text-2xl font-black text-amber-700 mt-1">{totalPending}</h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">Membutuhkan persetujuan</p>
-              </div>
-              <div className="w-11 h-11 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center">
-                <Clock className="w-5 h-5" />
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl p-5 border border-emerald-200 shadow-xs flex items-center justify-between">
-              <div>
-                <p className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">Status Aktif (Telah Di-ACC)</p>
-                <h3 className="text-2xl font-black text-emerald-700 mt-1">{totalActive}</h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">Tenant aktif &amp; memiliki akses</p>
-              </div>
-              <div className="w-11 h-11 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
-                <CheckCircle2 className="w-5 h-5" />
-              </div>
-            </div>
-          </div>
-
-          {/* Filter & Search */}
-          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="relative w-full sm:w-80">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari yayasan, pimpinan, kota, WA..."
-                className="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
-              />
-            </div>
-
-            <div className="flex items-center space-x-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-              <button
-                onClick={() => setFilterStatus('all')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition shrink-0 ${
-                  filterStatus === 'all'
-                    ? 'bg-slate-900 text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                Semua ({registrations.length})
-              </button>
-              <button
-                onClick={() => setFilterStatus('pending')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition shrink-0 ${
-                  filterStatus === 'pending'
-                    ? 'bg-amber-600 text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                Menunggu ACC ({totalPending})
-              </button>
-              <button
-                onClick={() => setFilterStatus('active')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition shrink-0 ${
-                  filterStatus === 'active'
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                Aktif ({totalActive})
-              </button>
-            </div>
-          </div>
-
-          {/* Daftar Kartu Tenant */}
-          <div className="space-y-4">
-            {filteredTenants.length === 0 ? (
-              <div className="bg-white rounded-3xl p-10 text-center border border-slate-200 space-y-3">
-                <Building2 className="w-10 h-10 text-slate-300 mx-auto" />
-                <h3 className="text-sm font-bold text-slate-700">Belum Ada Data Tenant</h3>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  Data pendaftaran yayasan baru dari formulir Welcome Screen akan otomatis masuk ke sini untuk verifikasi &amp; aktivasi.
-                </p>
+          {/* Menu Items */}
+          <nav className="p-3 space-y-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeMenu === item.id;
+              return (
                 <button
-                  onClick={() => setShowAddModal(true)}
-                  className="inline-flex items-center space-x-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition"
+                  key={item.id}
+                  onClick={() => {
+                    setActiveMenu(item.id as SuperAdminNavMenu);
+                    setMobileSidebarOpen(false);
+                  }}
+                  className={`
+                    w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all text-left
+                    ${isActive 
+                      ? 'border border-rose-500/80 bg-rose-500/10 text-white shadow-xs' 
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800/40 border border-transparent'
+                    }
+                  `}
                 >
-                  <Plus className="w-4 h-4" />
-                  <span>Input Yayasan Manual Sekarang</span>
-                </button>
-              </div>
-            ) : (
-              filteredTenants.map((reg) => (
-                <div
-                  key={reg.id}
-                  className={`bg-white rounded-2xl p-5 border transition shadow-xs space-y-4 ${
-                    reg.status === 'pending' ? 'border-amber-300 bg-amber-50/20' : 'border-slate-200'
-                  }`}
-                >
-                  {/* Baris Atas Info Yayasan */}
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-extrabold text-base text-slate-900 tracking-tight">
-                          {reg.nama_yayasan}
-                        </span>
-                        {reg.status === 'pending' ? (
-                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
-                            ⏳ Menunggu ACC Super Admin
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center space-x-1">
-                            <Check className="w-3 h-3 inline mr-0.5" />
-                            <span>Aktif &amp; Berlangganan</span>
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600">
-                        <span className="flex items-center space-x-1">
-                          <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{reg.kota}</span>
-                        </span>
-                        <span className="flex items-center space-x-1">
-                          <Clock className="w-3.5 h-3.5 text-slate-400" />
-                          <span>Mendaftar: {reg.created_at}</span>
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="self-start sm:self-auto text-left sm:text-right">
-                      <span className={`inline-block px-3 py-1 text-xs font-bold rounded-xl border ${
-                        reg.paket_pilihan === 'Enterprise'
-                          ? 'bg-purple-50 text-purple-800 border-purple-200'
-                          : 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                      }`}>
-                        Paket {reg.paket_pilihan}
-                      </span>
-                      <p className="text-[11px] text-slate-500 mt-0.5">Estimasi: {reg.estimasi_santri}</p>
-                    </div>
+                  <div className="flex items-center space-x-3">
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-rose-400' : 'text-slate-400'}`} />
+                    <span>{item.label}</span>
                   </div>
-
-                  {/* Profil Kontak Pimpinan */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50/80 rounded-xl p-3.5 border border-slate-100 text-xs">
-                    <div>
-                      <span className="text-[11px] text-slate-500 block">Pimpinan Lembaga:</span>
-                      <span className="font-bold text-slate-800 flex items-center space-x-1 mt-0.5">
-                        <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>{reg.nama_pimpinan}</span>
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-[11px] text-slate-500 block">WhatsApp Pimpinan:</span>
-                      <span className="font-bold text-emerald-700 flex items-center space-x-1 mt-0.5">
-                        <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        <span>{reg.no_whatsapp}</span>
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-[11px] text-slate-500 block">Email Lembaga:</span>
-                      <span className="font-medium text-slate-700 flex items-center space-x-1 mt-0.5 truncate">
-                        <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>{reg.email || '-'}</span>
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Catatan Kebutuhan Khusus jika ada */}
-                  {reg.catatan && (
-                    <div className="text-xs text-slate-600 bg-amber-50/50 p-2.5 rounded-xl border border-amber-200/60">
-                      <strong className="text-slate-800">Catatan Yayasan:</strong> {reg.catatan}
-                    </div>
+                  {item.badge && (
+                    <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-slate-950">
+                      {item.badge}
+                    </span>
                   )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
 
-                  {/* Tombol Aksi */}
-                  <div className="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100">
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleKirimWA(reg)}
-                        className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs rounded-xl border border-emerald-200 transition"
-                      >
-                        <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Chat WhatsApp</span>
-                      </button>
+        {/* Sidebar Footer (Mode Simulasi & Keluar Sesi) */}
+        <div className="p-3 border-t border-[#19243e] space-y-2 bg-[#091022]">
+          <button
+            onClick={() => {
+              setIsSimulasiMode(!isSimulasiMode);
+              showNotification(isSimulasiMode ? 'Beralih ke Mode Live Platform' : 'Beralih ke Mode Simulasi');
+            }}
+            className={`
+              w-full py-2 px-3 rounded-xl text-xs font-semibold border text-center transition
+              ${isSimulasiMode 
+                ? 'border-rose-900/60 bg-rose-950/30 text-rose-300 hover:bg-rose-900/40' 
+                : 'border-emerald-900/60 bg-emerald-950/30 text-emerald-300 hover:bg-emerald-900/40'
+              }
+            `}
+          >
+            {isSimulasiMode ? 'Mode Simulasi Aktif' : 'Mode Live Aktif'}
+          </button>
 
-                      <button
-                        onClick={() => {
-                          setSelectedFeatureRegId(reg.id);
-                          setActiveTab('fitur');
-                        }}
-                        className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition"
-                      >
-                        <Sliders className="w-3.5 h-3.5 text-slate-500" />
-                        <span>Atur Fitur ({reg.features?.length || 0})</span>
-                      </button>
-
-                      <button
-                        onClick={() => handleHapus(reg.id, reg.nama_yayasan)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                        title="Hapus Data Pengajuan"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      {reg.status === 'pending' ? (
-                        <button
-                          onClick={() => handleAktivasi(reg)}
-                          className="inline-flex items-center space-x-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition"
-                        >
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>ACC &amp; Aktivasi Tenant Sekarang</span>
-                        </button>
-                      ) : (
-                        <div className="flex items-center space-x-2">
-                          <span className="text-[11px] font-medium text-slate-600">
-                            ID: <code className="text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded">{reg.activated_tenant_id || 'active'}</code>
-                          </span>
-                          <button
-                            onClick={() => handleKirimWA(reg)}
-                            className="inline-flex items-center space-x-1 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition"
-                          >
-                            <Send className="w-3 h-3" />
-                            <span>Kirim Ulang Kredensial</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
+          <div className="flex items-center justify-between px-1 pt-1 text-xs text-slate-400 font-mono">
+            <span>{formatTimer(sessionSeconds)}</span>
+            <Link
+              href="/login"
+              className="flex items-center space-x-1.5 text-slate-300 hover:text-rose-400 transition"
+              title="Keluar Sesi"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="font-sans text-[11px]">Keluar Sesi</span>
+            </Link>
           </div>
         </div>
+      </aside>
+
+      {/* Backdrop Mobile Drawer */}
+      {mobileSidebarOpen && (
+        <div 
+          onClick={() => setMobileSidebarOpen(false)}
+          className="fixed inset-0 z-30 bg-black/60 backdrop-blur-xs lg:hidden"
+        />
       )}
 
       {/* ========================================================================= */}
-      {/* 2. TAB FITUR (BISA DIPILIH SESUAI DENGAN KEBUTUHAN YAYASAN)              */}
+      {/* KONTEN UTAMA (HEADER ATAS + PANEL AKTIF)                                  */}
       {/* ========================================================================= */}
-      {activeTab === 'fitur' && (
-        <div className="space-y-6 animate-in fade-in duration-200">
-          {/* Header Seleksi Fitur */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 bg-blue-100 text-blue-800 rounded-full inline-block">
-                  KUSTOMISASI FITUR PER YAYASAN
-                </span>
-                <h2 className="text-xl font-black text-slate-900 mt-1">
-                  Pilih Modul Sesuai Kebutuhan Yayasan
-                </h2>
-                <p className="text-xs text-slate-600">
-                  Super Admin dapat mencentang atau menonaktifkan fitur modul KabarSantri sesuai kebutuhan masing-masing lembaga.
-                </p>
-              </div>
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top Navbar */}
+        <header className="h-16 px-4 sm:px-8 border-b border-[#19243e] bg-[#091124] flex items-center justify-between sticky top-0 z-20">
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setMobileSidebarOpen(true)}
+              className="lg:hidden p-1.5 text-slate-300 hover:text-white rounded-lg border border-slate-700 bg-slate-800/60"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <h2 className="font-bold text-sm sm:text-base text-white tracking-tight">
+              Super Admin Dashboard
+            </h2>
+          </div>
 
-              {/* Selector Yayasan */}
-              <div className="min-w-[280px]">
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                  Pilih Yayasan / Pondok:
-                </label>
-                <select
-                  value={selectedFeatureRegId}
-                  onChange={(e) => setSelectedFeatureRegId(e.target.value)}
-                  className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
-                >
-                  {registrations.map(r => (
-                    <option key={r.id} value={r.id}>
-                      {r.nama_yayasan} ({r.kota}) - [{r.status === 'active' ? 'Aktif' : 'Pending'}]
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+          <div className="flex items-center space-x-3">
+            <Link
+              href="/"
+              className="text-xs text-slate-400 hover:text-white px-3 py-1 rounded-lg border border-slate-800 hover:border-slate-700 transition hidden sm:inline-block"
+            >
+              ← Welcome Screen
+            </Link>
 
-            {/* Ringkasan Yayasan Terpilih */}
-            {selectedYayasanData && (
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                <div className="space-y-0.5">
-                  <span className="font-extrabold text-slate-900 text-sm">{selectedYayasanData.nama_yayasan}</span>
-                  <div className="text-slate-600 flex items-center space-x-3">
-                    <span>Pimpinan: <strong>{selectedYayasanData.nama_pimpinan}</strong></span>
-                    <span>&bull;</span>
-                    <span>Paket: <strong className="text-emerald-700">Paket {selectedYayasanData.paket_pilihan}</strong></span>
-                    <span>&bull;</span>
-                    <span>Status: <strong>{selectedYayasanData.status === 'active' ? 'Aktif' : 'Menunggu ACC'}</strong></span>
-                  </div>
-                </div>
+            <span className="px-3 py-1 rounded-full text-[10px] sm:text-xs font-mono font-bold tracking-wider text-rose-300 border border-rose-800/80 bg-rose-950/40 uppercase">
+              ROLE: PLATFORM_SUPER_ADMIN
+            </span>
+          </div>
+        </header>
+
+        {/* Konten Halaman */}
+        <main className="flex-1 p-4 sm:p-8 overflow-y-auto space-y-6">
+          {/* ===================================================================== */}
+          {/* 1. VIEW DASHBOARD (IKHTISAR PLATFORM - IDENTIK FOTO MONITOR USER)     */}
+          {/* ===================================================================== */}
+          {activeMenu === 'dashboard' && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-white tracking-tight">
+                  Ikhtisar Platform
+                </h3>
 
                 <div className="flex items-center space-x-2">
                   <button
-                    type="button"
-                    onClick={() => setCurrentSelectedFeatures(['tahfidz', 'wali'])}
-                    className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-semibold rounded-xl text-xs transition"
+                    onClick={() => setShowAddModal(true)}
+                    className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow transition"
                   >
-                    Preset Gratis (2 Modul)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentSelectedFeatures(['tahfidz', 'spp', 'presensi', 'wali', 'rumah_tangga', 'akuntansi'])}
-                    className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-bold rounded-xl text-xs transition"
-                  >
-                    Preset Enterprise (Semua Modul)
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>+ Tenant Baru</span>
                   </button>
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Grid 6 Modul Fitur KabarSantri */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {AVAILABLE_YAYASAN_FEATURES.map((feature) => {
-              const isChecked = currentSelectedFeatures.includes(feature.id);
-
-              return (
-                <div
-                  key={feature.id}
-                  onClick={() => handleToggleFeature(feature.id)}
-                  className={`cursor-pointer p-5 rounded-2xl border transition relative flex flex-col justify-between ${
-                    isChecked
-                      ? 'bg-emerald-50/60 border-emerald-400 shadow-xs ring-2 ring-emerald-500/20'
-                      : 'bg-white border-slate-200 hover:border-slate-300 opacity-70'
-                  }`}
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                        {feature.category}
-                      </span>
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={() => {}} // handled by parent onClick
-                        className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
-                      />
-                    </div>
-
-                    <h4 className="font-extrabold text-sm text-slate-900 tracking-tight">
-                      {feature.name}
-                    </h4>
-                    <p className="text-xs text-slate-600 leading-relaxed">
-                      {feature.desc}
-                    </p>
+              {/* 5 Metric Cards (Persis Tata Letak Foto Monitor) */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+                {/* 1. TOTAL TENANTS */}
+                <div className="bg-[#0f1a35] border border-[#1e2c4d] rounded-2xl p-4 sm:p-5 space-y-1.5">
+                  <div className="text-[11px] font-bold tracking-wider text-slate-300 uppercase">
+                    TOTAL TENANTS
                   </div>
-
-                  <div className="pt-3 mt-3 border-t border-slate-200/60 flex items-center justify-between text-xs font-bold">
-                    <span className={isChecked ? 'text-emerald-700' : 'text-slate-400'}>
-                      {isChecked ? '✓ Modul Aktif' : '○ Modul Dinonaktifkan'}
-                    </span>
-                    <span className="text-[11px] text-slate-500">
-                      {isChecked ? 'Dapat Diakses' : 'Terkunci'}
-                    </span>
+                  <div className="text-2xl sm:text-3xl font-black text-white">
+                    {totalTenants > 0 ? totalTenants : '—'}
                   </div>
                 </div>
-              );
-            })}
-          </div>
 
-          {/* Tombol Simpan Modul Fitur */}
-          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="text-xs text-slate-600">
-              Total <strong>{currentSelectedFeatures.length} dari 6 modul</strong> aktif untuk lembaga ini.
+                {/* 2. ACTIVE TENANTS */}
+                <div className="bg-[#0f1a35] border border-[#1e2c4d] rounded-2xl p-4 sm:p-5 space-y-1.5">
+                  <div className="text-[11px] font-bold tracking-wider text-slate-300 uppercase">
+                    ACTIVE TENANTS
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-black text-white">
+                    {activeTenants > 0 ? activeTenants : '—'}
+                  </div>
+                </div>
+
+                {/* 3. ACTIVE SUBSCRIPTIONS */}
+                <div className="bg-[#0f1a35] border border-[#1e2c4d] rounded-2xl p-4 sm:p-5 space-y-1.5">
+                  <div className="text-[11px] font-bold tracking-wider text-slate-300 uppercase">
+                    ACTIVE SUBSCRIPTIONS
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-black text-white">
+                    {activeSubscriptions > 0 ? activeSubscriptions : '—'}
+                  </div>
+                </div>
+
+                {/* 4. MONTHLY REVENUE */}
+                <div className="bg-[#0f1a35] border border-[#1e2c4d] rounded-2xl p-4 sm:p-5 space-y-1.5">
+                  <div className="text-[11px] font-bold tracking-wider text-slate-300 uppercase">
+                    MONTHLY REVENUE
+                  </div>
+                  <div className="text-lg sm:text-2xl font-black text-white truncate">
+                    {activeTenants > 0 ? `Rp ${(activeTenants * 1500000).toLocaleString('id-ID')}` : '—'}
+                  </div>
+                </div>
+
+                {/* 5. PLATFORM USAGE */}
+                <div className="bg-[#0f1a35] border border-[#1e2c4d] rounded-2xl p-4 sm:p-5 space-y-1.5 col-span-2 sm:col-span-1">
+                  <div className="text-[11px] font-bold tracking-wider text-slate-300 uppercase">
+                    PLATFORM USAGE
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-black text-emerald-400">
+                    {totalTenants > 0 ? '98.4%' : '—'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Card Informasi Sistem (Sesuai Foto Monitor) */}
+              <div className="bg-[#0f1a35] border border-[#1e2c4d] rounded-2xl p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-sm text-white">Informasi Sistem</h4>
+                  <div className="flex items-center space-x-2">
+                    {supabaseStatus === 'connected' ? (
+                      <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 text-[10px] font-bold border border-emerald-800">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>Supabase Live Connected</span>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => setShowSqlModal(true)}
+                        className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 text-[10px] font-bold border border-amber-800 hover:text-white"
+                      >
+                        <Database className="w-3 h-3 text-amber-400" />
+                        <span>Skrip SQL Supabase</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-[#091122] border border-[#1e2c4d] rounded-xl p-4 font-mono text-xs text-slate-300 space-y-2">
+                  <p>
+                    Dashboard Super Admin berhasil diinisialisasi. Hubungkan API / database trigger untuk mulai mempopulasikan metrik secara real-time.
+                  </p>
+                  <div className="pt-2 flex flex-wrap gap-2 text-[11px]">
+                    <span className="text-slate-400">Status Platform: <strong className="text-white">Siap Beroperasi</strong></span>
+                    <span className="text-slate-500">•</span>
+                    <span className="text-slate-400">Antrean Verifikasi: <strong className="text-amber-400">{pendingTenants} Lembaga</strong></span>
+                    <span className="text-slate-500">•</span>
+                    <span className="text-slate-400">Lisensi Aktif: <strong className="text-emerald-400">{activeTenants} Tenant</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pintasan Aksi Cepat */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <button
+                  onClick={() => setActiveMenu('tenants')}
+                  className="bg-[#0f1a35] hover:bg-[#142347] border border-[#1e2c4d] p-4 rounded-2xl text-left transition flex items-center justify-between group"
+                >
+                  <div className="space-y-1">
+                    <div className="font-bold text-sm text-white flex items-center space-x-2">
+                      <Building2 className="w-4 h-4 text-emerald-400" />
+                      <span>Kelola Antrean Pendaftaran Tenant</span>
+                    </div>
+                    <p className="text-xs text-slate-400">
+                      Verifikasi pendaftaran yayasan baru dari Welcome Screen &amp; ACC langsung.
+                    </p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-white transition" />
+                </button>
+
+                <button
+                  onClick={() => setActiveMenu('modules')}
+                  className="bg-[#0f1a35] hover:bg-[#142347] border border-[#1e2c4d] p-4 rounded-2xl text-left transition flex items-center justify-between group"
+                >
+                  <div className="space-y-1">
+                    <div className="font-bold text-sm text-white flex items-center space-x-2">
+                      <Layers className="w-4 h-4 text-amber-400" />
+                      <span>Kustomisasi Modul Pesantren</span>
+                    </div>
+                    <p className="text-xs text-slate-400">
+                      Atur aktivasi fitur Tahfidz, SPP, Presensi GPS, Sarpras per yayasan.
+                    </p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-white transition" />
+                </button>
+              </div>
             </div>
+          )}
 
-            <button
-              onClick={handleSimpanFitur}
-              className="inline-flex items-center space-x-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition"
-            >
-              <Check className="w-4 h-4" />
-              <span>Simpan Pengaturan Fitur Lembaga</span>
-            </button>
-          </div>
-        </div>
-      )}
+          {/* ===================================================================== */}
+          {/* 2. VIEW TENANTS (DAFTAR YAYASAN & PERSETUJUAN ACC)                    */}
+          {/* ===================================================================== */}
+          {activeMenu === 'tenants' && (
+            <div className="space-y-5 animate-in fade-in duration-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-xl font-bold text-white tracking-tight">
+                    Manajemen Tenants
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Daftar pendaftaran yayasan dari Welcome Screen &amp; persetujuan lisensi.
+                  </p>
+                </div>
 
-      {/* ========================================================================= */}
-      {/* 3. TAB SUBSCRIPTION (MENUNGGU AKTIVASI, STATUS AKTIF)                    */}
-      {/* ========================================================================= */}
-      {activeTab === 'subscription' && (
-        <div className="space-y-6 animate-in fade-in duration-200">
-          {/* Header Subscription */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow transition"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Input Yayasan Manual</span>
+                </button>
+              </div>
+
+              {/* Filter & Pencarian */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                  <input
+                    type="text"
+                    placeholder="Cari nama yayasan, pimpinan, kota, nomor WA..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 bg-[#0f1a35] border border-[#1e2c4d] rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                  />
+                </div>
+
+                <div className="flex rounded-xl bg-[#0f1a35] border border-[#1e2c4d] p-1 text-xs">
+                  <button
+                    onClick={() => setTenantFilter('all')}
+                    className={`px-3 py-1 rounded-lg font-medium transition ${tenantFilter === 'all' ? 'bg-rose-500/20 text-rose-300 font-bold' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    Semua ({registrations.length})
+                  </button>
+                  <button
+                    onClick={() => setTenantFilter('pending')}
+                    className={`px-3 py-1 rounded-lg font-medium transition ${tenantFilter === 'pending' ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    Menunggu ACC ({pendingTenants})
+                  </button>
+                  <button
+                    onClick={() => setTenantFilter('active')}
+                    className={`px-3 py-1 rounded-lg font-medium transition ${tenantFilter === 'active' ? 'bg-emerald-500/20 text-emerald-300 font-bold' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    Aktif ({activeTenants})
+                  </button>
+                </div>
+              </div>
+
+              {/* List Tenant Cards */}
+              <div className="space-y-3">
+                {filteredTenants.length === 0 ? (
+                  <div className="bg-[#0f1a35] border border-[#1e2c4d] rounded-2xl p-8 text-center text-slate-400 text-xs">
+                    Tidak ditemukan data pendaftaran yang sesuai kriteria pencarian.
+                  </div>
+                ) : (
+                  filteredTenants.map((reg) => (
+                    <div
+                      key={reg.id}
+                      className="bg-[#0f1a35] border border-[#1e2c4d] hover:border-slate-600 rounded-2xl p-4 sm:p-5 transition space-y-3"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#19243e]">
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <h4 className="font-bold text-sm sm:text-base text-white">
+                              {reg.nama_yayasan}
+                            </h4>
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#142347] text-slate-300 border border-[#21345e]">
+                              Paket {reg.paket_pilihan}
+                            </span>
+                          </div>
+                          <div className="text-xs text-slate-400 flex flex-wrap gap-x-3 gap-y-1 mt-0.5">
+                            <span>Pimpinan: <strong className="text-slate-200">{reg.nama_pimpinan}</strong></span>
+                            <span>•</span>
+                            <span>Kota: <strong className="text-slate-200">{reg.kota || 'Indonesia'}</strong></span>
+                            <span>•</span>
+                            <span>Estimasi: <strong className="text-slate-200">{reg.estimasi_santri}</strong></span>
+                          </div>
+                        </div>
+
+                        <div>
+                          {reg.status === 'pending' ? (
+                            <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-amber-950/60 text-amber-300 border border-amber-800 text-xs font-bold">
+                              <Clock className="w-3.5 h-3.5" />
+                              <span>Menunggu ACC</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-950/60 text-emerald-300 border border-emerald-800 text-xs font-bold">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>Aktif Berlangganan</span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Detail Kontak & Aksi */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-slate-400">
+                          <span>WhatsApp: <strong className="text-emerald-400 font-mono">{reg.no_whatsapp}</strong></span>
+                          {reg.email && <span>Email: <strong className="text-slate-300 font-mono">{reg.email}</strong></span>}
+                          {reg.admin_email && <span>Login Admin: <strong className="text-amber-300 font-mono">{reg.admin_email}</strong></span>}
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          {reg.status === 'pending' && (
+                            <button
+                              onClick={() => handleAktivasi(reg)}
+                              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition flex items-center space-x-1.5"
+                            >
+                              <ShieldCheck className="w-3.5 h-3.5" />
+                              <span>ACC &amp; Aktivasi</span>
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => handleKirimWA(reg)}
+                            className="px-3 py-1.5 bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-800 font-semibold rounded-xl text-xs transition flex items-center space-x-1.5"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                            <span>Kirim WA</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleHapus(reg.id, reg.nama_yayasan)}
+                            className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-950/30 rounded-xl transition"
+                            title="Hapus"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ===================================================================== */}
+          {/* 3. VIEW SUBSCRIPTIONS (STANDAR 2 PAKET: GRATIS & ENTERPRISE)          */}
+          {/* ===================================================================== */}
+          {activeMenu === 'subscriptions' && (
+            <div className="space-y-5 animate-in fade-in duration-200">
               <div>
-                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded-full inline-block">
-                  MANAJEMEN PAKET &amp; STATUS LANGGANAN
-                </span>
-                <h2 className="text-xl font-black text-slate-900 mt-1">
-                  Status Berlangganan &amp; Lisensi Tenant
-                </h2>
-                <p className="text-xs text-slate-600">
-                  Pantau status aktivasi langganan (Menunggu Aktivasi vs Status Aktif) dengan 2 paket resmi: Gratis dan Enterprise.
+                <h3 className="text-xl font-bold text-white tracking-tight">
+                  Subscriptions &amp; Lisensi
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Paket resmi KabarSantri: <strong>Paket Gratis (50 Santri)</strong> dan <strong>Paket Enterprise (Skala Penuh)</strong>.
                 </p>
               </div>
 
-              {/* Filter Status Subscription */}
-              <div className="flex items-center space-x-1.5">
+              {/* Filter Subscriptions */}
+              <div className="flex rounded-xl bg-[#0f1a35] border border-[#1e2c4d] p-1 text-xs w-fit">
                 <button
-                  onClick={() => setSubFilterStatus('all')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
-                    subFilterStatus === 'all'
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
+                  onClick={() => setSubFilter('all')}
+                  className={`px-3 py-1 rounded-lg font-medium transition ${subFilter === 'all' ? 'bg-rose-500/20 text-rose-300 font-bold' : 'text-slate-400 hover:text-white'}`}
                 >
                   Semua ({registrations.length})
                 </button>
                 <button
-                  onClick={() => setSubFilterStatus('pending')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
-                    subFilterStatus === 'pending'
-                      ? 'bg-amber-600 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
+                  onClick={() => setSubFilter('pending')}
+                  className={`px-3 py-1 rounded-lg font-medium transition ${subFilter === 'pending' ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-400 hover:text-white'}`}
                 >
-                  Menunggu Aktivasi ({totalPending})
+                  Menunggu Aktivasi ({pendingTenants})
                 </button>
                 <button
-                  onClick={() => setSubFilterStatus('active')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
-                    subFilterStatus === 'active'
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
+                  onClick={() => setSubFilter('active')}
+                  className={`px-3 py-1 rounded-lg font-medium transition ${subFilter === 'active' ? 'bg-emerald-500/20 text-emerald-300 font-bold' : 'text-slate-400 hover:text-white'}`}
                 >
-                  Status Aktif ({totalActive})
+                  Aktif Berlangganan ({activeTenants})
                 </button>
               </div>
-            </div>
 
-            {/* Penjelasan 2 Paket Resmi */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100 text-xs">
-              <div className="bg-emerald-50/60 p-3.5 rounded-xl border border-emerald-200 space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-emerald-900 text-xs">PAKET GRATIS (STARTER)</span>
-                  <span className="font-bold text-emerald-700">Rp 0 / Selamanya</span>
-                </div>
-                <p className="text-[11px] text-emerald-800">
-                  Kapasitas 50 santri, modul Tahfidz &amp; Portal Wali Santri, lisensi tanpa batas waktu untuk pondok rintisan.
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredSubs.map((reg) => (
+                  <div
+                    key={reg.id}
+                    className="bg-[#0f1a35] border border-[#1e2c4d] rounded-2xl p-4 sm:p-5 space-y-3 text-xs"
+                  >
+                    <div className="flex items-center justify-between pb-2 border-b border-[#19243e]">
+                      <div>
+                        <h4 className="font-bold text-sm text-white">{reg.nama_yayasan}</h4>
+                        <p className="text-slate-400 text-[11px]">{reg.nama_pimpinan} &bull; {reg.kota}</p>
+                      </div>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${reg.status === 'active' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-amber-950 text-amber-300 border border-amber-800'}`}>
+                        {reg.status === 'active' ? 'Status: Aktif' : 'Menunggu ACC'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between bg-[#091122] border border-[#19243e] p-3 rounded-xl">
+                      <div>
+                        <span className="text-slate-400 text-[11px] block">Paket Saat Ini:</span>
+                        <strong className="text-white text-sm font-black">Paket {reg.paket_pilihan}</strong>
+                      </div>
+
+                      <div className="flex items-center space-x-1.5">
+                        <button
+                          onClick={() => handleUbahPaket(reg.id, 'Gratis')}
+                          className={`px-2.5 py-1 rounded-lg font-bold text-[10px] transition ${reg.paket_pilihan === 'Gratis' ? 'bg-slate-700 text-white' : 'bg-slate-800/60 text-slate-400 hover:text-white'}`}
+                        >
+                          Set Gratis
+                        </button>
+                        <button
+                          onClick={() => handleUbahPaket(reg.id, 'Enterprise')}
+                          className={`px-2.5 py-1 rounded-lg font-bold text-[10px] transition ${reg.paket_pilihan === 'Enterprise' ? 'bg-rose-600 text-white' : 'bg-slate-800/60 text-slate-400 hover:text-white'}`}
+                        >
+                          Set Enterprise
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="text-slate-400 text-[11px] flex justify-between">
+                      <span>Estimasi Santri: <strong className="text-slate-200">{reg.estimasi_santri}</strong></span>
+                      <span>Modul Aktif: <strong className="text-emerald-400">{reg.features?.length || 2} Fitur</strong></span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ===================================================================== */}
+          {/* 4. VIEW MODULES (KUSTOMISASI FITUR PER YAYASAN)                       */}
+          {/* ===================================================================== */}
+          {activeMenu === 'modules' && (
+            <div className="space-y-5 animate-in fade-in duration-200">
+              <div>
+                <h3 className="text-xl font-bold text-white tracking-tight">
+                  Kustomisasi Modul &amp; Fitur
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Centang modul aktif sesuai kebutuhan masing-masing yayasan/pesantren.
                 </p>
               </div>
 
-              <div className="bg-purple-50/60 p-3.5 rounded-xl border border-purple-200 space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-purple-900 text-xs">PAKET ENTERPRISE (SKALA PENUH)</span>
-                  <span className="font-bold text-purple-700">Solusi Terpadu</span>
+              {/* Selector Yayasan */}
+              <div className="bg-[#0f1a35] border border-[#1e2c4d] rounded-2xl p-4 sm:p-5 space-y-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-300">Pilih Yayasan / Pesantren:</label>
+                  <select
+                    value={selectedModuleRegId}
+                    onChange={(e) => setSelectedModuleRegId(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-[#091122] border border-[#1e2c4d] rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-rose-500"
+                  >
+                    {registrations.map((reg) => (
+                      <option key={reg.id} value={reg.id}>
+                        {reg.nama_yayasan} ({reg.kota}) - Paket {reg.paket_pilihan}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <p className="text-[11px] text-purple-800">
-                  Seluruh modul (Tahfidz, SPP, Presensi, HRD, Sarpras, Akuntansi), kuota santri penuh &amp; dukungan prioritas.
-                </p>
-              </div>
-            </div>
-          </div>
 
-          {/* Daftar Langganan Tenant */}
-          <div className="space-y-4">
-            {filteredSubscriptions.map((reg) => (
-              <div
-                key={reg.id}
-                className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-4"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-extrabold text-base text-slate-900">{reg.nama_yayasan}</span>
-                      {reg.status === 'pending' ? (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                          ⏳ Menunggu Aktivasi
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                          ✓ Status Aktif &amp; Berlangganan
-                        </span>
-                      )}
+                {selectedYayasanForModule && (
+                  <div className="space-y-4 pt-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {AVAILABLE_YAYASAN_FEATURES.map((feat) => {
+                        const checked = currentSelectedFeatures.includes(feat.id);
+                        return (
+                          <div
+                            key={feat.id}
+                            onClick={() => handleToggleFeature(feat.id)}
+                            className={`
+                              p-3.5 rounded-xl border cursor-pointer transition text-xs space-y-1.5 select-none
+                              ${checked 
+                                ? 'bg-rose-500/10 border-rose-500/80 text-white' 
+                                : 'bg-[#091122] border-[#1e2c4d] text-slate-400 hover:border-slate-500'
+                              }
+                            `}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-white text-xs">{feat.name}</span>
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => {}}
+                                className="rounded text-rose-500 focus:ring-rose-500"
+                              />
+                            </div>
+                            <p className="text-[11px] text-slate-400 leading-relaxed">
+                              {feat.desc}
+                            </p>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <div className="text-xs text-slate-600 flex items-center space-x-3">
-                      <span>Pimpinan: <strong>{reg.nama_pimpinan}</strong></span>
-                      <span>&bull;</span>
-                      <span>Domisili: {reg.kota}</span>
-                      <span>&bull;</span>
-                      <span>ID Tenant: <code>{reg.activated_tenant_id || 'Belum diaktivasi'}</code></span>
+
+                    <div className="pt-2 flex justify-end">
+                      <button
+                        onClick={handleSimpanModul}
+                        className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition"
+                      >
+                        Simpan Pengaturan Modul untuk {selectedYayasanForModule.nama_yayasan}
+                      </button>
                     </div>
-                  </div>
-
-                  {/* Switcher 2 Paket Langganan */}
-                  <div className="flex items-center space-x-2">
-                    <span className="text-[11px] font-bold text-slate-500">Pilihan Paket:</span>
-                    <button
-                      type="button"
-                      onClick={() => handleUbahPaket(reg.id, 'Gratis')}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition border ${
-                        reg.paket_pilihan === 'Gratis'
-                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      Gratis (50 Santri)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleUbahPaket(reg.id, 'Enterprise')}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition border ${
-                        reg.paket_pilihan === 'Enterprise'
-                          ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
-                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      Enterprise (Full)
-                    </button>
-                  </div>
-                </div>
-
-                {/* Rincian Kuota & Akses */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-100 text-xs">
-                  <div>
-                    <span className="text-[11px] text-slate-500 block">Kapasitas Santri:</span>
-                    <span className="font-bold text-slate-800 mt-0.5 block">
-                      {reg.paket_pilihan === 'Gratis' ? '50 Santri Binaan' : 'Kapasitas Penuh (Unlimited)'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[11px] text-slate-500 block">Masa Berlaku Lisensi:</span>
-                    <span className="font-bold text-emerald-700 mt-0.5 block">
-                      {reg.status === 'active' ? 'Aktif Hingga 31 Des 2026' : 'Menunggu ACC'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[11px] text-slate-500 block">Modul Terbuka:</span>
-                    <span className="font-bold text-slate-800 mt-0.5 block">
-                      {reg.features?.length || 2} Modul Sistem Aktif
-                    </span>
-                  </div>
-                </div>
-
-                {/* Action Row */}
-                {reg.status === 'pending' && (
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                    <span className="text-xs text-amber-700">
-                      Lembaga ini belum dapat membuka menu dashboard sebelum Super Admin menyetujui (ACC).
-                    </span>
-                    <button
-                      onClick={() => handleAktivasi(reg)}
-                      className="inline-flex items-center space-x-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>ACC &amp; Aktivasi Lisensi</span>
-                    </button>
                   </div>
                 )}
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+            </div>
+          )}
+
+          {/* ===================================================================== */}
+          {/* 5. VIEW USERS & ROLES                                                 */}
+          {/* ===================================================================== */}
+          {activeMenu === 'users' && (
+            <div className="space-y-5 animate-in fade-in duration-200">
+              <div>
+                <h3 className="text-xl font-bold text-white tracking-tight">Users &amp; Roles</h3>
+                <p className="text-xs text-slate-400">Akun kredensial administrator resmi per tenant pesantren.</p>
+              </div>
+
+              <div className="space-y-3">
+                {registrations.map((reg) => (
+                  <div key={reg.id} className="bg-[#0f1a35] border border-[#1e2c4d] rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                    <div>
+                      <h4 className="font-bold text-white text-sm">{reg.nama_yayasan}</h4>
+                      <p className="text-slate-400">Pimpinan: {reg.nama_pimpinan} &bull; WA: {reg.no_whatsapp}</p>
+                    </div>
+                    <div className="bg-[#091122] border border-[#19243e] p-2.5 rounded-xl font-mono text-[11px] space-y-0.5">
+                      <div>Login Email: <strong className="text-amber-300">{reg.admin_email || `admin@${reg.id}.kabarsantri.id`}</strong></div>
+                      <div>Password Sementara: <strong className="text-emerald-400">{reg.admin_temp_password || 'Santri2026!'}</strong></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ===================================================================== */}
+          {/* 6. VIEW BILLING & BALANCE                                             */}
+          {/* ===================================================================== */}
+          {activeMenu === 'billing' && (
+            <div className="space-y-5 animate-in fade-in duration-200">
+              <div>
+                <h3 className="text-xl font-bold text-white tracking-tight">Billing &amp; Balance</h3>
+                <p className="text-xs text-slate-400">Ikhtisar tagihan langganan SaaS dan pembayaran lisensi pesantren.</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <div className="bg-[#0f1a35] border border-[#1e2c4d] rounded-2xl p-4 space-y-1">
+                  <div className="text-[11px] text-slate-400 uppercase font-bold">Total Tagihan Terbit</div>
+                  <div className="text-2xl font-black text-white">Rp {(activeTenants * 1500000).toLocaleString('id-ID')}</div>
+                </div>
+                <div className="bg-[#0f1a35] border border-[#1e2c4d] rounded-2xl p-4 space-y-1">
+                  <div className="text-[11px] text-slate-400 uppercase font-bold">Status Pembayaran</div>
+                  <div className="text-2xl font-black text-emerald-400">Lunas</div>
+                </div>
+                <div className="bg-[#0f1a35] border border-[#1e2c4d] rounded-2xl p-4 space-y-1">
+                  <div className="text-[11px] text-slate-400 uppercase font-bold">Siklus Periode</div>
+                  <div className="text-2xl font-black text-white">Bulanan (30 Hari)</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ===================================================================== */}
+          {/* 7. VIEW USAGE                                                         */}
+          {/* ===================================================================== */}
+          {activeMenu === 'usage' && (
+            <div className="space-y-5 animate-in fade-in duration-200">
+              <div>
+                <h3 className="text-xl font-bold text-white tracking-tight">Platform Usage</h3>
+                <p className="text-xs text-slate-400">Metrik operasional dan beban server platform KabarSantri.</p>
+              </div>
+
+              <div className="bg-[#0f1a35] border border-[#1e2c4d] rounded-2xl p-5 space-y-3 font-mono text-xs">
+                <div className="flex justify-between py-1 border-b border-[#19243e]">
+                  <span className="text-slate-400">API Response Latency:</span>
+                  <span className="text-emerald-400 font-bold">18 ms</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-[#19243e]">
+                  <span className="text-slate-400">Database Engine:</span>
+                  <span className="text-white">PostgreSQL (Supabase fugqdiuxnjwfgxpvxqsy)</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-[#19243e]">
+                  <span className="text-slate-400">Uptime Serverless:</span>
+                  <span className="text-emerald-400 font-bold">99.98%</span>
+                </div>
+                <div className="flex justify-between py-1">
+                  <span className="text-slate-400">Active WebSocket / Push WA:</span>
+                  <span className="text-white font-bold">Online</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ===================================================================== */}
+          {/* 8. VIEW AUDIT LOG                                                     */}
+          {/* ===================================================================== */}
+          {activeMenu === 'audit' && (
+            <div className="space-y-5 animate-in fade-in duration-200">
+              <div>
+                <h3 className="text-xl font-bold text-white tracking-tight">Audit Log</h3>
+                <p className="text-xs text-slate-400">Catatan aktivitas pendaftaran, persetujuan ACC, dan kustomisasi lisensi.</p>
+              </div>
+
+              <div className="bg-[#0f1a35] border border-[#1e2c4d] rounded-2xl p-5 space-y-3 font-mono text-xs">
+                {registrations.slice(0, 8).map((reg, idx) => (
+                  <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between py-2 border-b border-[#19243e] last:border-b-0 gap-1">
+                    <div>
+                      <span className="text-emerald-400 font-bold">[{reg.created_at || 'Baru'}]</span>{' '}
+                      <span className="text-white">Pendaftaran {reg.nama_yayasan} ({reg.kota})</span> &bull;{' '}
+                      <span className="text-slate-400">Status: {reg.status === 'active' ? 'ACC Disetujui' : 'Menunggu Verifikasi'}</span>
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-sans">Super Admin Log</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ===================================================================== */}
+          {/* 9. VIEW SYSTEM SETTINGS                                               */}
+          {/* ===================================================================== */}
+          {activeMenu === 'settings' && (
+            <div className="space-y-5 animate-in fade-in duration-200">
+              <div>
+                <h3 className="text-xl font-bold text-white tracking-tight">System Settings</h3>
+                <p className="text-xs text-slate-400">Koneksi database Supabase dan integrasi cloud platform.</p>
+              </div>
+
+              <div className="bg-[#0f1a35] border border-[#1e2c4d] rounded-2xl p-5 space-y-4 text-xs">
+                <div className="flex items-center justify-between pb-3 border-b border-[#19243e]">
+                  <div>
+                    <h4 className="font-bold text-white text-sm">Supabase Database Connection</h4>
+                    <p className="text-slate-400 text-[11px]">Proyek: fugqdiuxnjwfgxpvxqsy</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      checkSupabaseStatus();
+                      showNotification('Memeriksa status tabel Supabase...');
+                    }}
+                    className="px-3 py-1.5 bg-[#142347] hover:bg-[#1a2d59] border border-[#21345e] rounded-xl text-white text-xs font-semibold flex items-center space-x-1.5"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Cek Koneksi</span>
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Status Tabel `yayasan_registrations`:</span>
+                    <strong className={supabaseStatus === 'connected' ? 'text-emerald-400' : 'text-amber-400'}>
+                      {supabaseStatus === 'connected' ? '✓ Tabel Cloud Terhubung' : 'Belum Dibuat di Supabase'}
+                    </strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Supabase URL:</span>
+                    <span className="font-mono text-slate-300">https://fugqdiuxnjwfgxpvxqsy.supabase.co</span>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex flex-col sm:flex-row gap-2">
+                  <button
+                    onClick={() => setShowSqlModal(true)}
+                    className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition flex items-center justify-center space-x-1.5"
+                  >
+                    <Database className="w-4 h-4" />
+                    <span>Buka Skrip SQL 1-Klik Supabase</span>
+                  </button>
+
+                  <a
+                    href="https://supabase.com/dashboard/project/fugqdiuxnjwfgxpvxqsy/sql"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-xs transition flex items-center justify-center space-x-1.5"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Buka Supabase SQL Editor</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
 
       {/* ========================================================================= */}
-      {/* MODAL 1: AKTIVASI & KREDENSIAL AKUN                                       */}
+      {/* MODAL 1: KREDENSIAL AKTIVASI & WHATSAPP BLAST                             */}
       {/* ========================================================================= */}
       {activeModalData && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-5 border border-slate-200 shadow-2xl animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center space-x-2">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                <h3 className="font-extrabold text-base text-slate-900">Tenant Berhasil Diaktivasi!</h3>
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#0f1a35] border border-[#1e2c4d] rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-[#19243e]">
+              <div className="flex items-center space-x-2 text-emerald-400">
+                <CheckCircle2 className="w-5 h-5" />
+                <h3 className="font-bold text-base text-white">Yayasan Berhasil Di-ACC</h3>
               </div>
               <button
                 onClick={() => setActiveModalData(null)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                className="text-slate-400 hover:text-white p-1"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Akun tenant untuk <strong>{activeModalData.registration.nama_yayasan}</strong> telah dibuat di sistem. Kredensial login berikut siap diserahkan kepada pimpinan yayasan:
+            <p className="text-xs text-slate-300">
+              Lembaga <strong>"{activeModalData.registration.nama_yayasan}"</strong> telah resmi diaktifkan. Kredensial administrator:
             </p>
 
-            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-2 text-xs">
-              <div className="flex justify-between py-1 border-b border-slate-200/60">
-                <span className="text-slate-600">ID Tenant:</span>
-                <span className="font-mono font-bold text-slate-900">{activeModalData.credentials.tenantId}</span>
+            <div className="bg-[#091122] border border-[#19243e] rounded-2xl p-4 space-y-2 text-xs font-mono">
+              <div className="flex justify-between items-center py-1 border-b border-[#19243e]">
+                <span className="text-slate-400 font-sans">Email Login:</span>
+                <span className="font-bold text-amber-300">{activeModalData.credentials.email}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-200/60">
-                <span className="text-slate-600">Email Administrator:</span>
-                <span className="font-mono font-bold text-emerald-700">{activeModalData.credentials.email}</span>
+              <div className="flex justify-between items-center py-1 border-b border-[#19243e]">
+                <span className="text-slate-400 font-sans">Password Sementara:</span>
+                <span className="font-bold text-emerald-400">{activeModalData.credentials.pass}</span>
               </div>
-              <div className="flex justify-between py-1">
-                <span className="text-slate-600">Password Sementara:</span>
-                <span className="font-mono font-bold text-slate-900 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                  {activeModalData.credentials.pass}
-                </span>
+              <div className="flex justify-between items-center py-1">
+                <span className="text-slate-400 font-sans">WhatsApp Pimpinan:</span>
+                <span className="text-white">{activeModalData.registration.no_whatsapp}</span>
               </div>
             </div>
 
-            <div className="pt-2 flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 pt-2">
               <button
-                onClick={() => {
-                  handleKirimWA(
-                    activeModalData.registration,
-                    activeModalData.credentials.email,
-                    activeModalData.credentials.pass
-                  );
-                }}
-                className="w-full inline-flex items-center justify-center space-x-2 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition"
+                onClick={() => handleKirimWA(activeModalData.registration, activeModalData.credentials.email, activeModalData.credentials.pass)}
+                className="flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center space-x-2"
               >
                 <MessageCircle className="w-4 h-4" />
-                <span>Kirim Kredensial via WhatsApp</span>
+                <span>Kirim via WhatsApp Pimpinan</span>
               </button>
+
               <button
-                onClick={() => {
-                  handleCopyText(
-                    `Email: ${activeModalData.credentials.email}\nPassword: ${activeModalData.credentials.pass}`
-                  );
-                }}
-                className="w-full inline-flex items-center justify-center space-x-2 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition"
+                onClick={() => handleCopyText(`Email: ${activeModalData.credentials.email}\nPass: ${activeModalData.credentials.pass}`)}
+                className="py-2.5 px-4 bg-[#142347] hover:bg-[#1a2d59] border border-[#21345e] text-slate-200 font-semibold text-xs rounded-xl transition flex items-center justify-center space-x-1.5"
               >
-                {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                <span>{copied ? 'Tersalin!' : 'Salin Kredensial'}</span>
+                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                <span>{copied ? 'Tersalin' : 'Salin Kredensial'}</span>
               </button>
             </div>
           </div>
@@ -1088,34 +1220,34 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
       {/* MODAL 2: SKRIP SQL 1-KLIK SUPABASE                                       */}
       {/* ========================================================================= */}
       {showSqlModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-4 border border-slate-200 shadow-2xl animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center space-x-2">
-                <Database className="w-5 h-5 text-amber-500" />
-                <h3 className="font-extrabold text-base text-slate-900">Skrip SQL 1-Klik Supabase</h3>
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#0f1a35] border border-[#1e2c4d] rounded-3xl max-w-2xl w-full p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-[#19243e]">
+              <div className="flex items-center space-x-2 text-amber-400">
+                <Database className="w-5 h-5" />
+                <h3 className="font-bold text-base text-white">Skrip SQL Supabase 1-Klik</h3>
               </div>
               <button
                 onClick={() => setShowSqlModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                className="text-slate-400 hover:text-white p-1"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Jalankan skrip SQL ini di <strong>Supabase SQL Editor</strong> untuk mengaktifkan tabel cloud <code>yayasan_registrations</code> agar setiap pendaftaran dari Vercel otomatis tersinkronisasi secara real-time:
+            <p className="text-xs text-slate-300">
+              Salin skrip berikut lalu jalankan di <strong>Supabase SQL Editor</strong> untuk membuat tabel registrasi:
             </p>
 
             <div className="relative">
-              <pre className="bg-slate-950 text-emerald-400 p-4 rounded-2xl text-[11px] font-mono overflow-x-auto max-h-56 leading-relaxed border border-slate-800">
+              <pre className="bg-[#070d1e] border border-[#19243e] rounded-2xl p-4 text-[11px] font-mono text-slate-300 max-h-56 overflow-y-auto">
                 {SQL_SCRIPT}
               </pre>
               <button
                 onClick={handleCopySql}
-                className="absolute top-3 right-3 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1"
+                className="absolute top-3 right-3 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-lg shadow transition flex items-center space-x-1"
               >
-                {copiedSql ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedSql ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedSql ? 'Tersalin!' : 'Salin SQL'}</span>
               </button>
             </div>
@@ -1125,18 +1257,18 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
                 href="https://supabase.com/dashboard/project/fugqdiuxnjwfgxpvxqsy/sql"
                 target="_blank"
                 rel="noreferrer"
-                className="w-full inline-flex items-center justify-center space-x-2 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition"
+                className="flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl text-center transition flex items-center justify-center space-x-1.5"
               >
-                <span>Buka Supabase SQL Editor</span>
                 <ExternalLink className="w-4 h-4" />
+                <span>Buka Supabase SQL Editor</span>
               </a>
 
               <button
                 onClick={() => {
                   checkSupabaseStatus();
-                  showNotification('Memeriksa status koneksi tabel Supabase...');
+                  showNotification('Memeriksa status tabel Supabase...');
                 }}
-                className="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition"
+                className="py-2.5 px-4 bg-[#142347] hover:bg-[#1a2d59] border border-[#21345e] text-slate-200 font-semibold text-xs rounded-xl transition"
               >
                 Periksa Status Ulang
               </button>
@@ -1146,28 +1278,28 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL 3: INPUT YAYASAN BARU MANUAL DI SUPER ADMIN                        */}
+      {/* MODAL 3: INPUT YAYASAN MANUAL DI SUPER ADMIN                             */}
       {/* ========================================================================= */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-4 border border-slate-200 shadow-2xl animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center space-x-2">
-                <Plus className="w-5 h-5 text-emerald-600" />
-                <h3 className="font-extrabold text-base text-slate-900">Input Yayasan / Lembaga Baru</h3>
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#0f1a35] border border-[#1e2c4d] rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-[#19243e]">
+              <div className="flex items-center space-x-2 text-emerald-400">
+                <Plus className="w-5 h-5" />
+                <h3 className="font-bold text-base text-white">Input Yayasan / Lembaga Baru</h3>
               </div>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                className="text-slate-400 hover:text-white p-1"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleManualSubmit} className="space-y-3.5 text-xs">
+            <form onSubmit={handleManualSubmit} className="space-y-3 text-xs">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Nama Yayasan / Pesantren <span className="text-rose-500">*</span>
+                <label className="block font-bold text-slate-300 mb-1">
+                  Nama Yayasan / Pesantren <span className="text-rose-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -1175,14 +1307,14 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
                   placeholder="Contoh: Pondok Pesantren Al-Falah"
                   value={addForm.nama_yayasan}
                   onChange={(e) => setAddForm({ ...addForm, nama_yayasan: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3 py-2 bg-[#091122] border border-[#1e2c4d] rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-rose-500"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Nama Pimpinan / Pengasuh <span className="text-rose-500">*</span>
+                  <label className="block font-bold text-slate-300 mb-1">
+                    Nama Pimpinan <span className="text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -1190,13 +1322,13 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
                     placeholder="Contoh: KH. Ahmad Dahlan"
                     value={addForm.nama_pimpinan}
                     onChange={(e) => setAddForm({ ...addForm, nama_pimpinan: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-3 py-2 bg-[#091122] border border-[#1e2c4d] rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-rose-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    No. WhatsApp Pimpinan <span className="text-rose-500">*</span>
+                  <label className="block font-bold text-slate-300 mb-1">
+                    WhatsApp Pimpinan <span className="text-rose-400">*</span>
                   </label>
                   <input
                     type="tel"
@@ -1204,42 +1336,42 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
                     placeholder="Contoh: 081234567890"
                     value={addForm.no_whatsapp}
                     onChange={(e) => setAddForm({ ...addForm, no_whatsapp: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-3 py-2 bg-[#091122] border border-[#1e2c4d] rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-rose-500"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Kota / Domisili</label>
+                  <label className="block font-bold text-slate-300 mb-1">Kota / Domisili</label>
                   <input
                     type="text"
                     placeholder="Contoh: Jombang, Jawa Timur"
                     value={addForm.kota}
                     onChange={(e) => setAddForm({ ...addForm, kota: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-3 py-2 bg-[#091122] border border-[#1e2c4d] rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-rose-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Email Lembaga</label>
+                  <label className="block font-bold text-slate-300 mb-1">Email Lembaga</label>
                   <input
                     type="email"
                     placeholder="info@pesantren.id"
                     value={addForm.email}
                     onChange={(e) => setAddForm({ ...addForm, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-3 py-2 bg-[#091122] border border-[#1e2c4d] rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-rose-500"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Paket Layanan</label>
+                  <label className="block font-bold text-slate-300 mb-1">Paket Layanan</label>
                   <select
                     value={addForm.paket_pilihan}
                     onChange={(e) => setAddForm({ ...addForm, paket_pilihan: e.target.value as PaketType })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                    className="w-full px-3 py-2 bg-[#091122] border border-[#1e2c4d] rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-rose-500"
                   >
                     <option value="Gratis">Paket Gratis (50 Santri)</option>
                     <option value="Enterprise">Paket Enterprise (Skala Penuh)</option>
@@ -1247,11 +1379,11 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Estimasi Santri</label>
+                  <label className="block font-bold text-slate-300 mb-1">Estimasi Santri</label>
                   <select
                     value={addForm.estimasi_santri}
                     onChange={(e) => setAddForm({ ...addForm, estimasi_santri: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                    className="w-full px-3 py-2 bg-[#091122] border border-[#1e2c4d] rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-rose-500"
                   >
                     <option value="< 50 Santri">&lt; 50 Santri</option>
                     <option value="50 - 200 Santri">50 - 200 Santri</option>
@@ -1261,28 +1393,17 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Catatan Kebutuhan (Opsional)</label>
-                <textarea
-                  rows={2}
-                  placeholder="Catatan aktivasi awal..."
-                  value={addForm.catatan}
-                  onChange={(e) => setAddForm({ ...addForm, catatan: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-                />
-              </div>
-
               <div className="pt-2 flex flex-col sm:flex-row gap-2">
                 <button
                   type="submit"
-                  className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition"
+                  className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition"
                 >
                   Simpan &amp; Tampilkan di Daftar Tenant
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition"
+                  className="w-full py-2.5 px-4 bg-[#142347] hover:bg-[#1a2d59] border border-[#21345e] text-slate-300 font-semibold text-xs rounded-xl transition"
                 >
                   Batal
                 </button>

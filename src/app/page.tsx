@@ -119,15 +119,15 @@ export default function WelcomeScreenYayasanPage() {
               <Clock className="w-9 h-9" />
             </div>
 
-            <div className="space-y-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider px-3 py-1 bg-amber-50 text-amber-800 rounded-full border border-amber-300 inline-block">
-                Menunggu Persetujuan Super Admin
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 bg-amber-50 text-amber-800 rounded-full border border-amber-300 inline-block">
+                Menunggu Persetujuan
               </span>
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-                Pendaftaran Berhasil Dikirim!
+              <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+                Pendaftaran Terkirim
               </h2>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Data pendaftaran <strong>{registeredData?.nama_yayasan}</strong> telah kami terima.
+              <p className="text-xs text-slate-600">
+                Data lembaga <strong>{registeredData?.nama_yayasan}</strong> telah kami terima.
               </p>
             </div>
 
@@ -152,14 +152,14 @@ export default function WelcomeScreenYayasanPage() {
               </div>
             </div>
 
-            {/* Peringatan Kunci: Hanya bisa buka menu setelah ACC */}
-            <div className="bg-amber-50 text-amber-900 rounded-2xl p-4 text-xs text-left border border-amber-300 space-y-1.5">
+            {/* Petunjuk Singkat Aktivasi */}
+            <div className="bg-amber-50 text-amber-900 rounded-2xl p-3 text-xs text-left border border-amber-300 space-y-1">
               <div className="font-bold flex items-center space-x-1.5 text-amber-900">
-                <Lock className="w-4 h-4 text-amber-700" />
-                <span>Pemberitahuan Aktivasi:</span>
+                <Lock className="w-3.5 h-3.5 text-amber-700" />
+                <span>Petunjuk Akses:</span>
               </div>
-              <p className="text-[11px] text-amber-800 leading-relaxed">
-                Sesuai kebijakan keamanan, <strong>Yayasan hanya dapat membuka menu dan dashboard setelah mendapatkan persetujuan (ACC) resmi dari Super Admin</strong>. Kredensial login akan dikirimkan langsung ke nomor WhatsApp di atas setelah di-ACC.
+              <p className="text-[11px] text-amber-800">
+                Akses menu terbuka setelah di-ACC Super Admin. Kredensial login dikirimkan ke WhatsApp pimpinan.
               </p>
             </div>
 
@@ -203,17 +203,17 @@ export default function WelcomeScreenYayasanPage() {
         ) : (
           /* Formulir Onboarding Yayasan */
           <div className="space-y-6 sm:space-y-8">
-            {/* Hero / Sambutan */}
-            <div className="text-center space-y-2 max-w-xl mx-auto">
-              <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">
+            {/* Hero / Sambutan Singkat */}
+            <div className="text-center space-y-1.5 max-w-xl mx-auto">
+              <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Portal Registrasi Yayasan &amp; Pesantren</span>
+                <span>Pendaftaran Lembaga &amp; Pesantren</span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                Selamat Datang di KabarSantri
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                Formulir Pendaftaran Yayasan
               </h1>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Lengkapi formulir pendaftaran di bawah ini sebagai bahan referensi resmi bagi Super Admin untuk proses verifikasi, persetujuan (ACC), dan aktivasi paket pesantren Anda.
+              <p className="text-xs text-slate-600">
+                Lengkapi data di bawah ini untuk verifikasi dan aktivasi paket layanan pesantren Anda.
               </p>
             </div>
 

@@ -70,142 +70,87 @@ export default function DashboardLayout({
     return () => window.removeEventListener('ks_yayasan_registered', handleUpdate);
   }, [pathname]);
 
-  // ISOLASI KETAT SUPER ADMIN: TIDAK MENAMPILKAN MENU KABARSANTRI LAINNYA
+  // ISOLASI KETAT SUPER ADMIN: SESUAI TAMPILAN PILIN PLATFORM (BEBAS HEADER LOGO GANDA)
   if (pathname?.startsWith('/super-admin') || pathname?.includes('/super-admin')) {
     return (
-      <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col justify-between selection:bg-amber-400 selection:text-slate-950">
-        <header className="bg-slate-950/90 border-b border-slate-800 px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-50">
-          <div className="flex items-center space-x-3">
-            <img src="/images/app-logo.png" alt="KabarSantri" className="w-8 h-8 rounded-xl object-contain bg-white p-0.5 border border-slate-700 shadow-xs" />
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-sm text-white tracking-tight">KabarSantri</span>
-                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-amber-400 text-slate-950 rounded-full">
-                  SUPER ADMIN
-                </span>
-              </div>
-              <p className="text-[10px] text-slate-400 hidden sm:block">Konsol Khusus Pendaftaran Yayasan, Seleksi Fitur &amp; Langganan</p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <Link
-              href="/"
-              className="text-xs font-semibold text-slate-300 hover:text-white px-3.5 py-1.5 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-900 transition flex items-center space-x-1.5"
-            >
-              <span>← Ke Welcome Screen</span>
-            </Link>
-          </div>
-        </header>
-
-        <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
-          <Suspense fallback={<div className="p-10 text-center text-slate-400">Memuat Konsol Super Admin...</div>}>
-            {children}
-          </Suspense>
-        </main>
-
-        <footer className="bg-slate-950 border-t border-slate-800/80 py-4 text-center text-xs text-slate-500">
-          © 2026 KabarSantri v2.0 Platform &bull; Hak Akses Super Admin Terisolasi
-        </footer>
+      <div className="min-h-screen bg-[#070d1e] text-slate-100 antialiased selection:bg-rose-500 selection:text-white">
+        <Suspense fallback={<div className="p-10 text-center text-slate-400">Memuat Konsol Super Admin...</div>}>
+          {children}
+        </Suspense>
       </div>
     );
   }
 
-  // PENGAWAL PERSETUJUAN (APPROVAL GUARD): JIKA STATUS PENDING, MENU LAIN DIKUNCI!
+  // PENGAWAL PERSETUJUAN (APPROVAL GUARD): PETUNJUK SINGKAT PADAT TANPA KALIMAT PANJANG
   if (mounted && isPendingApproval && pendingRegData) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between selection:bg-amber-400 selection:text-slate-950 p-4 sm:p-8">
-        <header className="max-w-4xl w-full mx-auto flex items-center justify-between pb-6 border-b border-slate-800">
-          <div className="flex items-center space-x-3">
-            <img src="/images/app-logo.png" alt="KabarSantri" className="w-9 h-9 rounded-xl object-contain bg-white p-0.5" />
-            <div>
-              <span className="font-black text-base text-white">KabarSantri <span className="text-emerald-400 text-xs font-semibold">v2.0</span></span>
-              <p className="text-[10px] text-slate-400">Sistem Manajemen Pesantren Terpadu</p>
-            </div>
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between selection:bg-amber-400 selection:text-slate-950 p-4 sm:p-6">
+        <header className="max-w-md w-full mx-auto flex items-center justify-between pb-4 border-b border-slate-800 text-xs">
+          <div className="flex items-center space-x-2">
+            <span className="font-bold text-white">KabarSantri</span>
+            <span className="text-[10px] text-emerald-400 font-mono">v2.0</span>
           </div>
           <Link
             href="/"
-            className="text-xs font-semibold text-slate-400 hover:text-white px-3 py-1.5 rounded-xl border border-slate-800 hover:border-slate-700 transition"
+            className="text-slate-400 hover:text-white transition"
           >
-            ← Kembali ke Welcome Screen
+            ← Kembali
           </Link>
         </header>
 
-        <main className="max-w-lg w-full mx-auto my-12 bg-slate-900 border border-amber-500/30 rounded-3xl p-6 sm:p-10 text-center space-y-6 shadow-2xl">
-          <div className="w-16 h-16 bg-amber-500/10 text-amber-400 rounded-2xl flex items-center justify-center mx-auto border border-amber-500/20 shadow-inner">
-            <Lock className="w-8 h-8" />
+        <main className="max-w-md w-full mx-auto my-auto bg-slate-900/90 border border-amber-500/30 rounded-2xl p-6 sm:p-8 text-center space-y-4 shadow-2xl">
+          <div className="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-xl flex items-center justify-center mx-auto border border-amber-500/20">
+            <Lock className="w-6 h-6" />
           </div>
 
-          <div className="space-y-2">
-            <span className="text-[10px] font-black uppercase tracking-wider px-3 py-1 bg-amber-400/20 text-amber-300 rounded-full border border-amber-400/30 inline-block">
-              AKSES TERKUNCI • MENUNGGU ACC SUPER ADMIN
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 bg-amber-400/20 text-amber-300 rounded-full border border-amber-400/30 inline-block">
+              MENUNGGU ACC
             </span>
-            <h2 className="text-2xl font-black text-white tracking-tight">
-              Menu Belum Dapat Dibuka
+            <h2 className="text-lg font-bold text-white tracking-tight">
+              Akses Menunggu Persetujuan
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Pendaftaran lembaga <strong>"{pendingRegData.nama_yayasan}"</strong> masih dalam status antrean verifikasi. Sesuai prosedur keamanan:
+            <p className="text-xs text-slate-300">
+              Pendaftaran <strong>{pendingRegData.nama_yayasan}</strong> telah kami terima. Menu aktif setelah disetujui Super Admin.
             </p>
           </div>
 
-          <div className="bg-slate-950/80 rounded-2xl p-4 text-left border border-slate-800 space-y-2 text-xs text-slate-300">
-            <div className="flex justify-between py-1 border-b border-slate-800/80">
-              <span className="text-slate-400">Pimpinan Yayasan:</span>
-              <span className="font-semibold text-white">{pendingRegData.nama_pimpinan}</span>
+          <div className="bg-slate-950/70 rounded-xl p-3 text-left border border-slate-800 space-y-1 text-xs text-slate-300">
+            <div className="flex justify-between py-0.5">
+              <span className="text-slate-400">Pimpinan:</span>
+              <span className="font-medium text-white">{pendingRegData.nama_pimpinan}</span>
             </div>
-            <div className="flex justify-between py-1 border-b border-slate-800/80">
-              <span className="text-slate-400">WhatsApp Pimpinan:</span>
-              <span className="font-semibold text-emerald-400">{pendingRegData.no_whatsapp}</span>
+            <div className="flex justify-between py-0.5">
+              <span className="text-slate-400">WhatsApp:</span>
+              <span className="font-medium text-emerald-400">{pendingRegData.no_whatsapp}</span>
             </div>
-            <div className="flex justify-between py-1 border-b border-slate-800/80">
-              <span className="text-slate-400">Paket Langganan:</span>
+            <div className="flex justify-between py-0.5">
+              <span className="text-slate-400">Paket:</span>
               <span className="font-bold text-amber-300">Paket {pendingRegData.paket_pilihan}</span>
             </div>
-            <div className="flex justify-between py-1">
-              <span className="text-slate-400">Status Akun:</span>
-              <span className="font-bold text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/60">
-                ⏳ Menunggu Persetujuan Super Admin
-              </span>
-            </div>
           </div>
 
-          <div className="bg-amber-950/30 border border-amber-500/30 rounded-2xl p-3.5 text-xs text-amber-200 text-left leading-relaxed">
-            <strong>Catatan Akses:</strong> Yayasan hanya dapat membuka seluruh modul KabarSantri (Akademik, Keuangan, Presensi, HRD, Sarpras, dsb) setelah akun disetujui (di-ACC) oleh Super Admin.
-          </div>
-
-          <div className="pt-2 flex flex-col gap-2.5">
+          <div className="pt-2 flex flex-col gap-2">
             <Link
               href="/super-admin"
-              className="w-full inline-flex items-center justify-center space-x-2 py-3 px-5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs rounded-xl shadow-lg transition"
+              className="w-full inline-flex items-center justify-center space-x-2 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-xl shadow transition"
             >
               <ShieldCheck className="w-4 h-4" />
-              <span>Buka Konsol Super Admin untuk ACC Yayasan Ini ➔</span>
+              <span>Buka Super Admin untuk ACC ➔</span>
             </Link>
 
-            <div className="flex flex-col sm:flex-row gap-2">
-              <button
-                type="button"
-                onClick={checkApprovalStatus}
-                className="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs rounded-xl border border-slate-700 transition"
-              >
-                🔄 Periksa Ulang Status ACC
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  clearPendingRegistrationLock();
-                  checkApprovalStatus();
-                }}
-                className="w-full py-2.5 px-4 bg-slate-950 hover:bg-slate-900 text-slate-400 hover:text-slate-200 font-semibold text-xs rounded-xl border border-slate-800 transition"
-              >
-                Ganti Akun Lain
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={checkApprovalStatus}
+              className="w-full py-2 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs rounded-xl border border-slate-700 transition"
+            >
+              Periksa Status Ulang
+            </button>
           </div>
         </main>
 
-        <footer className="text-center text-xs text-slate-600 py-4">
-          © 2026 KabarSantri v2.0 Platform &bull; Keamanan Multi-Tenant Terisolasi
+        <footer className="text-center text-[10px] text-slate-600 py-3">
+          © 2026 KabarSantri v2.0 Platform
         </footer>
       </div>
     );
