@@ -314,19 +314,26 @@ Alhamdulillah, pendaftaran yayasan Anda di *KabarSantri v2.0* telah kami verifik
 • Nama Lembaga: *${reg.nama_yayasan}*
 • Paket Langganan: *Paket ${reg.paket_pilihan}*
 • Estimasi Santri: *${reg.estimasi_santri}*
-• Status Akun: *Aktif & Berlangganan*
+• Status Akun: *Aktif & Siap Digunakan*
 
-🔑 *KREDENSIAL LOGIN ADMINISTRATOR:*
-• Link Portal: https://app.kabarsantri.id
-• Email Login: *${adminEmail}*
-• Password Sementara: *${adminPass}*
+🔑 *KREDENSIAL LOGIN RESMI:*
+• Link Masuk Resmi: https://kabarsantri.vercel.app/login
+• Email / No. WhatsApp: *${adminEmail}* / *${reg.no_whatsapp}*
+• Password Resmi: *${adminPass}*
 
-Silakan login dan mulai kelola data profil santri & asatidz perdana Anda. Tim kami siap mendampingi adaptasi sistem di pesantren Anda.
+📲 *PANDUAN MASUK AKUN:*
+1. Buka website KabarSantri lalu klik *Masuk Akun Resmi* di pojok kanan atas (atau akses https://kabarsantri.vercel.app/login).
+2. Masukkan Email atau No. WhatsApp Anda beserta Password resmi di atas.
+3. Anda dapat langsung mengelola database santri, pencatatan hafalan Al-Qur'an (Tahfidz), hingga pembinaan adab santri.
+
+Jika Anda membutuhkan bantuan teknis atau panduan, hubungi WhatsApp Layanan Resmi KabarSantri:
+📲 *0812 1556 6630*
 
 _Jazakumullahu Khairan Katsiran._
 Wassalamu'alaikum Warahmatullahi Wabarakatuh.
 
-*Super Admin KabarSantri Platform*`;
+*Super Admin KabarSantri Platform*
+Official WA: 0812 1556 6630`;
 
     const url = getWhatsAppWebUrl(reg.no_whatsapp, pesan);
     window.open(url, '_blank');

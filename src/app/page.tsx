@@ -176,7 +176,7 @@ export default function WelcomeScreenYayasanPage() {
                 <span>Petunjuk Akses:</span>
               </div>
               <p className="text-[11px] text-amber-800">
-                Akses menu aktif setelah diverifikasi. Kredensial login dikirimkan ke WhatsApp pimpinan.
+                Akses menu aktif setelah diverifikasi. Kredensial akun resmi dikirimkan dari nomor WhatsApp resmi <strong>0812 1556 6630</strong> ke WhatsApp pimpinan.
               </p>
             </div>
 
@@ -185,7 +185,7 @@ export default function WelcomeScreenYayasanPage() {
                 href="/login"
                 className="w-full inline-flex items-center justify-center space-x-2 py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition shadow-xs"
               >
-                <span>Cek Halaman Login</span>
+                <span>Masuk Akun Resmi</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
               <button

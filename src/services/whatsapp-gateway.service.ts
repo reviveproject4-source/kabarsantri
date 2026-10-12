@@ -2,6 +2,9 @@ import { supabase } from '../lib/supabaseClient';
 
 export type WhatsAppProvider = 'fonnte' | 'wablas' | 'meta_cloud';
 
+export const DEFAULT_KABARSANTRI_WA_SENDER = '0812 1556 6630';
+export const DEFAULT_KABARSANTRI_WA_SENDER_CLEAN = '6281215566630';
+
 export interface WhatsAppSendPayload {
   to: string; // Nomor WA tujuan (format: 628xxx)
   message: string;

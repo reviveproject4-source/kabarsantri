@@ -29,7 +29,6 @@ import {
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { useActiveTenant, APP_BRAND } from '@/lib/sessionStore';
-import { getYayasanRegistrations, clearPendingRegistrationLock } from '@/lib/yayasanRegistrationStore';
 
 export default function DashboardLayout({
   children,
@@ -39,35 +38,11 @@ export default function DashboardLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [bottomDrawerOpen, setBottomDrawerOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [isPendingApproval, setIsPendingApproval] = useState(false);
-  const [pendingRegData, setPendingRegData] = useState<any>(null);
   const pathname = usePathname();
   const tenant = useActiveTenant();
 
-  const checkApprovalStatus = () => {
-    if (typeof window !== 'undefined') {
-      const pendingId = localStorage.getItem('ks_pending_registration_id');
-      if (pendingId) {
-        const list = getYayasanRegistrations();
-        const found = list.find(r => r.id === pendingId);
-        if (found && found.status === 'pending') {
-          setIsPendingApproval(true);
-          setPendingRegData(found);
-          return;
-        }
-      }
-      setIsPendingApproval(false);
-      setPendingRegData(null);
-    }
-  };
-
   useEffect(() => {
     setMounted(true);
-    checkApprovalStatus();
-
-    const handleUpdate = () => checkApprovalStatus();
-    window.addEventListener('ks_yayasan_registered', handleUpdate);
-    return () => window.removeEventListener('ks_yayasan_registered', handleUpdate);
   }, [pathname]);
 
   // ISOLASI KETAT SUPER ADMIN: SESUAI TAMPILAN PILIN PLATFORM (BEBAS HEADER LOGO GANDA)
@@ -77,88 +52,6 @@ export default function DashboardLayout({
         <Suspense fallback={<div className="p-10 text-center text-slate-400">Memuat Konsol Super Admin...</div>}>
           {children}
         </Suspense>
-      </div>
-    );
-  }
-
-  // PENGAWAL PERSETUJUAN (APPROVAL GUARD): PETUNJUK SINGKAT PADAT TANPA KALIMAT PANJANG
-  if (mounted && isPendingApproval && pendingRegData) {
-    return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between selection:bg-amber-400 selection:text-slate-950 p-4 sm:p-6">
-        <header className="max-w-md w-full mx-auto flex items-center justify-between pb-4 border-b border-slate-800 text-xs">
-          <div className="flex items-center space-x-2">
-            <span className="font-bold text-white">KabarSantri</span>
-            <span className="text-[10px] text-emerald-400 font-mono">v2.0</span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <Link
-              href="/"
-              className="text-slate-400 hover:text-white transition"
-            >
-              ← Beranda
-            </Link>
-          </div>
-        </header>
-
-        <main className="max-w-md w-full mx-auto my-auto bg-slate-900/90 border border-amber-500/30 rounded-2xl p-6 sm:p-8 text-center space-y-4 shadow-2xl">
-          <div className="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-xl flex items-center justify-center mx-auto border border-amber-500/20">
-            <Lock className="w-6 h-6" />
-          </div>
-
-          <div className="space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 bg-amber-400/20 text-amber-300 rounded-full border border-amber-400/30 inline-block">
-              MENUNGGU VERIFIKASI
-            </span>
-            <h2 className="text-lg font-bold text-white tracking-tight">
-              Akses Menunggu Verifikasi
-            </h2>
-            <p className="text-xs text-slate-300">
-              Pendaftaran <strong>{pendingRegData.nama_yayasan}</strong> telah kami terima. Menu aktif setelah diverifikasi oleh tim pengelola.
-            </p>
-          </div>
-
-          <div className="bg-slate-950/70 rounded-xl p-3 text-left border border-slate-800 space-y-1 text-xs text-slate-300">
-            <div className="flex justify-between py-0.5">
-              <span className="text-slate-400">Pimpinan:</span>
-              <span className="font-medium text-white">{pendingRegData.nama_pimpinan}</span>
-            </div>
-            <div className="flex justify-between py-0.5">
-              <span className="text-slate-400">WhatsApp:</span>
-              <span className="font-medium text-emerald-400">{pendingRegData.no_whatsapp}</span>
-            </div>
-            <div className="flex justify-between py-0.5">
-              <span className="text-slate-400">Paket:</span>
-              <span className="font-bold text-amber-300">Paket {pendingRegData.paket_pilihan}</span>
-            </div>
-          </div>
-
-          <div className="pt-2 flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                clearPendingRegistrationLock();
-                setIsPendingApproval(false);
-                setPendingRegData(null);
-              }}
-              className="w-full inline-flex items-center justify-center space-x-2 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-md transition"
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              <span>Buka Akses Dashboard (Mode Peninjauan / Uji Coba)</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={checkApprovalStatus}
-              className="w-full py-2 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs rounded-xl border border-slate-700 transition"
-            >
-              Periksa Status Ulang
-            </button>
-          </div>
-        </main>
-
-        <footer className="text-center text-[10px] text-slate-600 py-3">
-          © 2026 KabarSantri v2.0 Platform
-        </footer>
       </div>
     );
   }

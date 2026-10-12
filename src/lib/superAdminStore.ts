@@ -236,22 +236,25 @@ Alhamdulillah, akun sistem *KabarSantri v2.0* untuk pondok pesantren Anda telah 
 ${fiturList}
 
 🔑 *KREDENSIAL AKSES ADMINISTRATOR:*
-• Link Portal Backoffice: http://localhost:3001
+• Link Portal Backoffice: https://kabarsantri.vercel.app/login
 • Username / Email: *${tenant.admin_email}*
 • Password Sementara: *${tenant.admin_temp_password}*
 
 📲 *PANDUAN LANGKAH PERTAMA (ONBOARDING):*
-1. Login menggunakan link dan password di atas.
-2. Masukkan data 50 santri binaan pertama Anda di menu *Kesiswaan > Data Santri*.
-3. Guru & Musyrif langsung dapat mencatat hafalan, adab, reward, dan pelanggaran dari HP/Laptop.
-4. Bagikan PIN Wali Santri agar orang tua santri dapat memantau capaian anaknya secara real-time.
+1. Buka website https://kabarsantri.vercel.app lalu klik *Masuk Akun Resmi* di kanan atas.
+2. Masukkan Email atau No. WhatsApp beserta password di atas.
+3. Masukkan data 50 santri binaan pertama Anda di menu *Kesiswaan > Data Santri*.
+4. Guru & Musyrif langsung dapat mencatat hafalan, adab, reward, dan pelanggaran dari HP/Laptop.
+5. Bagikan PIN Wali Santri agar orang tua santri dapat memantau capaian anaknya secara real-time.
 
-Jika ada kendala teknis atau membutuhkan pendampingan pelatihan tim asatidz, kami siap membantu melalui nomor ini.
+Jika ada kendala teknis atau membutuhkan pendampingan tim asatidz, kami siap membantu melalui WhatsApp Resmi:
+📲 *0812 1556 6630*
 
 _Jazakumullahu Khairan Katsiran._
 Wassalamu'alaikum Warahmatullahi Wabarakatuh.
 
 *Tim Layanan KabarSantri Indonesia*
+WhatsApp Resmi: 0812 1556 6630
 🌐 https://kabarsantri.id`;
 }
 
