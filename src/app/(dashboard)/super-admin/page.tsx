@@ -47,6 +47,7 @@ import {
   syncRegistrationsFromServer 
 } from '@/lib/yayasanRegistrationStore';
 import { getWhatsAppWebUrl } from '@/lib/superAdminStore';
+import { supabase } from '@/lib/supabaseClient';
 
 export type SuperAdminNavMenu = 
   | 'dashboard' 
@@ -154,16 +155,88 @@ export default function SuperAdminDashboardPage() {
   };
 
   const loadData = async () => {
-    const list = getYayasanRegistrations();
+    let list = getYayasanRegistrations();
     setRegistrations(list);
     if (!selectedModuleRegId && list.length > 0) {
       setSelectedModuleRegId(list[0].id);
       setCurrentSelectedFeatures(list[0].features || []);
     }
     checkSupabaseStatus();
+
+    // 1. Sync dari API Server
     try {
       const serverSynced = await syncRegistrationsFromServer();
-      setRegistrations(serverSynced);
+      if (serverSynced && serverSynced.length > 0) {
+        list = serverSynced;
+        setRegistrations(list);
+      }
+    } catch {}
+
+    // 2. Direct Sync dari Supabase (Cloud First)
+    try {
+      const { data: supaRows, error } = await supabase
+        .from('yayasan_registrations')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && Array.isArray(supaRows)) {
+        setSupabaseStatus('connected');
+        if (supaRows.length > 0) {
+          const map = new Map<string, YayasanRegistration>();
+          list.forEach(item => map.set(item.id, item));
+          supaRows.forEach((row: any) => {
+            map.set(row.id, {
+              id: row.id,
+              nama_yayasan: row.nama_yayasan,
+              nama_pimpinan: row.nama_pimpinan,
+              no_whatsapp: row.no_whatsapp,
+              email: row.email || '',
+              kota: row.kota || 'Indonesia',
+              estimasi_santri: row.estimasi_santri || '< 50 Santri',
+              paket_pilihan: row.paket_pilihan || 'Gratis',
+              catatan: row.catatan || '',
+              status: row.status || 'pending',
+              features: row.features || ['tahfidz', 'wali'],
+              created_at: row.created_at || new Date().toISOString(),
+              activated_tenant_id: row.activated_tenant_id,
+              admin_email: row.admin_email,
+              admin_temp_password: row.admin_temp_password,
+            });
+          });
+
+          const merged = Array.from(map.values());
+          merged.sort((a, b) => {
+            if (a.status === 'pending' && b.status !== 'pending') return -1;
+            if (a.status !== 'pending' && b.status === 'pending') return 1;
+            const timeA = new Date(a.created_at || 0).getTime() || 0;
+            const timeB = new Date(b.created_at || 0).getTime() || 0;
+            if (timeA !== timeB) return timeB - timeA;
+            return (b.id || '').localeCompare(a.id || '');
+          });
+
+          setRegistrations(merged);
+        } else if (list.length > 0) {
+          // Jika Supabase kosong tetapi local ada data pendaftaran, dorong langsung ke Supabase
+          try {
+            const pushItems = list.map(item => ({
+              id: item.id,
+              nama_yayasan: item.nama_yayasan,
+              nama_pimpinan: item.nama_pimpinan,
+              no_whatsapp: item.no_whatsapp,
+              email: item.email || null,
+              kota: item.kota || 'Indonesia',
+              estimasi_santri: item.estimasi_santri || '< 50 Santri',
+              paket_pilihan: item.paket_pilihan || 'Gratis',
+              catatan: item.catatan || null,
+              status: item.status || 'pending',
+              features: item.features || ['tahfidz', 'wali'],
+              created_at: item.created_at?.includes('T') ? item.created_at : new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            }));
+            await supabase.from('yayasan_registrations').upsert(pushItems);
+          } catch {}
+        }
+      }
     } catch {}
   };
 
@@ -634,6 +707,74 @@ Wassalamu'alaikum Warahmatullahi Wabarakatuh.
                     <span className="text-slate-400">Lisensi Aktif: <strong className="text-emerald-400">{activeTenants} Tenant</strong></span>
                   </div>
                 </div>
+              </div>
+
+              {/* Antrean Pendaftaran Yayasan Terbaru (Menunggu ACC) */}
+              <div className="bg-[#0f1a35] border border-[#1e2c4d] rounded-2xl p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Clock className="w-4 h-4 text-amber-400" />
+                    <h4 className="font-bold text-sm text-white">
+                      Antrean Pendaftaran Yayasan Terbaru ({pendingTenants} Menunggu ACC)
+                    </h4>
+                  </div>
+                  <button
+                    onClick={() => setActiveMenu('tenants')}
+                    className="text-xs text-rose-400 hover:text-rose-300 font-semibold flex items-center space-x-1"
+                  >
+                    <span>Buka Semua di Menu Tenants</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {registrations.filter(r => r.status === 'pending').length === 0 ? (
+                  <div className="bg-[#091122] border border-[#1e2c4d] rounded-xl p-4 text-center text-xs text-slate-400">
+                    Tidak ada antrean tertunda. Seluruh pendaftaran telah disetujui (di-ACC).
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {registrations.filter(r => r.status === 'pending').slice(0, 5).map((reg) => (
+                      <div
+                        key={reg.id}
+                        className="bg-[#091122] border border-[#1e2c4d] hover:border-slate-600 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                      >
+                        <div className="space-y-0.5">
+                          <div className="flex items-center space-x-2">
+                            <strong className="text-white text-sm">{reg.nama_yayasan}</strong>
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                              Paket {reg.paket_pilihan}
+                            </span>
+                          </div>
+                          <div className="text-slate-400 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px]">
+                            <span>Pimpinan: <strong className="text-slate-200">{reg.nama_pimpinan}</strong></span>
+                            <span>•</span>
+                            <span>WA: <strong className="text-emerald-400 font-mono">{reg.no_whatsapp}</strong></span>
+                            <span>•</span>
+                            <span>Kota: <strong className="text-slate-200">{reg.kota || 'Indonesia'}</strong></span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-2 shrink-0">
+                          <button
+                            onClick={() => handleAktivasi(reg)}
+                            className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition flex items-center space-x-1.5"
+                          >
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                            <span>ACC &amp; Aktivasi</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleKirimWA(reg)}
+                            className="px-3 py-1.5 bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-800 font-semibold rounded-xl text-xs transition flex items-center space-x-1.5"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                            <span>WA</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Pintasan Aksi Cepat */}

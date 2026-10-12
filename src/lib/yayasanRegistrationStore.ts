@@ -129,7 +129,10 @@ export function getYayasanRegistrations(): YayasanRegistration[] {
     list.sort((a, b) => {
       if (a.status === 'pending' && b.status !== 'pending') return -1;
       if (a.status !== 'pending' && b.status === 'pending') return 1;
-      return (b.created_at || '').localeCompare(a.created_at || '');
+      const timeA = new Date(a.created_at || 0).getTime() || 0;
+      const timeB = new Date(b.created_at || 0).getTime() || 0;
+      if (timeA !== timeB) return timeB - timeA;
+      return (b.id || '').localeCompare(a.id || '');
     });
 
     // Sinkronkan kembali ke semua key
@@ -184,7 +187,10 @@ export async function syncRegistrationsFromServer(): Promise<YayasanRegistration
       merged.sort((a, b) => {
         if (a.status === 'pending' && b.status !== 'pending') return -1;
         if (a.status !== 'pending' && b.status === 'pending') return 1;
-        return (b.created_at || '').localeCompare(a.created_at || '');
+        const timeA = new Date(a.created_at || 0).getTime() || 0;
+        const timeB = new Date(b.created_at || 0).getTime() || 0;
+        if (timeA !== timeB) return timeB - timeA;
+        return (b.id || '').localeCompare(a.id || '');
       });
 
       saveYayasanRegistrations(merged);
@@ -214,6 +220,8 @@ export async function submitYayasanRegistration(data: {
     ? ['tahfidz', 'spp', 'presensi', 'wali', 'rumah_tangga', 'akuntansi']
     : ['tahfidz', 'wali'];
 
+  const nowIso = new Date().toISOString();
+
   const newReg: YayasanRegistration = {
     id: 'reg-' + Date.now().toString().slice(-6),
     nama_yayasan: data.nama_yayasan.trim(),
@@ -226,13 +234,7 @@ export async function submitYayasanRegistration(data: {
     catatan: data.catatan?.trim() || '',
     status: 'pending', // WAJIB PENDING MENUNGGU ACC SUPER ADMIN
     features: defaultFeatures,
-    created_at: new Date().toLocaleString('id-ID', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    }),
+    created_at: nowIso,
   };
 
   // Tambahkan pendaftaran baru di baris PALING DEPAN
@@ -259,21 +261,22 @@ export async function submitYayasanRegistration(data: {
     });
   } catch {}
 
-  // Simpan ke Supabase jika tabel sudah dibuat
+  // Simpan ke Supabase jika tabel sudah dibuat (Gunakan UPSERT)
   try {
-    await supabase.from('yayasan_registrations').insert({
+    await supabase.from('yayasan_registrations').upsert({
       id: newReg.id,
       nama_yayasan: newReg.nama_yayasan,
       nama_pimpinan: newReg.nama_pimpinan,
       no_whatsapp: newReg.no_whatsapp,
-      email: newReg.email,
-      kota: newReg.kota,
+      email: newReg.email || null,
+      kota: newReg.kota || 'Indonesia',
       estimasi_santri: newReg.estimasi_santri,
       paket_pilihan: newReg.paket_pilihan,
-      catatan: newReg.catatan,
+      catatan: newReg.catatan || null,
       status: 'pending',
       features: newReg.features,
-      created_at: new Date().toISOString(),
+      created_at: nowIso,
+      updated_at: nowIso,
     });
   } catch {}
 

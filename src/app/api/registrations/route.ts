@@ -80,16 +80,41 @@ export async function GET() {
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (!error && Array.isArray(data) && data.length > 0) {
-      // Gabungkan data Supabase dengan memoryStore jika ada yang belum terunggah
-      const existingIds = new Set(data.map((d: any) => d.id));
-      const combined = [...data];
-      for (const m of memoryStore) {
-        if (!existingIds.has(m.id)) {
-          combined.push(m);
+    if (!error && Array.isArray(data)) {
+      if (data.length > 0) {
+        // Gabungkan data Supabase dengan memoryStore jika ada yang belum terunggah
+        const existingIds = new Set(data.map((d: any) => d.id));
+        const combined = [...data];
+        for (const m of memoryStore) {
+          if (!existingIds.has(m.id)) {
+            combined.push(m);
+          }
         }
+        return NextResponse.json({ success: true, source: 'supabase', data: combined });
+      } else {
+        // Tabel ada tapi masih kosong: unggah cache lokal ke Supabase
+        if (memoryStore.length > 0) {
+          try {
+            const seedItems = memoryStore.map(item => ({
+              id: item.id,
+              nama_yayasan: item.nama_yayasan,
+              nama_pimpinan: item.nama_pimpinan,
+              no_whatsapp: item.no_whatsapp,
+              email: item.email || null,
+              kota: item.kota || 'Indonesia',
+              estimasi_santri: item.estimasi_santri || '< 50 Santri',
+              paket_pilihan: item.paket_pilihan || 'Gratis',
+              catatan: item.catatan || null,
+              status: item.status || 'pending',
+              features: item.features || ['tahfidz', 'wali'],
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }));
+            await supabase.from('yayasan_registrations').upsert(seedItems);
+          } catch {}
+        }
+        return NextResponse.json({ success: true, source: 'supabase', data: memoryStore });
       }
-      return NextResponse.json({ success: true, source: 'supabase', data: combined });
     }
   } catch {}
 
@@ -107,6 +132,8 @@ export async function POST(req: Request) {
       );
     }
 
+    const nowIso = new Date().toISOString();
+
     const newRecord = {
       id: body.id || 'reg-' + Date.now().toString().slice(-6),
       nama_yayasan: String(body.nama_yayasan).trim(),
@@ -121,22 +148,30 @@ export async function POST(req: Request) {
       features: body.paket_pilihan === 'Enterprise'
         ? ['tahfidz', 'spp', 'presensi', 'wali', 'rumah_tangga', 'akuntansi']
         : ['tahfidz', 'wali'],
-      created_at: new Date().toLocaleString('id-ID', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
+      created_at: nowIso,
     };
 
     loadLocalFile();
-    memoryStore = [newRecord, ...memoryStore];
+    memoryStore = [newRecord, ...memoryStore.filter(m => m.id !== newRecord.id)];
     saveLocalFile(memoryStore);
 
-    // Kirim juga ke Supabase
+    // Kirim juga ke Supabase dengan format ISO yang valid
     try {
-      await supabase.from('yayasan_registrations').insert([newRecord]);
+      await supabase.from('yayasan_registrations').upsert({
+        id: newRecord.id,
+        nama_yayasan: newRecord.nama_yayasan,
+        nama_pimpinan: newRecord.nama_pimpinan,
+        no_whatsapp: newRecord.no_whatsapp,
+        email: newRecord.email || null,
+        kota: newRecord.kota || 'Indonesia',
+        estimasi_santri: newRecord.estimasi_santri || '< 50 Santri',
+        paket_pilihan: newRecord.paket_pilihan,
+        catatan: newRecord.catatan || null,
+        status: 'pending',
+        features: newRecord.features,
+        created_at: nowIso,
+        updated_at: nowIso,
+      });
     } catch {}
 
     return NextResponse.json({ success: true, data: newRecord });
