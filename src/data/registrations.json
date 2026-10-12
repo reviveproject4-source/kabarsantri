@@ -1,5 +1,59 @@
 [
   {
+    "id": "reg-498363",
+    "nama_yayasan": "Al kausar",
+    "nama_pimpinan": "Ust. Raynd",
+    "no_whatsapp": "081280320505",
+    "email": "",
+    "kota": "Cibuntu",
+    "estimasi_santri": "< 50 Santri",
+    "paket_pilihan": "Gratis",
+    "catatan": "",
+    "status": "active",
+    "features": [
+      "tahfidz",
+      "wali"
+    ],
+    "created_at": "2026-10-12T02:01:40.251Z",
+    "activated_tenant_id": "tenant-al-kausar-9033",
+    "admin_email": "admin@al-kausar.kabarsantri.id",
+    "admin_temp_password": "Raynd3387!"
+  },
+  {
+    "id": "reg-085400",
+    "nama_yayasan": "Al Kausar",
+    "nama_pimpinan": "Ust. Raynd",
+    "no_whatsapp": "081280320505",
+    "email": "",
+    "kota": "Cibuntu",
+    "estimasi_santri": "< 50 Santri",
+    "paket_pilihan": "Gratis",
+    "catatan": "",
+    "status": "pending",
+    "features": [
+      "tahfidz",
+      "wali"
+    ],
+    "created_at": "2026-10-12T01:38:05.419Z"
+  },
+  {
+    "id": "reg-996029",
+    "nama_yayasan": "Al Fatih",
+    "nama_pimpinan": "Ust. Raynd",
+    "no_whatsapp": "081280320505",
+    "email": "",
+    "kota": "CIseeng",
+    "estimasi_santri": "< 50 Santri",
+    "paket_pilihan": "Gratis",
+    "catatan": "",
+    "status": "pending",
+    "features": [
+      "tahfidz",
+      "wali"
+    ],
+    "created_at": "2026-10-12T01:36:36.110Z"
+  },
+  {
     "id": "reg-843085",
     "nama_yayasan": "Pesantren Modern Darussalam",
     "nama_pimpinan": "KH. Abdullah Syukri",
