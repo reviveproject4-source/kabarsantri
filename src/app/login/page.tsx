@@ -95,6 +95,17 @@ export default function LoginPage() {
     } catch {}
 
     setTimeout(() => {
+      // 0. Akses Khusus Super Admin Platform
+      if (identifier.toLowerCase().includes('superadmin') || identifier.toLowerCase().includes('super_admin')) {
+        setAppMode('demo');
+        setActiveActorByRole('super_admin');
+        document.cookie = `sb-access-token=superadmin-token; path=/; max-age=86400`;
+        document.cookie = `ks_session=active; path=/; max-age=86400`;
+        setLoading(false);
+        router.push('/super-admin');
+        return;
+      }
+
       // Set Mode Tenant
       const registrations = getYayasanRegistrations();
       const matchedActive = registrations.find(r => 
