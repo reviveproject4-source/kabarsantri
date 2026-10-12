@@ -351,24 +351,29 @@ export function getActiveActor(): ActiveActor {
   if (typeof window === 'undefined') return MASTER_PILLAR_ACTORS.yayasan;
   try {
     const mode = getAppMode();
-    if (mode === 'tenant') {
-      const raw = localStorage.getItem(SESSION_ACTOR_STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed.role_key && ['yayasan', 'pegawai', 'wali_santri'].includes(parsed.role_key)) {
-          return MASTER_PILLAR_ACTORS[parsed.role_key];
-        }
-      }
-      return MASTER_PILLAR_ACTORS.yayasan;
-    }
+    let baseActor = MASTER_PILLAR_ACTORS.yayasan;
+
     const raw = localStorage.getItem(SESSION_ACTOR_STORAGE_KEY);
-    if (!raw) {
-      return MASTER_PILLAR_ACTORS.yayasan;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.role_key && MASTER_PILLAR_ACTORS[parsed.role_key]) {
+        baseActor = MASTER_PILLAR_ACTORS[parsed.role_key];
+      }
     }
-    const parsed = JSON.parse(raw);
-    return parsed.role_key && MASTER_PILLAR_ACTORS[parsed.role_key]
-      ? MASTER_PILLAR_ACTORS[parsed.role_key]
-      : MASTER_PILLAR_ACTORS.yayasan;
+
+    if (mode === 'tenant') {
+      const tenant = getActiveTenant();
+      if (tenant && tenant.name && tenant.name.trim() !== '') {
+        return {
+          ...baseActor,
+          tenant_id: tenant.id,
+          tenant_name: tenant.name,
+          name: baseActor.role_key === 'yayasan' && tenant.leader_name ? tenant.leader_name : baseActor.name,
+        };
+      }
+    }
+
+    return baseActor;
   } catch {
     return MASTER_PILLAR_ACTORS.yayasan;
   }
@@ -395,42 +400,19 @@ export function getActiveTenant(): TenantInfo {
     return getAppMode() === 'tenant' ? NURUL_HUDA_TENANT : DEFAULT_TENANT;
   }
   try {
-    const mode = getAppMode();
-    if (mode === 'tenant') {
-      const raw = localStorage.getItem(TENANT_STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed.id === 'tenant-rabu-001') {
-          if (parsed.name && parsed.name.toLowerCase().includes('nurul huda')) {
-            parsed.name = '';
-            parsed.city = '';
-            localStorage.setItem(TENANT_STORAGE_KEY, JSON.stringify(parsed));
-          }
-          return parsed;
-        }
+    const raw = localStorage.getItem(TENANT_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.name && parsed.name.trim() !== '') {
+        return parsed;
       }
-      return NURUL_HUDA_TENANT;
     }
 
-    const activeTid = localStorage.getItem('ks_active_tenant_id');
-    if (activeTid === 'tenant-rabu-001') {
-      const raw = localStorage.getItem(TENANT_STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed.id === 'tenant-rabu-001') {
-          if (parsed.name && parsed.name.toLowerCase().includes('nurul huda')) {
-            parsed.name = '';
-            parsed.city = '';
-            localStorage.setItem(TENANT_STORAGE_KEY, JSON.stringify(parsed));
-          }
-          return parsed;
-        }
-      }
+    const mode = getAppMode();
+    if (mode === 'tenant') {
       return NURUL_HUDA_TENANT;
     }
-    const raw = localStorage.getItem(TENANT_STORAGE_KEY);
-    if (!raw) return DEFAULT_TENANT;
-    return JSON.parse(raw);
+    return DEFAULT_TENANT;
   } catch {
     return DEFAULT_TENANT;
   }
