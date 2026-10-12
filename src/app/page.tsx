@@ -14,9 +14,10 @@ import {
   ShieldCheck, 
   Send,
   Clock,
-  Lock
+  Lock,
+  LayoutDashboard
 } from 'lucide-react';
-import { submitYayasanRegistration, PaketType } from '@/lib/yayasanRegistrationStore';
+import { submitYayasanRegistration, PaketType, clearPendingRegistrationLock } from '@/lib/yayasanRegistrationStore';
 
 export default function WelcomeScreenYayasanPage() {
   const [submitted, setSubmitted] = useState(false);
@@ -24,6 +25,7 @@ export default function WelcomeScreenYayasanPage() {
   const [registeredData, setRegisteredData] = useState<any>(null);
 
   // Form State: Paket HANYA 2 (Gratis dan Enterprise)
+  // Default Paket Gratis: estimasi_santri otomatis terkunci ke '< 50 Santri'
   const [formData, setFormData] = useState<{
     nama_yayasan: string;
     nama_pimpinan: string;
@@ -39,10 +41,33 @@ export default function WelcomeScreenYayasanPage() {
     no_whatsapp: '',
     email: '',
     kota: '',
-    estimasi_santri: '50 - 200 Santri',
+    estimasi_santri: '< 50 Santri',
     paket_pilihan: 'Gratis',
     catatan: '',
   });
+
+  // Handler pergantian paket: Jika Paket Gratis -> Otomatis default '< 50 Santri' dan terkunci
+  const handleSelectPaket = (paket: PaketType) => {
+    if (paket === 'Gratis') {
+      setFormData(prev => ({
+        ...prev,
+        paket_pilihan: 'Gratis',
+        estimasi_santri: '< 50 Santri', // Otomatis reset dan terkunci ke < 50 Santri
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        paket_pilihan: 'Enterprise',
+      }));
+    }
+  };
+
+  const handleBypassPreview = () => {
+    clearPendingRegistrationLock();
+    if (typeof window !== 'undefined') {
+      window.location.href = '/dashboard';
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,12 +123,28 @@ export default function WelcomeScreenYayasanPage() {
             </div>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold text-slate-700 hover:text-emerald-700 bg-white hover:bg-emerald-50 rounded-xl transition border border-slate-200 shadow-2xs"
+            >
+              <LayoutDashboard className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="hidden sm:inline">Lihat Dashboard</span>
+            </Link>
+
+            <Link
+              href="/super-admin"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 rounded-xl transition border border-amber-300 shadow-2xs"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
+              <span>Super Admin</span>
+            </Link>
+
             <Link
               href="/login"
-              className="inline-flex items-center space-x-1.5 px-4 py-2 text-xs font-bold text-slate-700 hover:text-emerald-700 bg-white hover:bg-emerald-50 rounded-xl transition border border-slate-200 shadow-2xs"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition shadow-2xs"
             >
-              <span>Masuk Akun Resmi</span>
+              <span>Login</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -168,8 +209,19 @@ export default function WelcomeScreenYayasanPage() {
                 href="/super-admin"
                 className="w-full inline-flex items-center justify-center space-x-2 py-3 px-5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs rounded-xl shadow-md transition"
               >
+                <ShieldCheck className="w-4 h-4" />
                 <span>Buka Konsol Super Admin (Verifikasi / ACC Lembaga) ➔</span>
               </Link>
+
+              <button
+                type="button"
+                onClick={handleBypassPreview}
+                className="w-full inline-flex items-center justify-center space-x-2 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                <span>Buka Akses Dashboard (Mode Peninjauan / Preview)</span>
+              </button>
+
               <div className="flex flex-col sm:flex-row gap-2">
                 <Link
                   href="/login"
@@ -188,7 +240,7 @@ export default function WelcomeScreenYayasanPage() {
                       no_whatsapp: '',
                       email: '',
                       kota: '',
-                      estimasi_santri: '50 - 200 Santri',
+                      estimasi_santri: '< 50 Santri',
                       paket_pilihan: 'Gratis',
                       catatan: '',
                     });
@@ -327,23 +379,72 @@ export default function WelcomeScreenYayasanPage() {
 
                 {/* Estimasi Santri (Pills) */}
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold text-slate-700">Perkiraan Jumlah Santri Binaan:</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {['< 50 Santri', '50 - 200 Santri', '200 - 500 Santri', '> 500 Santri'].map((item) => (
-                      <button
-                        key={item}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, estimasi_santri: item })}
-                        className={`py-2 px-3 rounded-xl text-xs font-semibold border transition text-center ${
-                          formData.estimasi_santri === item
-                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                        }`}
-                      >
-                        {item}
-                      </button>
-                    ))}
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-slate-700">
+                      Perkiraan Jumlah Santri Binaan:
+                    </label>
+                    {formData.paket_pilihan === 'Gratis' ? (
+                      <span className="inline-flex items-center space-x-1 text-[11px] font-bold text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300">
+                        <Lock className="w-3 h-3 text-amber-700" />
+                        <span>Terkunci: Paket Gratis maks 50 santri</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center space-x-1 text-[11px] font-bold text-purple-800 bg-purple-100 px-2.5 py-0.5 rounded-full border border-purple-300">
+                        <Sparkles className="w-3 h-3 text-purple-700" />
+                        <span>Bebas Pilih Kapasitas</span>
+                      </span>
+                    )}
                   </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {['< 50 Santri', '50 - 200 Santri', '200 - 500 Santri', '> 500 Santri'].map((item) => {
+                      const isFree = formData.paket_pilihan === 'Gratis';
+                      const isDefaultFreeChoice = item === '< 50 Santri';
+                      const isDisabled = isFree && !isDefaultFreeChoice;
+
+                      return (
+                        <button
+                          key={item}
+                          type="button"
+                          disabled={isDisabled}
+                          onClick={() => {
+                            if (!isFree) {
+                              setFormData(prev => ({ ...prev, estimasi_santri: item }));
+                            }
+                          }}
+                          className={`py-2 px-3 rounded-xl text-xs font-semibold border transition text-center relative ${
+                            formData.estimasi_santri === item
+                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs ring-2 ring-emerald-500/20'
+                              : isDisabled
+                              ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-50'
+                              : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 cursor-pointer'
+                          }`}
+                          title={isDisabled ? 'Terkunci. Pilih Paket Enterprise di bawah untuk kapasitas di atas 50 santri.' : undefined}
+                        >
+                          <span className="block">{item}</span>
+                          {isDisabled && (
+                            <span className="block text-[9px] text-slate-400 font-normal">
+                              (Khusus Enterprise)
+                            </span>
+                          )}
+                          {isFree && isDefaultFreeChoice && (
+                            <span className="block text-[9px] text-emerald-100 font-medium">
+                              (Default Terkunci)
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {formData.paket_pilihan === 'Gratis' && (
+                    <p className="text-[11px] text-amber-800 bg-amber-50/70 p-2 rounded-lg border border-amber-200 flex items-center space-x-1.5">
+                      <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      <span>
+                        Kapasitas Paket Gratis otomatis <strong>&lt; 50 Santri</strong> dan tidak bisa dipilih. Untuk santri 50 ke atas, silakan pilih <strong>Paket Enterprise</strong> di bawah.
+                      </span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Pilihan Paket Langganan: HANYA 2 PAKET (GRATIS & ENTERPRISE) */}
@@ -352,7 +453,7 @@ export default function WelcomeScreenYayasanPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Paket 1: GRATIS */}
                     <div
-                      onClick={() => setFormData({ ...formData, paket_pilihan: 'Gratis' })}
+                      onClick={() => handleSelectPaket('Gratis')}
                       className={`cursor-pointer p-5 rounded-2xl border transition relative flex flex-col justify-between ${
                         formData.paket_pilihan === 'Gratis'
                           ? 'border-emerald-500 bg-emerald-50/50 ring-2 ring-emerald-500/20'
@@ -366,7 +467,7 @@ export default function WelcomeScreenYayasanPage() {
                           </span>
                           <span className="text-sm font-black text-emerald-700">Rp 0 / Selamanya</span>
                         </div>
-                        <h4 className="font-extrabold text-sm text-slate-900">Kapasitas 50 Santri</h4>
+                        <h4 className="font-extrabold text-sm text-slate-900">Kapasitas Maksimal 50 Santri</h4>
                         <ul className="text-xs text-slate-600 space-y-1.5 pt-1">
                           <li className="flex items-center space-x-1.5">
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
@@ -383,13 +484,13 @@ export default function WelcomeScreenYayasanPage() {
                         </ul>
                       </div>
                       <div className="mt-4 pt-3 border-t border-slate-200/60 text-[11px] font-bold text-emerald-700">
-                        {formData.paket_pilihan === 'Gratis' ? '✓ Paket Terpilih' : 'Pilih Paket Ini'}
+                        {formData.paket_pilihan === 'Gratis' ? '✓ Paket Terpilih (Kapasitas Terkunci)' : 'Pilih Paket Ini'}
                       </div>
                     </div>
 
                     {/* Paket 2: ENTERPRISE */}
                     <div
-                      onClick={() => setFormData({ ...formData, paket_pilihan: 'Enterprise' })}
+                      onClick={() => handleSelectPaket('Enterprise')}
                       className={`cursor-pointer p-5 rounded-2xl border transition relative flex flex-col justify-between ${
                         formData.paket_pilihan === 'Enterprise'
                           ? 'border-purple-500 bg-purple-50/50 ring-2 ring-purple-500/20'

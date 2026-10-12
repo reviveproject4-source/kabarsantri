@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Shield, KeyRound, User, Lock, ArrowRight, HeartHandshake, Eye, EyeOff, AlertCircle, Building2, Sun, Moon } from 'lucide-react';
 import { setAppMode, setActiveActorByRole } from '@/lib/sessionStore';
 import { useThemeMode } from '@/lib/themeStore';
-import { getYayasanRegistrations } from '@/lib/yayasanRegistrationStore';
+import { getYayasanRegistrations, clearPendingRegistrationLock } from '@/lib/yayasanRegistrationStore';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -196,14 +196,24 @@ export default function LoginPage() {
                 <span className="leading-relaxed">{authError.generalMessage || 'Kredensial tidak sesuai.'}</span>
               </div>
               {authError.generalMessage?.includes('ACC') && (
-                <div className="pt-1.5 border-t border-amber-200 dark:border-amber-800/60 flex items-center justify-between">
-                  <span className="text-[11px] text-amber-700 dark:text-amber-300">Aktivasi akun di Super Admin:</span>
+                <div className="pt-2 border-t border-amber-200 dark:border-amber-800/60 flex flex-col sm:flex-row items-center justify-between gap-2">
                   <Link
                     href="/super-admin"
                     className="font-bold text-amber-900 dark:text-amber-100 underline hover:no-underline text-[11px]"
                   >
-                    Buka Konsol Super Admin ➔
+                    Buka Konsol Super Admin (ACC Lembaga) ➔
                   </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearPendingRegistrationLock();
+                      setAppMode('demo');
+                      router.push('/dashboard');
+                    }}
+                    className="font-bold text-emerald-700 dark:text-emerald-300 underline hover:no-underline text-[11px]"
+                  >
+                    Buka Dashboard (Mode Demo Preview) ➔
+                  </button>
                 </div>
               )}
             </div>

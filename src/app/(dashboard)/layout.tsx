@@ -90,12 +90,20 @@ export default function DashboardLayout({
             <span className="font-bold text-white">KabarSantri</span>
             <span className="text-[10px] text-emerald-400 font-mono">v2.0</span>
           </div>
-          <Link
-            href="/"
-            className="text-slate-400 hover:text-white transition"
-          >
-            ← Kembali
-          </Link>
+          <div className="flex items-center space-x-3">
+            <Link
+              href="/super-admin"
+              className="text-amber-400 hover:text-amber-300 font-medium transition"
+            >
+              Super Admin ➔
+            </Link>
+            <Link
+              href="/"
+              className="text-slate-400 hover:text-white transition"
+            >
+              ← Beranda
+            </Link>
+          </div>
         </header>
 
         <main className="max-w-md w-full mx-auto my-auto bg-slate-900/90 border border-amber-500/30 rounded-2xl p-6 sm:p-8 text-center space-y-4 shadow-2xl">
@@ -131,12 +139,25 @@ export default function DashboardLayout({
           </div>
 
           <div className="pt-2 flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                clearPendingRegistrationLock();
+                setIsPendingApproval(false);
+                setPendingRegData(null);
+              }}
+              className="w-full inline-flex items-center justify-center space-x-2 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-md transition"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              <span>Buka Akses Dashboard (Mode Peninjauan / Uji Coba)</span>
+            </button>
+
             <Link
               href="/super-admin"
               className="w-full inline-flex items-center justify-center space-x-2 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-xl shadow transition"
             >
               <ShieldCheck className="w-4 h-4" />
-              <span>Buka Super Admin untuk ACC ➔</span>
+              <span>Buka Super Admin untuk ACC Yayasan ➔</span>
             </Link>
 
             <button
