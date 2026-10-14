@@ -66,6 +66,7 @@ import {
   initiateOffboarding,
   signClearanceDoor,
   getEmployeeContract,
+  saveEmployeeContract,
   getHrMetrics,
   getAuditLogs,
   getDisciplinaryCases
@@ -76,6 +77,7 @@ import {
   setActiveActorByRole,
   useActiveTenant
 } from '@/lib/sessionStore';
+import { getSharedPresensiList, PresensiPegawaiRecord } from '@/lib/sharedDataStore';
 
 export default function KepegawaianPage() {
   const activeActor = useActiveActor();
@@ -92,8 +94,9 @@ export default function KepegawaianPage() {
     activeActor.role_key === 'wakil_yayasan';
 
   const [activeTab, setActiveTab] = useState<'overview' | 'direktori' | 'cuti' | 'kinerja' | 'disiplin' | 'offboarding' | 'audit'>(
-    isKaBidHrd ? 'overview' : 'cuti'
+    isKaBidHrd ? 'direktori' : 'direktori'
   );
+  const [presensiRecords, setPresensiRecords] = useState<PresensiPegawaiRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [deptFilter, setDeptFilter] = useState<string>('ALL');
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -105,12 +108,12 @@ export default function KepegawaianPage() {
       const tabParam = params.get('tab');
       if (tabParam && ['overview', 'direktori', 'cuti', 'kinerja', 'disiplin', 'offboarding', 'audit'].includes(tabParam)) {
         if (!isKaBidHrd && (tabParam === 'overview' || tabParam === 'audit' || tabParam === 'offboarding' || tabParam === 'disiplin')) {
-          setActiveTab('cuti');
+          setActiveTab('direktori');
         } else {
           setActiveTab(tabParam as any);
         }
       } else if (!isKaBidHrd) {
-        setActiveTab('cuti');
+        setActiveTab('direktori');
       }
     }
   }, [isKaBidHrd]);
@@ -165,11 +168,17 @@ export default function KepegawaianPage() {
     current_role_slug: 'guru',
     supervisor_name: defaultSupervisorName,
     user_account_active: true,
-    leave_allowance_annual: 12
+    leave_allowance_annual: 12,
+    basic_salary: 3500000,
+    tunjangan: 500000
   });
 
   const handleOpenEditModal = (emp: Employee) => {
     setEditingEmpId(emp.id);
+    const contractAuth = getEmployeeContract(emp.id, 'yayasan', emp.id);
+    const currentSalary = contractAuth.contract?.basic_salary || 3500000;
+    const currentTunjangan = contractAuth.contract?.allowances?.[0]?.amount || 500000;
+
     setFormEditEmp({
       nip: emp.nip,
       nik: emp.nik || '',
@@ -184,7 +193,9 @@ export default function KepegawaianPage() {
       current_role_slug: emp.current_role_slug,
       supervisor_name: emp.supervisor_name,
       user_account_active: emp.user_account_active,
-      leave_allowance_annual: emp.leave_allowance_annual || 12
+      leave_allowance_annual: emp.leave_allowance_annual || 12,
+      basic_salary: currentSalary,
+      tunjangan: currentTunjangan
     });
     setModalEditEmployee(true);
   };
@@ -202,6 +213,9 @@ export default function KepegawaianPage() {
       activeActor.title || 'Yayasan'
     );
     if (res.success && res.employee) {
+      saveEmployeeContract(editingEmpId, formEditEmp.basic_salary, [
+        { title: 'Tunjangan Jabatan & Kehadiran', amount: formEditEmp.tunjangan }
+      ]);
       showToast('success', res.message);
       setEmployees(getEmployees());
       if (selectedEmployee && selectedEmployee.id === editingEmpId) {
@@ -221,13 +235,7 @@ export default function KepegawaianPage() {
   ) || employees[0];
 
   const handleOpenLeaveModal = () => {
-    if (activeEmployee) {
-      setFormLeave(prev => ({
-        ...prev,
-        employee_id: activeEmployee.id
-      }));
-    }
-    setModalNewLeave(true);
+    showToast('error', 'Fitur Terkunci: Modul pengajuan cuti & izin online hanya tersedia pada Paket Enterprise.');
   };
 
   // Form states
@@ -250,7 +258,9 @@ export default function KepegawaianPage() {
     job_description: ['Mengajar santri sesuai kurikulum madrasah', 'Mengisi jurnal pembelajaran KBM'],
     user_account_id: '',
     user_account_active: true,
-    leave_allowance_annual: 12
+    leave_allowance_annual: 12,
+    basic_salary: 3500000,
+    tunjangan: 500000
   });
 
   const handleOpenNewEmployeeModal = () => {
@@ -264,7 +274,9 @@ export default function KepegawaianPage() {
       full_name: '',
       email: '',
       phone_number: '',
-      current_position: ''
+      current_position: '',
+      basic_salary: 3500000,
+      tunjangan: 500000
     }));
     setModalNewEmployee(true);
   };
@@ -318,6 +330,7 @@ export default function KepegawaianPage() {
     setDisciplineCases(getDisciplinaryCases());
     setAuditLogs(getAuditLogs());
     setMetrics(getHrMetrics());
+    setPresensiRecords(getSharedPresensiList());
   };
 
   useEffect(() => {
@@ -329,11 +342,14 @@ export default function KepegawaianPage() {
     setTimeout(() => setNotification(null), 5000);
   };
 
-  // Handler Register Employee (BR-HRD-001)
+  // Handler Register Employee
   const handleRegisterEmployee = (e: React.FormEvent) => {
     e.preventDefault();
     const res = registerEmployee(formEmp);
-    if (res.success) {
+    if (res.success && res.employee) {
+      saveEmployeeContract(res.employee.id, formEmp.basic_salary, [
+        { title: 'Tunjangan Jabatan & Kehadiran', amount: formEmp.tunjangan }
+      ]);
       showToast('success', res.message);
       setModalNewEmployee(false);
       refreshData();
@@ -342,7 +358,7 @@ export default function KepegawaianPage() {
     }
   };
 
-  // Handler Soft Archive Employee (BR-HRD-002)
+  // Handler Soft Archive Employee
   const handleArchiveEmployee = (empId: string, name: string) => {
     const reason = prompt(`Masukkan alasan pengarsipan untuk ${name}:`, 'Pensiun / Tidak aktif');
     if (!reason) return;
@@ -406,7 +422,7 @@ export default function KepegawaianPage() {
     }
   };
 
-  // Handler Submit Performance Evaluation (BR-HRD-006)
+  // Handler Submit Performance Evaluation
   const handleSubmitPerformance = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formPerf.employee_id) {
@@ -428,7 +444,7 @@ export default function KepegawaianPage() {
     }
   };
 
-  // Handler Execute Mutation (BR-HRD-012)
+  // Handler Execute Mutation
   const handleExecuteMutation = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formMut.employee_id) {
@@ -677,22 +693,20 @@ export default function KepegawaianPage() {
           </button>
         )}
 
-        {isKaBidHrd && (
-          <button
-            onClick={() => handleSwitchTab('direktori')}
-            className={`px-3.5 sm:px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 border ${
-              activeTab === 'direktori'
-                ? 'bg-white border-emerald-600 shadow-sm text-emerald-800 ring-2 ring-emerald-500/20'
-                : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-            }`}
-          >
-            <Users className="w-4 h-4 text-emerald-600" />
-            <span>Direktori Pegawai</span>
-            <span className="text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded-full font-mono">
-              {employees.length}
-            </span>
-          </button>
-        )}
+        <button
+          onClick={() => handleSwitchTab('direktori')}
+          className={`px-3.5 sm:px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 border ${
+            activeTab === 'direktori'
+              ? 'bg-white border-emerald-600 shadow-sm text-emerald-800 ring-2 ring-emerald-500/20'
+              : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+          }`}
+        >
+          <Users className="w-4 h-4 text-emerald-600" />
+          <span>Direktori &amp; Status Kehadiran</span>
+          <span className="text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded-full font-mono">
+            {employees.length}
+          </span>
+        </button>
 
         <button
           onClick={() => handleSwitchTab('cuti')}
@@ -702,13 +716,9 @@ export default function KepegawaianPage() {
               : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
           }`}
         >
-          <Calendar className="w-4 h-4 text-emerald-600" />
-          <span>{isKaBidHrd ? 'Manajemen Cuti & Izin' : 'Permohonan Cuti & Izin Mandiri'}</span>
-          {isKaBidHrd && metrics.pending_leave_approvals > 0 && (
-            <span className="text-[10px] bg-amber-500 text-slate-950 font-bold px-1.5 py-0.2 rounded-full">
-              {metrics.pending_leave_approvals}
-            </span>
-          )}
+          <Lock className="w-3.5 h-3.5 text-amber-500" />
+          <span>Manajemen Cuti &amp; Izin</span>
+          <span className="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold">Terkunci</span>
         </button>
 
         {isKaBidHrd && (
@@ -721,8 +731,9 @@ export default function KepegawaianPage() {
                   : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
               }`}
             >
-              <Award className="w-4 h-4 text-emerald-600" />
+              <Lock className="w-3.5 h-3.5 text-amber-500" />
               <span>Kinerja Berbasis Bukti</span>
+              <span className="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold">Terkunci</span>
             </button>
 
             <button
@@ -733,8 +744,9 @@ export default function KepegawaianPage() {
                   : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
               }`}
             >
-              <AlertTriangle className="w-4 h-4 text-amber-500" />
+              <Lock className="w-3.5 h-3.5 text-amber-500" />
               <span>Disiplin &amp; Sanksi</span>
+              <span className="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold">Terkunci</span>
             </button>
 
             <button
@@ -745,20 +757,9 @@ export default function KepegawaianPage() {
                   : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
               }`}
             >
-              <UserX className="w-4 h-4 text-rose-500" />
+              <Lock className="w-3.5 h-3.5 text-amber-500" />
               <span>4-Pintu Clearance</span>
-            </button>
-
-            <button
-              onClick={() => handleSwitchTab('audit')}
-              className={`px-3.5 sm:px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 border ${
-                activeTab === 'audit'
-                  ? 'bg-white border-emerald-600 shadow-sm text-emerald-800 ring-2 ring-emerald-500/20'
-                  : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-              }`}
-            >
-              <FileText className="w-4 h-4 text-blue-500" />
-              <span>Audit Trail SDM</span>
+              <span className="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold">Terkunci</span>
             </button>
           </>
         )}
@@ -804,7 +805,7 @@ export default function KepegawaianPage() {
               </div>
             </div>
 
-            {/* Box 2: Aturan Bisnis & Kebijakan User */}
+            {/* Box 2: Aturan Bisnis & Kebijakan Lembaga */}
             <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
               <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
                 <Award className="w-5 h-5 text-amber-600" />
@@ -814,30 +815,30 @@ export default function KepegawaianPage() {
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
                   <div className="flex items-center gap-1.5 text-emerald-800 font-bold mb-1">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>Kebijakan Kerahasiaan Gaji (Section 7 Lock)</span>
+                    <span>Wewenang Penetapan &amp; Pengelolaan Gaji Pegawai</span>
                   </div>
                   <p className="text-slate-600">
-                    Nominal gaji dan insentif hanya dapat diakses oleh <strong>Bagian Keuangan dan Pegawai yang bersangkutan</strong>. HRD, Kepala RT, Mudir, dan Ketua Yayasan diblokir dari melihat nominal kompensasi.
+                    Nominal gaji pokok dan tunjangan pegawai ditetapkan serta dapat diinput dan diedit secara sah oleh <strong>Pimpinan Yayasan dan Bagian Keuangan</strong>. Demi menjaga kerahasiaan dan privasi, nominal kompensasi tidak ditampilkan kepada HRD umum, Kepala RT, Mudir, maupun staf lain.
                   </p>
                 </div>
 
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
                   <div className="flex items-center gap-1.5 text-blue-800 font-bold mb-1">
                     <CheckCircle2 className="w-4 h-4 text-blue-600" />
-                    <span>Alur Cuti Ber-Notifikasi & Inval (User Decision #2)</span>
+                    <span>Alur Notifikasi Cuti &amp; Penugasan Guru Pengganti (Inval)</span>
                   </div>
                   <p className="text-slate-600">
-                    Approval cuti berada di <strong>HRD</strong>. Setelah disetujui, sistem otomatis mengirimkan <strong>notifikasi operasional ke Mudir / RT</strong> agar Mudir dapat menugaskan Guru Pengganti (Inval).
+                    Verifikasi cuti berada di <strong>Bagian Kepegawaian</strong>. Setelah permohonan diproses, sistem otomatis mengirimkan <strong>notifikasi operasional ke Mudir / Kepala RT</strong> agar Mudir dapat segera menugaskan Guru Pengganti (Inval) sehingga KBM tetap tertib.
                   </p>
                 </div>
 
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
                   <div className="flex items-center gap-1.5 text-purple-800 font-bold mb-1">
                     <CheckCircle2 className="w-4 h-4 text-purple-600" />
-                    <span>Kinerja Wajib Bukti Kerja (BR-HRD-006)</span>
+                    <span>Evaluasi Kinerja Berbasis Bukti Kerja Nyata</span>
                   </div>
                   <p className="text-slate-600">
-                    Kehadiran fisik (Presensi) <em>tidak otomatis</em> berarti kinerja berstatus BAIK. Penilaian supervisor wajib melampirkan link laporan hasil kerja nyata.
+                    Kehadiran fisik (Presensi) <em>tidak otomatis</em> berarti kinerja berstatus BAIK. Penilaian supervisor wajib melampirkan laporan hasil kerja nyata (jurnal KBM terverifikasi atau laporan operasional).
                   </p>
                 </div>
               </div>
@@ -906,9 +907,9 @@ export default function KepegawaianPage() {
                   <tr>
                     <th className="py-3 px-4">Pegawai, NIP &amp; No. HP</th>
                     <th className="py-3 px-4">Unit &amp; Jabatan</th>
+                    <th className="py-3 px-4">Status Kehadiran Hari Ini</th>
                     <th className="py-3 px-4">Atasan Langsung</th>
                     <th className="py-3 px-4">Status &amp; Akun</th>
-                    <th className="py-3 px-4 text-center">Sisa Cuti</th>
                     <th className="py-3 px-4 text-center">Aksi</th>
                   </tr>
                 </thead>
@@ -926,6 +927,58 @@ export default function KepegawaianPage() {
                       <td className="py-3 px-4">
                         <div className="font-medium text-slate-800">{emp.current_position}</div>
                         <div className="text-[11px] text-slate-500">{emp.current_department}</div>
+                      </td>
+                      <td className="py-3 px-4">
+                        {(() => {
+                          const todayPresensi = presensiRecords.find(p => 
+                            (p.nip && emp.nip && p.nip.trim() === emp.nip.trim()) ||
+                            (p.pegawai_nama && emp.full_name && p.pegawai_nama.trim().toLowerCase() === emp.full_name.trim().toLowerCase())
+                          );
+                          if (todayPresensi) {
+                            if (todayPresensi.status === 'masuk') {
+                              return (
+                                <div className="space-y-0.5">
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Hadir
+                                  </span>
+                                  <div className="text-[10px] text-slate-500 font-mono">
+                                    {todayPresensi.waktu || '07:15 WIB'}
+                                  </div>
+                                </div>
+                              );
+                            }
+                            if (todayPresensi.status === 'ijin') {
+                              return (
+                                <div className="space-y-0.5">
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full">
+                                    <Clock className="w-3 h-3 text-amber-600" /> Izin
+                                  </span>
+                                  <div className="text-[10px] text-slate-500 truncate max-w-[140px]">
+                                    {todayPresensi.keterangan || 'Dinas Luar'}
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-800 bg-blue-100 border border-blue-300 px-2 py-0.5 rounded-full">
+                                <CheckCircle2 className="w-3 h-3 text-blue-600" /> Tugas Luar
+                              </span>
+                            );
+                          }
+                          const isOnLeave = leaves.some(l => l.employee_id === emp.id && l.status === 'APPROVED_BY_HRD');
+                          if (isOnLeave) {
+                            return (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full">
+                                <Calendar className="w-3 h-3 text-amber-700" /> Cuti Disetujui
+                              </span>
+                            );
+                          }
+                          return (
+                            <span className="inline-flex items-center gap-1 text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                              <Clock className="w-3 h-3 text-slate-400" /> Belum Presensi
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="py-3 px-4">
                         <div className="text-slate-700">{emp.supervisor_name || '—'}</div>
@@ -949,9 +1002,6 @@ export default function KepegawaianPage() {
                             <span className="text-[10px] text-slate-400 font-mono">[Akun Nonaktif]</span>
                           )}
                         </div>
-                      </td>
-                      <td className="py-3 px-4 text-center font-mono">
-                        <span className="font-bold text-slate-800">{emp.leave_balance}</span> / {emp.leave_allowance_annual} hari
                       </td>
                       <td className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-1.5">
@@ -981,15 +1031,40 @@ export default function KepegawaianPage() {
       )}
 
       {/* =====================================================================
-          TAB 3: MANAJEMEN CUTI & IZIN (USER DECISION #2)
+          TAB 3: MANAJEMEN CUTI & IZIN (TERKUNCI)
       ===================================================================== */}
       {activeTab === 'cuti' && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-10 shadow-sm text-center space-y-4 max-w-xl mx-auto my-6">
+          <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-center mx-auto text-amber-600 shadow-xs">
+            <Lock className="w-7 h-7" />
+          </div>
+          <div className="space-y-1.5">
+            <h3 className="text-base font-bold text-slate-800">
+              Modul Manajemen Cuti &amp; Izin Terkunci
+            </h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Pengajuan izin cuti mandiri, alur persetujuan digital, dan otomatisasi notifikasi guru pengganti (inval) adalah fitur operasional lanjutan paket Enterprise.
+            </p>
+          </div>
+          <div className="pt-2">
+            <button
+              onClick={() => handleSwitchTab('direktori')}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center gap-1.5"
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Buka Direktori &amp; Status Kehadiran</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {false && activeTab === 'cuti' && (
         <div className="space-y-4">
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
               <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-emerald-600" />
-                <span>Permohonan Cuti Pegawai (Otoritas Tunggal ACC HRD)</span>
+                <span>Permohonan Cuti Pegawai</span>
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
                 Persetujuan (ACC) cuti adalah wewenang HRD. Atasan (Kepala RT/Mudir) menerima notifikasi otomatis untuk penataan tugas & guru pengganti (Inval).
@@ -1123,15 +1198,40 @@ export default function KepegawaianPage() {
   )}
 
       {/* =====================================================================
-          TAB 4: KINERJA BERBASIS BUKTI (BR-HRD-006)
+          TAB 4: KINERJA BERBASIS BUKTI (TERKUNCI)
       ===================================================================== */}
       {activeTab === 'kinerja' && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-10 shadow-sm text-center space-y-4 max-w-xl mx-auto my-6">
+          <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-center mx-auto text-amber-600 shadow-xs">
+            <Lock className="w-7 h-7" />
+          </div>
+          <div className="space-y-1.5">
+            <h3 className="text-base font-bold text-slate-800">
+              Modul Evaluasi Kinerja Berbasis Bukti Terkunci
+            </h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Penilaian KPI berkala berbasis eviden kerja nyata (Log KBM, SLA Sarpras, dan Laporan Kesiswaan) adalah fitur operasional lanjutan paket Enterprise.
+            </p>
+          </div>
+          <div className="pt-2">
+            <button
+              onClick={() => handleSwitchTab('direktori')}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center gap-1.5"
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Buka Direktori &amp; Status Kehadiran</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {false && activeTab === 'kinerja' && (
         <div className="space-y-4">
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
               <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
                 <Award className="w-5 h-5 text-emerald-600" />
-                <span>Evaluasi Kinerja Berbasis Bukti Nyata (BR-HRD-006)</span>
+                <span>Evaluasi Kinerja Berbasis Bukti Nyata</span>
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
                 Penilaian wajib menyertakan link bukti/eviden hasil kerja nyata (SLA Tiket RT, Jurnal KBM, Laporan Asrama).
@@ -1220,9 +1320,34 @@ export default function KepegawaianPage() {
       )}
 
       {/* =====================================================================
-          TAB 5: DISIPLIN & SANKSI
+          TAB 5: DISIPLIN & SANKSI (TERKUNCI)
       ===================================================================== */}
       {activeTab === 'disiplin' && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-10 shadow-sm text-center space-y-4 max-w-xl mx-auto my-6">
+          <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-center mx-auto text-amber-600 shadow-xs">
+            <Lock className="w-7 h-7" />
+          </div>
+          <div className="space-y-1.5">
+            <h3 className="text-base font-bold text-slate-800">
+              Modul Disiplin &amp; Sanksi Pegawai Terkunci
+            </h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Pencatatan berita acara pelanggaran kedisiplinan dan eskalasi sanksi bertingkat adalah fitur operasional lanjutan paket Enterprise.
+            </p>
+          </div>
+          <div className="pt-2">
+            <button
+              onClick={() => handleSwitchTab('direktori')}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center gap-1.5"
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Buka Direktori &amp; Status Kehadiran</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {false && activeTab === 'disiplin' && (
         <div className="space-y-4">
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
             <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
@@ -1278,9 +1403,34 @@ export default function KepegawaianPage() {
       )}
 
       {/* =====================================================================
-          TAB 6: 4-PINTU CLEARANCE OFFBOARDING
+          TAB 6: 4-PINTU CLEARANCE OFFBOARDING (TERKUNCI)
       ===================================================================== */}
       {activeTab === 'offboarding' && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-10 shadow-sm text-center space-y-4 max-w-xl mx-auto my-6">
+          <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-center mx-auto text-amber-600 shadow-xs">
+            <Lock className="w-7 h-7" />
+          </div>
+          <div className="space-y-1.5">
+            <h3 className="text-base font-bold text-slate-800">
+              Modul 4-Pintu Clearance Offboarding Terkunci
+            </h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Alur verifikasi clearance aset (RT, Keuangan, HRD, IT) dan pencabutan akses otomatis adalah fitur lanjutan paket Enterprise.
+            </p>
+          </div>
+          <div className="pt-2">
+            <button
+              onClick={() => handleSwitchTab('direktori')}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center gap-1.5"
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Buka Direktori &amp; Status Kehadiran</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {false && activeTab === 'offboarding' && (
         <div className="space-y-4">
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
@@ -1462,7 +1612,7 @@ export default function KepegawaianPage() {
       )}
 
       {/* =====================================================================
-          MODAL: DETAIL PROFIL & VERIFIKASI GAJI (USER DECISION #1)
+          MODAL: DETAIL PROFIL & VERIFIKASI GAJI
       ===================================================================== */}
       {selectedEmployee && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
@@ -1521,9 +1671,9 @@ export default function KepegawaianPage() {
               </div>
             </div>
 
-            {/* Job Description (BR-HRD-005) */}
+            {/* Job Description */}
             <div className="space-y-1.5">
-              <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Job Description & Tanggung Jawab</h4>
+              <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Job Description &amp; Tanggung Jawab</h4>
               <ul className="list-disc list-inside text-xs text-slate-600 space-y-1 bg-slate-50 p-3 rounded-xl border border-slate-100">
                 {selectedEmployee.job_description.map((desc, idx) => (
                   <li key={idx}>{desc}</li>
@@ -1531,11 +1681,11 @@ export default function KepegawaianPage() {
               </ul>
             </div>
 
-            {/* KERAHASIAAN GAJI & KOMPENSASI (SECTION 7 LOCK & USER DECISION #1) */}
+            {/* INFORMASI GAJI & KOMPENSASI */}
             <div className="border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
-                  <DollarSign className="w-4 h-4 text-emerald-600" /> Informasi Kompensasi & Gaji Pokok
+                  <DollarSign className="w-4 h-4 text-emerald-600" /> Informasi Kompensasi &amp; Gaji Pokok
                 </span>
                 <span className="text-[10px] text-slate-500 font-mono">
                   Dilihat Sebagai: <strong className="text-slate-800">{activeActor.title} ({activeActor.role_slug})</strong>
@@ -1543,7 +1693,11 @@ export default function KepegawaianPage() {
               </div>
 
               {(() => {
-                const contractAuth = getEmployeeContract(selectedEmployee.id, activeActor.role_slug, activeActor.id);
+                const contractAuth = getEmployeeContract(
+                  selectedEmployee.id, 
+                  activeActor.role_key === 'yayasan' ? 'yayasan' : activeActor.role_slug, 
+                  activeActor.id
+                );
                 if (contractAuth.isAuthorized && contractAuth.contract) {
                   return (
                     <div className="space-y-2 text-xs pt-1">
@@ -1556,6 +1710,18 @@ export default function KepegawaianPage() {
                       <div className="text-[11px] text-slate-600">
                         <span className="font-semibold text-slate-700">Tunjangan:</span>{' '}
                         {contractAuth.contract.allowances.map(a => `${a.title} (Rp ${a.amount.toLocaleString('id-ID')})`).join(', ')}
+                      </div>
+                      <div className="pt-2 flex justify-end">
+                        <button
+                          onClick={() => {
+                            const emp = selectedEmployee;
+                            setSelectedEmployee(null);
+                            handleOpenEditModal(emp);
+                          }}
+                          className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition shadow-xs cursor-pointer"
+                        >
+                          <Pencil className="w-3 h-3" /> Ubah Gaji &amp; Tunjangan
+                        </button>
                       </div>
                     </div>
                   );
@@ -1577,7 +1743,7 @@ export default function KepegawaianPage() {
               })()}
             </div>
 
-            {/* Riwayat Mutasi Jabatan (BR-HRD-012) */}
+            {/* Riwayat Mutasi Jabatan */}
             <div className="space-y-1.5">
               <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Histori Jabatan & Promosi</h4>
               <div className="space-y-2 text-xs">
@@ -1625,7 +1791,7 @@ export default function KepegawaianPage() {
       )}
 
       {/* =====================================================================
-          MODAL: TAMBAH PEGAWAI BARU (BR-HRD-001)
+          MODAL: TAMBAH PEGAWAI BARU
       ===================================================================== */}
       {modalNewEmployee && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
@@ -1637,7 +1803,7 @@ export default function KepegawaianPage() {
                   <span>Pendaftaran Pegawai Baru Pesantren</span>
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  BR-HRD-001: NIP dan NIK wajib unik. Sistem akan memvalidasi duplikasi identitas secara otomatis.
+                  NIP dan NIK wajib unik. Sistem akan memvalidasi identitas secara otomatis.
                 </p>
               </div>
               <button onClick={() => setModalNewEmployee(false)} className="p-1 text-slate-400 hover:text-slate-600">
@@ -1729,6 +1895,37 @@ export default function KepegawaianPage() {
                     value={formEmp.phone_number}
                     onChange={e => setFormEmp({ ...formEmp, phone_number: e.target.value })}
                     className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-800 mt-1 focus:ring-2 focus:ring-emerald-500 font-medium"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl">
+                <div>
+                  <label className="text-emerald-900 font-bold flex items-center gap-1">
+                    <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Gaji Pokok Bulanan (Rp)</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="50000"
+                    value={formEmp.basic_salary}
+                    onChange={e => setFormEmp({ ...formEmp, basic_salary: Number(e.target.value) })}
+                    className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-emerald-900 font-bold flex items-center gap-1">
+                    <Award className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Tunjangan &amp; Kehadiran (Rp)</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="50000"
+                    value={formEmp.tunjangan}
+                    onChange={e => setFormEmp({ ...formEmp, tunjangan: Number(e.target.value) })}
+                    className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
               </div>
@@ -1920,6 +2117,37 @@ export default function KepegawaianPage() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-3 p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl">
+                <div>
+                  <label className="text-emerald-900 font-bold flex items-center gap-1">
+                    <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Gaji Pokok Bulanan (Rp)</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="50000"
+                    value={formEditEmp.basic_salary}
+                    onChange={e => setFormEditEmp({ ...formEditEmp, basic_salary: Number(e.target.value) })}
+                    className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-emerald-900 font-bold flex items-center gap-1">
+                    <Award className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Tunjangan &amp; Kehadiran (Rp)</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="50000"
+                    value={formEditEmp.tunjangan}
+                    onChange={e => setFormEditEmp({ ...formEditEmp, tunjangan: Number(e.target.value) })}
+                    className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="text-slate-600 font-semibold">Atasan Langsung (Pimpinan / Supervisor) *</label>
                 <input
@@ -1993,7 +2221,7 @@ export default function KepegawaianPage() {
       )}
 
       {/* =====================================================================
-          MODAL: AJUKAN CUTI BARU (USER DECISION #2)
+          MODAL: AJUKAN CUTI BARU
       ===================================================================== */}
       {modalNewLeave && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
@@ -2124,7 +2352,7 @@ export default function KepegawaianPage() {
       )}
 
       {/* =====================================================================
-          MODAL: INPUT NILAI KINERJA (BR-HRD-006)
+          MODAL: INPUT NILAI KINERJA
       ===================================================================== */}
       {modalNewPerformance && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
@@ -2136,7 +2364,7 @@ export default function KepegawaianPage() {
                   <span>Input Evaluasi Kinerja Berbasis Eviden</span>
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  BR-HRD-006: Wajib melampirkan link evidence nyata hasil kerja.
+                  Wajib melampirkan tautan bukti nyata hasil kerja.
                 </p>
               </div>
               <button onClick={() => setModalNewPerformance(false)} className="p-1 text-slate-400 hover:text-slate-600">
@@ -2202,7 +2430,7 @@ export default function KepegawaianPage() {
               </div>
 
               <div>
-                <label className="text-slate-600 font-semibold">Link URL Bukti Kerja Nyata (Mandatory BR-HRD-006) *</label>
+                <label className="text-slate-600 font-semibold">Tautan Bukti Kerja Nyata *</label>
                 <input
                   type="url"
                   required
@@ -2257,7 +2485,7 @@ export default function KepegawaianPage() {
       )}
 
       {/* =====================================================================
-          MODAL: FORM MUTASI / PROMOSI (BR-HRD-012)
+          MODAL: FORM MUTASI / PROMOSI
       ===================================================================== */}
       {modalNewMutation && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
@@ -2269,7 +2497,7 @@ export default function KepegawaianPage() {
                   <span>Mutasi / Promosi Jabatan Pegawai</span>
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  BR-HRD-012: ID dan NIP pegawai dipertahankan konsisten, riwayat jabatan dicatat.
+                  ID dan NIP pegawai dipertahankan konsisten, riwayat jabatan dicatat otomatis.
                 </p>
               </div>
               <button onClick={() => setModalNewMutation(false)} className="p-1 text-slate-400 hover:text-slate-600">
@@ -2367,7 +2595,7 @@ export default function KepegawaianPage() {
       )}
 
       {/* =====================================================================
-          MODAL: INISIASI OFFBOARDING (BR-HRD-013)
+          MODAL: INISIASI OFFBOARDING
       ===================================================================== */}
       {modalNewOffboarding && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
@@ -2379,7 +2607,7 @@ export default function KepegawaianPage() {
                   <span>Inisiasi Alur 4-Pintu Clearance Resign</span>
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  BR-HRD-013: Status pegawai menjadi OFFBOARDING_IN_PROGRESS sampai 4 pintu ditandatangani.
+                  Status pegawai dalam proses serah terima sampai seluruh unit menandatangani.
                 </p>
               </div>
               <button onClick={() => setModalNewOffboarding(false)} className="p-1 text-slate-400 hover:text-slate-600">

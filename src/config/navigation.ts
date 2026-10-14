@@ -223,18 +223,30 @@ export function getFilteredNavigation(
           return false;
         }
       }
+
+      // Khusus Peran Yayasan: Hapus Portal Orang Tua & Absen Diri (Kehadiran terpusat di HRD)
+      if (activeRole === 'yayasan' || activeRole === 'pimpinan_yayasan') {
+        if (item.href === '/portal-wali' || item.href === '/presensi') {
+          return false;
+        }
+      }
+
       // 1. Feature flag check
       if (item.featureFlag && !isFeatureActive(item.featureFlag, customFlags)) {
         return false;
       }
+
       // 2. Product entitlement check
-      if (tenantId && item.productCode && !hasProduct(tenantId, item.productCode)) {
+      // Standar Pesantren: Hafalan (Tahfidz), HRD (Data Pegawai), dan Adab (Disiplin) selalu aktif
+      const baselineProducts = ['hafalan', 'hrd', 'adab'];
+      if (tenantId && item.productCode && !baselineProducts.includes(item.productCode) && !hasProduct(tenantId, item.productCode)) {
         return false;
       }
       return true;
     })
     .map(item => {
       if (!item.children) return item;
+      const baselineProducts = ['hafalan', 'hrd', 'adab'];
       const filteredChildren = item.children.filter(child => {
         // Child super admin check
         if (child.superAdminOnly && (isTenantActive || tenantId || (activeRole && activeRole !== 'super_admin'))) {
@@ -245,7 +257,7 @@ export function getFilteredNavigation(
           return false;
         }
         // Child product entitlement
-        if (tenantId && child.productCode && !hasProduct(tenantId, child.productCode)) {
+        if (tenantId && child.productCode && !baselineProducts.includes(child.productCode) && !hasProduct(tenantId, child.productCode)) {
           return false;
         }
         return true;

@@ -79,8 +79,11 @@ export default function DashboardLayout({
     badge?: string;
   }
 
+  const isYayasan = activeActor.role_key === 'yayasan' || activeActor.role_key === 'pimpinan_yayasan';
+
   // Primary Quick Mobile Bottom Tabs
   // Untuk Pegawai: Dashboard, Tahfidz (Prioritas), KBM Guru, Absen Diri, Pengaturan (Ganti Password & Mode)
+  // Untuk Yayasan: Dashboard Yayasan, Tahfidz, Keuangan / SPP, HRD / Kehadiran Pegawai, Pengaturan
   const mobileBottomTabs: MobileTabItem[] = isPegawai ? [
     { 
       href: '/dashboard', 
@@ -112,6 +115,37 @@ export default function DashboardLayout({
       icon: Settings,
       isActive: Boolean(pathname?.startsWith('/pengaturan'))
     },
+  ] : isYayasan ? [
+    { 
+      href: '/dashboard/yayasan', 
+      label: 'Dashboard', 
+      icon: LayoutDashboard,
+      isActive: Boolean(pathname?.startsWith('/dashboard/yayasan'))
+    },
+    { 
+      href: '/akademik/tahfidz', 
+      label: 'Tahfidz', 
+      icon: Award,
+      isActive: Boolean(pathname?.startsWith('/akademik/tahfidz'))
+    },
+    { 
+      href: '/finance', 
+      label: 'Keuangan', 
+      icon: Wallet,
+      isActive: Boolean(pathname?.startsWith('/finance'))
+    },
+    { 
+      href: '/kepegawaian', 
+      label: 'Kehadiran HRD', 
+      icon: Users,
+      isActive: Boolean(pathname?.startsWith('/kepegawaian'))
+    },
+    { 
+      href: '/pengaturan', 
+      label: 'Pengaturan', 
+      icon: Settings,
+      isActive: Boolean(pathname?.startsWith('/pengaturan'))
+    },
   ] : [
     { 
       href: dashboardHref, 
@@ -126,16 +160,16 @@ export default function DashboardLayout({
       isActive: Boolean(pathname?.startsWith('/akademik/tahfidz'))
     },
     { 
-      href: '/presensi/diri', 
-      label: 'Absen Diri', 
-      icon: UserCheck,
-      isActive: Boolean(pathname?.startsWith('/presensi')),
-    },
-    { 
       href: '/kepegawaian', 
-      label: 'HRD / Cuti', 
+      label: 'Kepegawaian', 
       icon: Users,
       isActive: Boolean(pathname?.startsWith('/kepegawaian'))
+    },
+    { 
+      href: '/pengaturan', 
+      label: 'Pengaturan', 
+      icon: Settings,
+      isActive: Boolean(pathname?.startsWith('/pengaturan'))
     },
   ];
 
@@ -164,8 +198,8 @@ export default function DashboardLayout({
       desc: 'Pusat Kepegawaian, Cuti & Presensi',
       featureKey: 'kepegawaian',
       items: [
-        { href: '/kepegawaian', label: 'Pusat Kepegawaian & Cuti', icon: Users },
-        { href: '/presensi/diri', label: 'Presensi Diri Pegawai', icon: MapPin },
+        { href: '/kepegawaian', label: 'Direktori & Status Kehadiran Pegawai', icon: Users },
+        ...(!isYayasan ? [{ href: '/presensi/diri', label: 'Presensi Diri Pegawai', icon: MapPin }] : []),
         { href: '/presensi/santri', label: 'Presensi Santri Berjamaah & Kelas', icon: CheckCircle2 },
       ]
     },
@@ -217,8 +251,14 @@ export default function DashboardLayout({
     }
   ];
 
-  // Filter pillar sesuai lisensi yang diberikan oleh Super Admin
-  const allPillars = rawPillars.filter(p => tenantPackageInfo.isFeatureUnlocked(p.featureKey));
+  // Filter pillar sesuai lisensi yang diberikan oleh Super Admin dan peran Yayasan
+  const allPillars = rawPillars
+    .filter(p => tenantPackageInfo.isFeatureUnlocked(p.featureKey))
+    .filter(p => {
+      // Hapus Portal Orang Tua dari Dashboard Yayasan
+      if (isYayasan && p.title === 'Portal Orang Tua') return false;
+      return true;
+    });
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 overflow-hidden w-full max-w-full">

@@ -600,19 +600,30 @@ export function getActiveTenantPackageAndFeatures(tenantId?: string): {
     if (isEnterprise) return true;
     const key = (featureKey || '').toLowerCase();
     
-    // Fitur inti selalu terbuka untuk institusi
-    if (['dashboard', 'yayasan', 'pengaturan', 'laporan', 'ringkasan'].includes(key)) return true;
-    
-    // Mapping alias fitur
+    // 1. Fitur Standar Dasar Pesantren (Wajib selalu TERBUKA untuk semua yayasan & tenant)
+    // Mencakup: Data Santri, Data Pegawai & Kehadiran, Kedisiplinan & Adab/Akhlak, Tahfidz, Dashboard & Pengaturan
+    const standardBaselineFeatures = [
+      'dashboard', 'yayasan', 'pengaturan', 'laporan', 'ringkasan', 'overview',
+      'santri', 'kesiswaan', 'siswa',
+      'hrd', 'kepegawaian', 'pegawai',
+      'adab', 'disiplin', 'akhlak', 'reward', 'pelanggaran',
+      'hafalan', 'tahfidz'
+    ];
+    if (standardBaselineFeatures.includes(key)) return true;
+
+    // 2. Fitur Tambahan yang Diaktifkan / di-ACC Super Admin
     if (features.includes(key)) return true;
-    if (['finance', 'spp', 'keuangan', 'uang-jajan'].includes(key) && features.includes('spp')) return true;
-    if (['hafalan', 'tahfidz'].includes(key) && features.includes('tahfidz')) return true;
-    if (['wali', 'portal-wali'].includes(key) && features.includes('wali')) return true;
-    if (['hrd', 'kepegawaian'].includes(key) && features.includes('kepegawaian')) return true;
+
+    // 3. Modul Keuangan & SPP (Terbuka penuh jika Super Admin mengaktifkan 'spp' atau 'keuangan')
+    if (['finance', 'spp', 'keuangan', 'uang-jajan'].includes(key)) {
+      return features.includes('spp') || features.includes('keuangan') || features.includes('finance');
+    }
+
+    // 4. Modul Tambahan Lainnya (KBM, Sarpras, Presensi Standalone, Akuntansi)
     if (['kbm', 'rapot', 'nilai'].includes(key) && features.includes('kbm')) return true;
+    if (['wali', 'portal-wali'].includes(key) && features.includes('wali')) return true;
     if (['presensi', 'absen'].includes(key) && features.includes('presensi')) return true;
     if (['rumah_tangga', 'sarpras'].includes(key) && features.includes('rumah_tangga')) return true;
-    if (['adab', 'disiplin', 'izin'].includes(key) && features.includes('adab')) return true;
     if (['akuntansi'].includes(key) && features.includes('akuntansi')) return true;
     
     return false;

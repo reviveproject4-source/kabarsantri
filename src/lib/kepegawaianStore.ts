@@ -1019,7 +1019,7 @@ export function registerEmployee(
   if (duplicate) {
     return {
       success: false,
-      message: `Gagal! NIP (${employeeData.nip}) atau NIK sudah terdaftar atas nama ${duplicate.full_name}. (BR-HRD-001: Uniqueness Required)`
+      message: `Gagal! NIP (${employeeData.nip}) atau NIK sudah terdaftar atas nama ${duplicate.full_name}. Identitas pegawai harus unik.`
     };
   }
 
@@ -1368,11 +1368,11 @@ export function submitPerformanceEvaluation(data: {
   const emp = state.employees.find(e => e.id === data.employee_id);
   if (!emp) return { success: false, message: 'Data pegawai tidak ditemukan.' };
 
-  // BR-HRD-006: Enforce Mandatory Evidence
+  // Mandatory Evidence Requirement
   if (!data.mandatory_evidence_url || data.mandatory_evidence_url.trim().length < 5) {
     return {
       success: false,
-      message: 'Penilaian ditolak! Wajib melampirkan link evidence kerja (Log KBM / SLA Tiket RT / Laporan). (BR-HRD-006: Evidence Mandatory)'
+      message: 'Penilaian ditolak! Wajib melampirkan link bukti hasil kerja nyata (Log KBM / SLA Tiket RT / Laporan Kegiatan).'
     };
   }
 
@@ -1660,11 +1660,45 @@ export function getEmployeeContract(
     };
   }
 
-  // Not authorized: HRD, Mudir, Kepala RT, Staff umum
+  // Not authorized: Staff operasional umum
   return {
     isAuthorized: false,
     maskedSalary: 'Rp •••••••• (Akses Terbatas: Hanya Yayasan, Keuangan & Pegawai ybs)'
   };
+}
+
+/**
+ * Menyimpan atau memperbarui data kontrak & gaji pegawai (Wewenang Yayasan & Keuangan)
+ */
+export function saveEmployeeContract(
+  employeeId: string,
+  basicSalary: number,
+  allowances: { title: string; amount: number }[] = []
+): boolean {
+  const state = loadState();
+  const existingIdx = state.contracts.findIndex(c => c.employee_id === employeeId);
+  const contractData: EmploymentContract = {
+    id: existingIdx >= 0 ? state.contracts[existingIdx].id : `ctr-${employeeId}`,
+    employee_id: employeeId,
+    contract_number: existingIdx >= 0 ? state.contracts[existingIdx].contract_number : `CTR/2026/${employeeId.slice(0, 4).toUpperCase()}`,
+    type: existingIdx >= 0 ? state.contracts[existingIdx].type : 'TETAP',
+    start_date: existingIdx >= 0 ? state.contracts[existingIdx].start_date : new Date().toISOString().split('T')[0],
+    end_date: null,
+    basic_salary: basicSalary,
+    allowances: allowances.length > 0 ? allowances : [
+      { title: 'Tunjangan Jabatan & Kehadiran', amount: 500000 }
+    ],
+    is_active: true
+  };
+
+  if (existingIdx >= 0) {
+    state.contracts[existingIdx] = contractData;
+  } else {
+    state.contracts.push(contractData);
+  }
+
+  saveState(state);
+  return true;
 }
 
 // ============================================================================

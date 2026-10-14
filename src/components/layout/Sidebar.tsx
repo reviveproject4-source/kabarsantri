@@ -121,7 +121,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
     isHydrated ? activeRole : 'yayasan',
     isHydrated ? isTenantActive : false
   ).filter(item => {
-    if (isYayasanExecutive && item.href.startsWith('/presensi')) {
+    if ((isYayasanExecutive || activeRole === 'yayasan') && (item.href.startsWith('/presensi') || item.href.startsWith('/portal-wali'))) {
       return false;
     }
     if (isTenantActive && (item.href.startsWith('/super-admin') || item.superAdminOnly)) {

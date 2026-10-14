@@ -107,7 +107,7 @@ export const SIX_GOVERNANCE_PILLARS: GovernancePillar[] = [
       'Mengirimkan notifikasi informasi cuti ke atasan unit (Kepala RT / Mudir / Kesantrian)'
     ],
     strict_prohibitions: [
-      'STRICTLY DILARANG melihat nominal gaji dan insentif pegawai (Section 7 Business Rule Lock)',
+      'STRICTLY DILARANG melihat nominal gaji dan insentif pegawai (Kerahasiaan Kompensasi Yayasan)',
       'DILARANG mengintervensi substansi teknis KBM atau teknis sarpras'
     ]
   },
@@ -145,7 +145,7 @@ export const SIX_GOVERNANCE_PILLARS: GovernancePillar[] = [
       'Menetapkan rombel dan penempatan kelas santri baru'
     ],
     strict_prohibitions: [
-      'STRICTLY DILARANG melihat nominal gaji dan tunjangan guru/staf (Section 7 Lock)',
+      'STRICTLY DILARANG melihat nominal gaji dan tunjangan guru/staf (Kerahasiaan Kompensasi)',
       'DILARANG meng-ACC cuti pegawai (cuti adalah wewenang HRD; Mudir hanya penerima notifikasi untuk menunjuk guru pengganti)'
     ]
   },
@@ -164,7 +164,7 @@ export const SIX_GOVERNANCE_PILLARS: GovernancePillar[] = [
       'Melakukan clearance fisik aset pesantren saat pegawai offboarding'
     ],
     strict_prohibitions: [
-      'STRICTLY DILARANG melihat nominal gaji karyawan (Section 7 Lock)',
+      'STRICTLY DILARANG melihat nominal gaji karyawan (Kerahasiaan Kompensasi)',
       'DILARANG meng-ACC cuti staf teknis (cuti di-ACC oleh HRD)'
     ]
   }
@@ -485,7 +485,7 @@ export function authorizeCompensationRead(
   if (actor.role === 'kepala_kepegawaian') {
     return {
       authorized: false,
-      reason: 'COMPENSATION_RESTRICTED_FROM_HRD: HRD mengelola administrasi pegawai, namun tidak memiliki akses terhadap nominal gaji dan insentif (Section 7 Business Rule Lock).'
+      reason: 'COMPENSATION_RESTRICTED_FROM_HRD: HRD mengelola administrasi pegawai, namun tidak memiliki wewenang terhadap penetapan nominal kompensasi gaji.'
     };
   }
 

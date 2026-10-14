@@ -721,7 +721,7 @@ export default function RumahTanggaHubPage() {
             <div>
               <h3 className="font-bold text-slate-800 text-sm">Manajemen Service Request & Kerusakan Fisik</h3>
               <p className="text-slate-500 text-xs">
-                Siklus Transisi: SUBMITTED ➔ ASSIGNED (IN_PROGRESS) ➔ COMPLETED ➔ VERIFIED ➔ CLOSED (BR-RT-005)
+                Siklus Transisi: Diajukan ➔ Ditugaskan ➔ Selesai Dikerjakan ➔ Diverifikasi ➔ Ditutup
               </p>
             </div>
 
@@ -847,7 +847,7 @@ export default function RumahTanggaHubPage() {
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4 text-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div>
-              <h3 className="font-bold text-slate-800 text-sm">Register Aset Fisik & Fasilitas Pesantren (BR-RT-003)</h3>
+              <h3 className="font-bold text-slate-800 text-sm">Register Aset Fisik & Fasilitas Pesantren</h3>
               <p className="text-slate-500 text-xs">
                 Setiap aset memiliki identitas (Asset Code), lokasi aktual, kondisi fisik, dan rekam jejak relokasi/lifecycle
               </p>
@@ -957,7 +957,7 @@ export default function RumahTanggaHubPage() {
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4 text-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div>
-              <h3 className="font-bold text-slate-800 text-sm">Gudang & Inventaris Stok Rumah Tangga (BR-RT-004)</h3>
+              <h3 className="font-bold text-slate-800 text-sm">Gudang & Inventaris Stok Rumah Tangga</h3>
               <p className="text-slate-500 text-xs">
                 Prinsip Inti: Tidak ada perubahan stok tanpa transaksi movement (STOCK_IN, STOCK_OUT, RETURN, ADJUSTMENT)
               </p>
@@ -1355,7 +1355,7 @@ export default function RumahTanggaHubPage() {
       {activeTab === 'audit' && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4 text-xs">
           <div className="border-b border-slate-100 pb-3">
-            <h3 className="font-bold text-slate-800 text-sm">Audit Trail Aktivitas & Perubahan Data (BR-RT-006)</h3>
+            <h3 className="font-bold text-slate-800 text-sm">Audit Trail Aktivitas & Perubahan Data</h3>
             <p className="text-slate-500 text-xs">Rekam jejak tidak dapat dimanipulasi: Siapa, Kapan, Aksi, Entitas, Nilai Lama, Nilai Baru, dan Alasan</p>
           </div>
 
@@ -1635,7 +1635,7 @@ export default function RumahTanggaHubPage() {
               </div>
 
               <div className="p-3 bg-amber-50 rounded-xl text-amber-900 text-[11px] leading-relaxed">
-                ℹ Sesuai aturan <strong>BR-RT-005</strong>, penekanan tombol ini akan mengubah status ke <strong>COMPLETED</strong> (belum CLOSED) sampai diverifikasi oleh supervisor RT.
+                ℹ Penekanan tombol ini akan mengubah status ke <strong>COMPLETED</strong> (belum CLOSED) sampai diverifikasi oleh supervisor RT.
               </div>
 
               <div className="flex justify-end space-x-2 pt-2 border-t border-slate-100">
@@ -1665,7 +1665,7 @@ export default function RumahTanggaHubPage() {
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-xl border border-slate-200">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-800 text-base">Verifikasi Hasil Pekerjaan (BR-RT-005)</h3>
+              <h3 className="font-bold text-slate-800 text-base">Verifikasi Hasil Pekerjaan</h3>
               <button onClick={() => setModalVerifyRequest(null)} className="text-slate-400 hover:text-slate-700">
                 <X className="w-5 h-5" />
               </button>
