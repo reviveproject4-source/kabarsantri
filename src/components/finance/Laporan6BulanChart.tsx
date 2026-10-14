@@ -106,10 +106,7 @@ export default function Laporan6BulanChart() {
           <div className="w-12 h-12 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mx-auto">
             <BarChart3 className="w-6 h-6 text-slate-500" />
           </div>
-          <h3 className="font-bold text-slate-800 text-base">Belum Ada Data Historis Keuangan (Tenant Live)</h3>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            Grafik komparasi pendapatan dan surplus 6 bulan akan terbentuk secara otomatis setelah tenant memiliki riwayat transaksi keuangan operasional riil.
-          </p>
+          <h3 className="font-bold text-slate-800 text-base">Belum Ada Data Historis Keuangan</h3>
         </div>
       </div>
     );

@@ -126,12 +126,21 @@ export default function UnifiedRoleDashboardPage() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const modeParam = params.get('mode');
+      const existingActorRaw = localStorage.getItem('ks_active_session_actor_v1');
+      const isCustomSession = existingActorRaw && (
+        existingActorRaw.includes('"role_key":"pegawai"') || 
+        existingActorRaw.includes('"role_key":"wali_santri"')
+      );
       if (modeParam === 'tenant' || modeParam === 'live') {
         setAppMode('tenant', 'tenant-rabu-001');
-        setActiveActorByRole('tenant_admin_nh');
+        if (!isCustomSession) {
+          setActiveActorByRole('tenant_admin_nh');
+        }
       } else if (modeParam === 'demo') {
         setAppMode('demo');
-        setActiveActorByRole('yayasan');
+        if (!isCustomSession) {
+          setActiveActorByRole('yayasan');
+        }
       }
     }
 

@@ -43,8 +43,7 @@ if (typeof window !== 'undefined') {
         const parsed = JSON.parse(rawEmp);
         if (parsed.employees) {
           parsed.employees = parsed.employees.filter((e: any) => 
-            !e.full_name?.toLowerCase().includes('fauzan') &&
-            !e.full_name?.toLowerCase().includes('faqih')
+            !e.id?.startsWith('emp-00')
           );
           localStorage.setItem('ks_tenant_kepegawaian_store_v1', JSON.stringify(parsed));
         }

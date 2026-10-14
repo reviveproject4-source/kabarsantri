@@ -24,7 +24,8 @@ import {
   PieChart,
   Percent,
   Check,
-  School
+  School,
+  Trash2
 } from 'lucide-react';
 import { 
   getSharedThresholds, 
@@ -188,6 +189,16 @@ export default function DashboardKetuaYayasanPage() {
     });
     setNotif(`✓ Rekening bank ${newRek.nama_bank} (${newRek.fungsi_label}) berhasil didaftarkan dan tersinkronisasi ke Portal Wali Santri!`);
     setTimeout(() => setNotif(''), 6000);
+  };
+
+  const handleHapusRekening = (rekId: string, namaBank: string) => {
+    if (confirm(`Hapus rekening bank ${namaBank}? Rekening ini tidak akan lagi ditampilkan ke wali santri.`)) {
+      const updated = rekeningList.filter(r => r.id !== rekId);
+      setRekeningList(updated);
+      saveSharedRekeningList(updated);
+      setNotif(`✓ Rekening bank ${namaBank} berhasil dihapus.`);
+      setTimeout(() => setNotif(''), 4000);
+    }
   };
 
   return (
@@ -522,48 +533,68 @@ export default function DashboardKetuaYayasanPage() {
           </button>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-4">
-          {rekeningList.map((rek) => (
-            <div key={rek.id} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3 flex flex-col justify-between">
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-900 text-sm">{rek.nama_bank}</span>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                    rek.pengelola === 'Bagian Keuangan' 
-                      ? 'bg-blue-100 text-blue-800 border border-blue-200'
-                      : rek.pengelola === 'Bagian Kesantrian'
-                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                      : 'bg-purple-100 text-purple-800 border border-purple-200'
-                  }`}>
-                    {rek.pengelola}
-                  </span>
+        {rekeningList.length === 0 ? (
+          <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-300 space-y-2">
+            <Landmark className="w-8 h-8 text-slate-400 mx-auto" />
+            <h4 className="text-sm font-bold text-slate-700">Belum Ada Rekening Bank Resmi</h4>
+            <p className="text-xs text-slate-500 max-w-md mx-auto">
+              Rekening contoh telah dihapus. Klik tombol "Tambah Rekening Baru" di atas untuk mendaftarkan rekening bank resmi milik yayasan/pesantren Anda.
+            </p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-4">
+            {rekeningList.map((rek) => (
+              <div key={rek.id} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3 flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-900 text-sm">{rek.nama_bank}</span>
+                    <div className="flex items-center space-x-1.5">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                        rek.pengelola === 'Bagian Keuangan' 
+                          ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                          : rek.pengelola === 'Bagian Kesantrian'
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                          : 'bg-purple-100 text-purple-800 border border-purple-200'
+                      }`}>
+                        {rek.pengelola}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleHapusRekening(rek.id, rek.nama_bank)}
+                        title="Hapus Rekening Contoh / Nonaktif"
+                        className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="text-xs font-mono font-bold text-emerald-800 tracking-wider">
+                    No. Rek: {rek.nomor_rekening}
+                  </div>
+                  <div className="text-[11px] text-slate-600 font-medium">
+                    a.n. {rek.atas_nama}
+                  </div>
+                  <p className="text-[10px] text-slate-500 leading-snug">
+                    {rek.keterangan}
+                  </p>
                 </div>
-                <div className="text-xs font-mono font-bold text-emerald-800 tracking-wider">
-                  No. Rek: {rek.nomor_rekening}
-                </div>
-                <div className="text-[11px] text-slate-600 font-medium">
-                  a.n. {rek.atas_nama}
-                </div>
-                <p className="text-[10px] text-slate-500 leading-snug">
-                  {rek.keterangan}
-                </p>
-              </div>
 
-              <div className="pt-2 border-t border-slate-200">
-                <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                  Peruntukan Transaksi:
-                </span>
-                <div className="flex flex-wrap gap-1">
-                  {rek.cakupan_pembayaran.map((c, cIdx) => (
-                    <span key={cIdx} className="text-[10px] px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-700">
-                      {c}
-                    </span>
-                  ))}
+                <div className="pt-2 border-t border-slate-200">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                    Peruntukan Transaksi:
+                  </span>
+                  <div className="flex flex-wrap gap-1">
+                    {rek.cakupan_pembayaran.map((c, cIdx) => (
+                      <span key={cIdx} className="text-[10px] px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-700">
+                        {c}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -885,13 +885,11 @@ function loadState(forceTenantMode?: boolean) {
     }
     const parsed = JSON.parse(raw);
     if (isTenant) {
-      // Sanitasi ketat: Data demo pegawai / mock pimpinan dilarang ada di tenant live
-      const demoNames = DEFAULT_EMPLOYEES.map(e => e.full_name.toLowerCase());
+      // Sanitasi ketat: Data demo pegawai dilarang ada di tenant live
+      const demoIds = new Set(DEFAULT_EMPLOYEES.map(e => e.id));
       let modified = false;
       let cleaned = (parsed.employees || []).filter((e: any) => 
-        !demoNames.includes((e.full_name || '').toLowerCase()) &&
-        !e.full_name?.toLowerCase().includes('fauzan') &&
-        !e.full_name?.toLowerCase().includes('faqih')
+        !demoIds.has(e.id) && !e.id?.startsWith('emp-00')
       );
       if (cleaned.length !== (parsed.employees || []).length) {
         modified = true;
