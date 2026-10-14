@@ -21,7 +21,7 @@ import {
 import { setAppMode, setActiveTenant, getActiveTenant, TenantInfo, ActiveActor } from '@/lib/sessionStore';
 import { useThemeMode } from '@/lib/themeStore';
 import { getYayasanRegistrations, saveYayasanRegistrations, clearPendingRegistrationLock } from '@/lib/yayasanRegistrationStore';
-import { DEFAULT_EMPLOYEES, getEmployees, getPegawaiDefaultPassword, getPegawaiCustomPassword } from '@/lib/kepegawaianStore';
+import { DEFAULT_EMPLOYEES, getEmployees, getAllEmployeesForAuth, getPegawaiDefaultPassword, getPegawaiCustomPassword } from '@/lib/kepegawaianStore';
 import { getSharedSantriList, MASTER_SANTRI, getWaliDefaultPin, getWaliCustomPin } from '@/lib/sharedDataStore';
 import { getSuperAdminTenants } from '@/lib/superAdminStore';
 
@@ -295,35 +295,67 @@ export default function LoginPage() {
     }
 
     try {
-      // Cari di data pegawai kepegawaianStore dan tenant employees
-      const allEmps = getEmployees();
-      const matchedEmp = allEmps.find(emp => 
-        (emp.nip && emp.nip.toLowerCase() === trimmedNip) ||
-        (emp.email && emp.email.toLowerCase() === trimmedNip) ||
-        (emp.phone_number && cleanDigits.length >= 8 && emp.phone_number.replace(/[^0-9]/g, '').includes(cleanDigits)) ||
-        (cleanDigits.length >= 8 && trimmedNip === cleanDigits)
-      ) || DEFAULT_EMPLOYEES.find(emp => 
-        (emp.nip && emp.nip.toLowerCase() === trimmedNip) ||
-        (emp.email && emp.email.toLowerCase() === trimmedNip) ||
-        (emp.phone_number && cleanDigits.length >= 8 && emp.phone_number.replace(/[^0-9]/g, '').includes(cleanDigits)) ||
-        trimmedNip.includes('guru') ||
-        trimmedNip.includes('pegawai') ||
-        trimmedNip.includes('asatidz')
-      );
+      // 1. Ambil data pegawai dari SEMUA storage (Tenant Storage resmi, Standard Store, dan Defaults)
+      const allEmps = getAllEmployeesForAuth();
 
-      // Hitung kata sandi default: 4 angka terakhir nomor HP
-      const empPhone = matchedEmp?.phone_number || (cleanDigits.length >= 4 ? cleanDigits : '');
+      // 2. Cari pegawai secara presisi (NIP, No. HP, Email, atau Nama)
+      const matchedEmp = allEmps.find(emp => {
+        if (!emp) return false;
+        
+        // Cek NIP
+        if (emp.nip && emp.nip.trim().toLowerCase() === trimmedNip) return true;
+        
+        // Cek Email
+        if (emp.email && emp.email.trim().toLowerCase() === trimmedNip) return true;
+        
+        // Cek Nama Lengkap
+        if (emp.full_name && emp.full_name.trim().toLowerCase() === trimmedNip) return true;
+
+        // Cek No. HP / WhatsApp (Pencocokan digit fleksibel)
+        if (emp.phone_number && cleanDigits.length >= 8) {
+          const empDigits = emp.phone_number.replace(/[^0-9]/g, '');
+          if (empDigits === cleanDigits) return true;
+          if (empDigits.endsWith(cleanDigits) || cleanDigits.endsWith(empDigits)) return true;
+          if (cleanDigits.length >= 8 && empDigits.slice(-8) === cleanDigits.slice(-8)) return true;
+        }
+
+        return false;
+      }) || (trimmedNip.includes('guru') || trimmedNip.includes('pegawai') || trimmedNip.includes('asatidz')
+        ? allEmps[0]
+        : undefined);
+
+      if (!matchedEmp) {
+        setTimeout(() => {
+          setAuthError({
+            isError: true,
+            generalMessage: 'Akun pegawai tidak ditemukan. Pastikan NIP / No. WhatsApp / Email sesuai dengan data yang didaftarkan Yayasan.',
+          });
+          setLoading(false);
+        }, 350);
+        return;
+      }
+
+      // 3. Hitung kata sandi default: 4 angka terakhir nomor HP
+      const empPhone = matchedEmp.phone_number || (cleanDigits.length >= 4 ? cleanDigits : '');
+      const empDigits = empPhone.replace(/[^0-9]/g, '');
       const defaultPass4 = getPegawaiDefaultPassword(empPhone);
-      const customPass = matchedEmp ? (getPegawaiCustomPassword(matchedEmp.id) || getPegawaiCustomPassword(matchedEmp.nip)) : null;
+      const customPass = (getPegawaiCustomPassword(matchedEmp.id) || getPegawaiCustomPassword(matchedEmp.nip));
+
+      // 4 digit terakhir nomor HP pegawai
+      const empLast4 = empDigits.length >= 4 ? empDigits.slice(-4) : '';
+      // 4 digit terakhir dari input username jika memasukkan No. HP
+      const inputLast4 = cleanDigits.length >= 4 ? cleanDigits.slice(-4) : '';
 
       // Validasi kata sandi pegawai:
-      // 1. Password kustom yang diganti mandiri oleh pegawai
+      // 1. Password kustom mandiri yang diubah di menu Pengaturan
       // 2. Default 4 angka terakhir nomor HP pegawai
-      // 3. Fallback jika login dengan nomor HP, 4 digit terakhir nomor tersebut
+      // 3. 4 angka terakhir dari input jika memasukkan nomor HP
+      // 4. Password master darurat (Raynd6304!, Guru2026!, dsb)
       const validPassword = 
         (customPass && trimmedPass === customPass) ||
         (defaultPass4 && trimmedPass === defaultPass4) ||
-        (cleanDigits.length >= 4 && trimmedPass === cleanDigits.slice(-4)) ||
+        (empLast4 && trimmedPass === empLast4) ||
+        (inputLast4 && trimmedPass === inputLast4) ||
         trimmedPass === 'Guru2026!' ||
         trimmedPass === 'Asatidz2026!' ||
         trimmedPass === 'Pegawai2026!' ||
@@ -334,41 +366,43 @@ export default function LoginPage() {
         setTimeout(() => {
           setAuthError({
             isError: true,
-            generalMessage: 'Kata sandi atau PIN pegawai tidak sesuai. Default adalah 4 angka terakhir nomor HP Anda.',
+            generalMessage: `Kata sandi tidak sesuai. Default adalah 4 angka terakhir nomor HP${empLast4 ? ` (${empLast4})` : ''}.`,
           });
           setLoading(false);
         }, 350);
         return;
       }
 
-      // Ambil tenant aktif
-      const tenant = getActiveTenant();
-      const empName = matchedEmp?.full_name || 'Ust. Ahmad Dahlan, S.Pd.I.';
-      const empNip = matchedEmp?.nip || (trimmedNip.startsWith('nip') ? trimmedNip.toUpperCase() : 'PEG-GRU-001');
-      const roleSlug = matchedEmp?.current_role_slug || 'guru';
+      // Ambil tenant aktif atau tenant dari pegawai yang ditemukan
+      const activeTenantObj = getActiveTenant();
+      const tenantId = (matchedEmp.tenant_id && matchedEmp.tenant_id !== 'tenant-pesantren-001')
+        ? matchedEmp.tenant_id
+        : (activeTenantObj.id || 'tenant-al-kausar-9033');
+      const tenantName = activeTenantObj.name || 'Pondok Pesantren';
 
       const actor: ActiveActor = {
-        id: matchedEmp?.id || 'emp-pgw-001',
+        id: matchedEmp.id || `emp-${Date.now().toString(36)}`,
         role_key: 'pegawai',
-        role_slug: roleSlug,
-        name: empName,
-        nip: empNip,
-        title: matchedEmp?.current_position || 'Guru & Tenaga Kependidikan',
-        dept: matchedEmp?.current_department || 'KBM, Tahfidz & Kepegawaian',
-        gender: matchedEmp?.gender === 'P' ? 'akhwat' : 'ikhwan',
-        tenant_id: tenant.id,
-        tenant_name: tenant.name,
-        unit_name: 'Madrasah & Asrama'
+        role_slug: matchedEmp.current_role_slug || 'guru',
+        name: matchedEmp.full_name || 'Guru & Tenaga Kependidikan',
+        nip: matchedEmp.nip || (trimmedNip.startsWith('nip') ? trimmedNip.toUpperCase() : 'PEG-GRU-001'),
+        title: matchedEmp.current_position || 'Guru & Tenaga Kependidikan',
+        dept: matchedEmp.current_department || 'KBM, Tahfidz & Kepegawaian',
+        gender: matchedEmp.gender === 'P' ? 'akhwat' : 'ikhwan',
+        tenant_id: tenantId,
+        tenant_name: tenantName,
+        unit_name: matchedEmp.current_department || 'Madrasah & Asrama'
       };
 
+      setAppMode('tenant', tenantId);
       localStorage.setItem('ks_active_session_actor_v1', JSON.stringify(actor));
-      localStorage.setItem('ks_active_tenant_id', tenant.id);
+      localStorage.setItem('ks_active_tenant_id', tenantId);
       window.dispatchEvent(new CustomEvent('ks_session_actor_changed', { detail: actor }));
 
       document.cookie = `sb-access-token=pegawai-token; path=/; max-age=86400`;
       document.cookie = `ks_session=active; path=/; max-age=86400`;
       document.cookie = `ks_app_mode=tenant; path=/; max-age=864000`;
-      document.cookie = `ks_active_tenant_id=${tenant.id}; path=/; max-age=864000`;
+      document.cookie = `ks_active_tenant_id=${tenantId}; path=/; max-age=864000`;
 
       setTimeout(() => {
         setLoading(false);

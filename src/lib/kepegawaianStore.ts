@@ -887,12 +887,25 @@ function loadState(forceTenantMode?: boolean) {
     if (isTenant) {
       // Sanitasi ketat: Data demo pegawai / mock pimpinan dilarang ada di tenant live
       const demoNames = DEFAULT_EMPLOYEES.map(e => e.full_name.toLowerCase());
-      const cleaned = (parsed.employees || []).filter((e: any) => 
+      let modified = false;
+      let cleaned = (parsed.employees || []).filter((e: any) => 
         !demoNames.includes((e.full_name || '').toLowerCase()) &&
         !e.full_name?.toLowerCase().includes('fauzan') &&
         !e.full_name?.toLowerCase().includes('faqih')
       );
       if (cleaned.length !== (parsed.employees || []).length) {
+        modified = true;
+      }
+      // Sanitasi atasan: Hapus atasan dummy "Dr. KH. Mahmud Ridwan, M.A." dari tenant live
+      cleaned = cleaned.map((e: any) => {
+        if (e.supervisor_name && e.supervisor_name.includes('Mahmud Ridwan')) {
+          e.supervisor_name = 'Pimpinan Yayasan';
+          e.supervisor_id = 'emp-yys-001';
+          modified = true;
+        }
+        return e;
+      });
+      if (modified) {
         parsed.employees = cleaned;
         saveState(parsed);
       }
@@ -921,6 +934,64 @@ function saveState(state: typeof inMemoryState) {
 
 export function getEmployees(forceTenantMode?: boolean): Employee[] {
   return loadState(forceTenantMode).employees;
+}
+
+/**
+ * Mendapatkan seluruh pegawai dari semua sumber (Tenant Storage, Standard, dan Default)
+ * Digunakan khusus untuk autentikasi login agar pegawai resmi tenant selalu ditemukan
+ */
+export function getAllEmployeesForAuth(): Employee[] {
+  const result: Employee[] = [];
+  const seenIds = new Set<string>();
+  const seenNips = new Set<string>();
+
+  if (typeof window !== 'undefined') {
+    // 1. Ambil dari Tenant Storage terlebih dahulu (data resmi live yayasan)
+    try {
+      const rawTenant = localStorage.getItem(TENANT_STORAGE_KEY);
+      if (rawTenant) {
+        const parsed = JSON.parse(rawTenant);
+        (parsed.employees || []).forEach((e: Employee) => {
+          if (e && (e.id || e.nip)) {
+            const cleanNip = (e.nip || '').trim().toLowerCase();
+            if (e.id) seenIds.add(e.id);
+            if (cleanNip) seenNips.add(cleanNip);
+            result.push(e);
+          }
+        });
+      }
+    } catch {}
+
+    // 2. Ambil dari Standard Storage
+    try {
+      const rawStd = localStorage.getItem(STORAGE_KEY);
+      if (rawStd) {
+        const parsed = JSON.parse(rawStd);
+        (parsed.employees || []).forEach((e: Employee) => {
+          if (e && (e.id || e.nip)) {
+            const cleanNip = (e.nip || '').trim().toLowerCase();
+            if ((e.id && seenIds.has(e.id)) || (cleanNip && seenNips.has(cleanNip))) return;
+            if (e.id) seenIds.add(e.id);
+            if (cleanNip) seenNips.add(cleanNip);
+            result.push(e);
+          }
+        });
+      }
+    } catch {}
+  }
+
+  // 3. Fallback Seed Employees
+  DEFAULT_EMPLOYEES.forEach((e: Employee) => {
+    if (e && (e.id || e.nip)) {
+      const cleanNip = (e.nip || '').trim().toLowerCase();
+      if ((e.id && seenIds.has(e.id)) || (cleanNip && seenNips.has(cleanNip))) return;
+      if (e.id) seenIds.add(e.id);
+      if (cleanNip) seenNips.add(cleanNip);
+      result.push(e);
+    }
+  });
+
+  return result;
 }
 
 export function getEmployeeById(id: string): Employee | undefined {

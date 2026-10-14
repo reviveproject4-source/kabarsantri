@@ -68,11 +68,17 @@ import {
 
 import { 
   useActiveActor, 
-  setActiveActorByRole 
+  setActiveActorByRole,
+  useActiveTenant
 } from '@/lib/sessionStore';
 
 export default function KepegawaianPage() {
   const activeActor = useActiveActor();
+  const tenant = useActiveTenant();
+
+  const defaultSupervisorName = activeActor.role_key === 'yayasan'
+    ? (activeActor.name || tenant.leader_name || 'Pimpinan Yayasan')
+    : (tenant.leader_name || 'Pimpinan Yayasan');
 
   const isKaBidHrd = activeActor.role_key === 'hrd' || 
     activeActor.role_key === 'kepala_kepegawaian' || 
@@ -158,7 +164,7 @@ export default function KepegawaianPage() {
 
   // Form states
   const [formEmp, setFormEmp] = useState({
-    tenant_id: 'tenant-pesantren-001',
+    tenant_id: tenant.id || 'tenant-al-kausar-9033',
     nip: '',
     nik: '',
     full_name: '',
@@ -171,13 +177,29 @@ export default function KepegawaianPage() {
     current_department: 'PENDIDIKAN_KBM' as DepartmentUnit,
     current_position: '',
     current_role_slug: 'guru',
-    supervisor_id: 'emp-mdr-001',
-    supervisor_name: 'Dr. KH. Mahmud Ridwan, M.A.',
+    supervisor_id: activeActor.id || 'emp-yys-001',
+    supervisor_name: defaultSupervisorName,
     job_description: ['Mengajar santri sesuai kurikulum madrasah', 'Mengisi jurnal pembelajaran KBM'],
     user_account_id: '',
     user_account_active: true,
     leave_allowance_annual: 12
   });
+
+  const handleOpenNewEmployeeModal = () => {
+    setFormEmp(prev => ({
+      ...prev,
+      tenant_id: tenant.id || 'tenant-al-kausar-9033',
+      supervisor_id: activeActor.id || 'emp-yys-001',
+      supervisor_name: defaultSupervisorName,
+      nip: '',
+      nik: '',
+      full_name: '',
+      email: '',
+      phone_number: '',
+      current_position: ''
+    }));
+    setModalNewEmployee(true);
+  };
 
   const [formLeave, setFormLeave] = useState({
     employee_id: '',
@@ -799,7 +821,7 @@ export default function KepegawaianPage() {
                 <span>Mutasi / Promosi</span>
               </button>
               <button
-                onClick={() => setModalNewEmployee(true)}
+                onClick={handleOpenNewEmployeeModal}
                 className="bg-emerald-600 hover:bg-emerald-700 text-xs font-bold px-4 py-2 rounded-xl text-white transition flex items-center gap-1.5 shadow-xs"
               >
                 <Plus className="w-4 h-4" />
@@ -1596,6 +1618,42 @@ export default function KepegawaianPage() {
                     onChange={e => setFormEmp({ ...formEmp, phone_number: e.target.value })}
                     className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-800 mt-1 focus:ring-2 focus:ring-emerald-500 font-medium"
                   />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-slate-600 font-semibold">Atasan Langsung (Pimpinan / Supervisor) *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Nama Pimpinan Yayasan / Mudir Pesantren"
+                  value={formEmp.supervisor_name}
+                  onChange={e => setFormEmp({ ...formEmp, supervisor_name: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-800 mt-1 focus:ring-2 focus:ring-emerald-500 font-medium"
+                />
+                <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                  <span className="text-[10px] text-slate-400">Pilihan Cepat:</span>
+                  <button
+                    type="button"
+                    onClick={() => setFormEmp({ ...formEmp, supervisor_name: defaultSupervisorName })}
+                    className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold hover:bg-emerald-100 transition"
+                  >
+                    {defaultSupervisorName}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormEmp({ ...formEmp, supervisor_name: 'Mudir Pesantren' })}
+                    className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-semibold hover:bg-slate-200 transition"
+                  >
+                    Mudir Pesantren
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormEmp({ ...formEmp, supervisor_name: 'Kepala Pengasuhan & Asrama' })}
+                    className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-semibold hover:bg-slate-200 transition"
+                  >
+                    Kepala Asrama
+                  </button>
                 </div>
               </div>
 
