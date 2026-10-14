@@ -216,32 +216,14 @@ export default function LearningSessionKBMPage() {
               Manajemen sesi belajar mengajar, presensi real-time, dan asesmen capaian santri
             </p>
           </div>
-          <Link
-            href="/dashboard/mudir"
-            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition self-start md:self-auto flex items-center space-x-1.5"
-          >
-            <span>+ Buat Jadwal di Dashboard Mudir</span>
-          </Link>
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center">
-          <div className="max-w-md mx-auto space-y-3">
-            <div className="w-12 h-12 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mx-auto">
-              <BookOpen className="w-6 h-6 text-slate-500" />
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-12 text-center">
+          <div className="max-w-xs mx-auto space-y-2">
+            <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-2xl flex items-center justify-center mx-auto">
+              <BookOpen className="w-6 h-6 text-slate-400" />
             </div>
-            <h3 className="font-bold text-slate-800 text-base">Belum Ada Sesi KBM Terjadwal</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Belum ada mata pelajaran dan sesi pembelajaran untuk tenant ini. Sesi KBM dan jurnal nilai akan muncul otomatis saat Mudir / Kepala Sekolah menambahkan mata pelajaran ke kurikulum.
-            </p>
-            <div className="pt-2">
-              <Link
-                href="/dashboard/mudir"
-                className="inline-flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition shadow-xs"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Buka Dashboard Mudir untuk Tambah Mapel</span>
-              </Link>
-            </div>
+            <h3 className="font-bold text-slate-700 dark:text-slate-300 text-sm">Belum Ada KBM Terjadwal</h3>
           </div>
         </div>
       </div>

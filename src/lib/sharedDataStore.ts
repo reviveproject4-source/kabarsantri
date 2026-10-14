@@ -2381,3 +2381,38 @@ export function addSharedDisciplineRecord(record: Omit<DisciplineRecord, 'id'>):
   return newRec;
 }
 
+// ============================================================================
+// WALI SANTRI PIN MANAGEMENT (Default: 4 digit terakhir nomor HP)
+// ============================================================================
+
+export function getWaliDefaultPin(phoneNumber?: string): string {
+  if (!phoneNumber) return '1234';
+  const digits = phoneNumber.replace(/[^0-9]/g, '');
+  if (digits.length >= 4) {
+    return digits.slice(-4);
+  }
+  return digits.padStart(4, '0');
+}
+
+export function getWaliCustomPin(nis: string): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem('ks_wali_custom_pins_v1');
+    if (!raw) return null;
+    const map = JSON.parse(raw);
+    return map[nis.trim()] || null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveWaliCustomPin(nis: string, newPin: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const raw = localStorage.getItem('ks_wali_custom_pins_v1');
+    const map = raw ? JSON.parse(raw) : {};
+    map[nis.trim()] = newPin.trim();
+    localStorage.setItem('ks_wali_custom_pins_v1', JSON.stringify(map));
+  } catch {}
+}
+

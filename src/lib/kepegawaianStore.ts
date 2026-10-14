@@ -1536,3 +1536,40 @@ export function getDisciplinaryCases(): DisciplinaryCase[] {
 export function getAuditLogs(): HrAuditEntry[] {
   return loadState().auditLogs;
 }
+
+// ============================================================================
+// PEGAWAI PASSWORD MANAGEMENT (Default: 4 digit terakhir nomor HP)
+// ============================================================================
+
+export function getPegawaiDefaultPassword(phoneNumber?: string): string {
+  if (!phoneNumber) return '1234';
+  const digits = phoneNumber.replace(/[^0-9]/g, '');
+  if (digits.length >= 4) {
+    return digits.slice(-4);
+  }
+  return digits.padStart(4, '0');
+}
+
+export function getPegawaiCustomPassword(identifier: string): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem('ks_pegawai_custom_passwords_v1');
+    if (!raw) return null;
+    const map = JSON.parse(raw);
+    const cleanId = identifier.trim().toLowerCase();
+    return map[cleanId] || null;
+  } catch {
+    return null;
+  }
+}
+
+export function savePegawaiCustomPassword(identifier: string, newPassword: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const raw = localStorage.getItem('ks_pegawai_custom_passwords_v1');
+    const map = raw ? JSON.parse(raw) : {};
+    const cleanId = identifier.trim().toLowerCase();
+    map[cleanId] = newPassword.trim();
+    localStorage.setItem('ks_pegawai_custom_passwords_v1', JSON.stringify(map));
+  } catch {}
+}

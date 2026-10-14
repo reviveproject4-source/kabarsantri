@@ -24,11 +24,12 @@ import {
   Award, 
   MapPin, 
   ChevronRight,
-  Lock
+  Lock,
+  Settings
 } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
-import { useActiveTenant, APP_BRAND } from '@/lib/sessionStore';
+import { useActiveTenant, APP_BRAND, getActiveActor } from '@/lib/sessionStore';
 
 export default function DashboardLayout({
   children,
@@ -45,6 +46,9 @@ export default function DashboardLayout({
     setMounted(true);
   }, [pathname]);
 
+  const activeActor = mounted && typeof window !== 'undefined' ? getActiveActor() : { role_key: 'yayasan' };
+  const isPegawai = activeActor.role_key === 'pegawai' || activeActor.role_key === 'guru' || activeActor.role_key === 'guru_akhwat' || activeActor.role_key === 'musyrif';
+
   // ISOLASI KETAT SUPER ADMIN: SESUAI TAMPILAN PILIN PLATFORM (BEBAS HEADER LOGO GANDA)
   if (pathname?.startsWith('/super-admin') || pathname?.includes('/super-admin')) {
     return (
@@ -56,11 +60,11 @@ export default function DashboardLayout({
     );
   }
 
-  // Dynamic Dashboard route according to current section
+  // Dynamic Dashboard route according to current section & actor
   const getDashboardHref = () => {
+    if (activeActor.role_key === 'yayasan' || pathname?.includes('/yayasan')) return '/dashboard/yayasan';
     if (pathname?.includes('/wakil-yayasan')) return '/dashboard/wakil-yayasan';
-    if (pathname?.includes('/yayasan')) return '/dashboard/yayasan';
-    return '/dashboard/mudir';
+    return '/dashboard'; // Pegawai goes to /dashboard, NEVER to /dashboard/mudir!
   };
 
   const dashboardHref = getDashboardHref();
@@ -73,8 +77,40 @@ export default function DashboardLayout({
     badge?: string;
   }
 
-  // Primary Quick Mobile Bottom Tabs (Optimized for Small Screens)
-  const mobileBottomTabs: MobileTabItem[] = [
+  // Primary Quick Mobile Bottom Tabs
+  // Untuk Pegawai: Dashboard, Tahfidz (Prioritas), KBM Guru, Absen Diri, Pengaturan (Ganti Password & Mode)
+  const mobileBottomTabs: MobileTabItem[] = isPegawai ? [
+    { 
+      href: '/dashboard', 
+      label: 'Dashboard', 
+      icon: LayoutDashboard,
+      isActive: pathname === '/dashboard'
+    },
+    { 
+      href: '/akademik/tahfidz', 
+      label: 'Tahfidz', 
+      icon: Award,
+      isActive: Boolean(pathname?.startsWith('/akademik/tahfidz'))
+    },
+    { 
+      href: '/akademik/nilai', 
+      label: 'KBM Guru', 
+      icon: BookOpen,
+      isActive: Boolean(pathname?.startsWith('/akademik/nilai'))
+    },
+    { 
+      href: '/presensi/diri', 
+      label: 'Absen Diri', 
+      icon: UserCheck,
+      isActive: Boolean(pathname?.startsWith('/presensi/diri'))
+    },
+    { 
+      href: '/pengaturan', 
+      label: 'Pengaturan', 
+      icon: Settings,
+      isActive: Boolean(pathname?.startsWith('/pengaturan'))
+    },
+  ] : [
     { 
       href: dashboardHref, 
       label: 'Dashboard', 
@@ -82,10 +118,10 @@ export default function DashboardLayout({
       isActive: Boolean(pathname?.startsWith('/dashboard'))
     },
     { 
-      href: '/akademik/nilai', 
-      label: 'KBM Guru', 
-      icon: BookOpen,
-      isActive: Boolean(pathname?.startsWith('/akademik') && !pathname?.includes('/perizinan'))
+      href: '/akademik/tahfidz', 
+      label: 'Tahfidz', 
+      icon: Award,
+      isActive: Boolean(pathname?.startsWith('/akademik/tahfidz'))
     },
     { 
       href: '/presensi/diri', 
@@ -223,26 +259,28 @@ export default function DashboardLayout({
             );
           })}
 
-          {/* Tombol "Semua Tab" (Clickable Bottom Drawer) */}
-          <button
-            onClick={() => setBottomDrawerOpen(true)}
-            className={`flex flex-col items-center justify-center flex-1 py-1 transition-all duration-150 ${
-              bottomDrawerOpen 
-                ? 'text-blue-600 dark:text-blue-400 font-bold scale-105' 
-                : 'text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300'
-            }`}
-          >
-            <div className={`p-1.5 rounded-xl transition ${
-              bottomDrawerOpen 
-                ? 'bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 shadow-2xs' 
-                : 'hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}>
-              <Grid className="w-5 h-5" />
-            </div>
-            <span className="text-[10px] mt-0.5 tracking-tight font-bold">
-              Semua Menu
-            </span>
-          </button>
+          {/* Tombol "Semua Tab" (Clickable Bottom Drawer - Hanya untuk Non-Pegawai / Eksekutif Yayasan) */}
+          {!isPegawai && (
+            <button
+              onClick={() => setBottomDrawerOpen(true)}
+              className={`flex flex-col items-center justify-center flex-1 py-1 transition-all duration-150 ${
+                bottomDrawerOpen 
+                  ? 'text-blue-600 dark:text-blue-400 font-bold scale-105' 
+                  : 'text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300'
+              }`}
+            >
+              <div className={`p-1.5 rounded-xl transition ${
+                bottomDrawerOpen 
+                  ? 'bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 shadow-2xs' 
+                  : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}>
+                <Grid className="w-5 h-5" />
+              </div>
+              <span className="text-[10px] mt-0.5 tracking-tight font-bold">
+                Semua Menu
+              </span>
+            </button>
+          )}
         </nav>
 
         {/* 📋 MOBILE BOTTOM SHEET */}

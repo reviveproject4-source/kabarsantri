@@ -74,7 +74,15 @@ import {
 export default function KepegawaianPage() {
   const activeActor = useActiveActor();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'direktori' | 'cuti' | 'kinerja' | 'disiplin' | 'offboarding' | 'audit'>('overview');
+  const isKaBidHrd = activeActor.role_key === 'hrd' || 
+    activeActor.role_key === 'kepala_kepegawaian' || 
+    activeActor.role_slug === 'kepala_kepegawaian' || 
+    activeActor.role_key === 'yayasan' || 
+    activeActor.role_key === 'wakil_yayasan';
+
+  const [activeTab, setActiveTab] = useState<'overview' | 'direktori' | 'cuti' | 'kinerja' | 'disiplin' | 'offboarding' | 'audit'>(
+    isKaBidHrd ? 'overview' : 'cuti'
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [deptFilter, setDeptFilter] = useState<string>('ALL');
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -85,10 +93,16 @@ export default function KepegawaianPage() {
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get('tab');
       if (tabParam && ['overview', 'direktori', 'cuti', 'kinerja', 'disiplin', 'offboarding', 'audit'].includes(tabParam)) {
-        setActiveTab(tabParam as any);
+        if (!isKaBidHrd && (tabParam === 'overview' || tabParam === 'audit' || tabParam === 'offboarding' || tabParam === 'disiplin')) {
+          setActiveTab('cuti');
+        } else {
+          setActiveTab(tabParam as any);
+        }
+      } else if (!isKaBidHrd) {
+        setActiveTab('cuti');
       }
     }
-  }, []);
+  }, [isKaBidHrd]);
 
   const handleSwitchTab = (tab: typeof activeTab) => {
     setActiveTab(tab);
@@ -131,12 +145,6 @@ export default function KepegawaianPage() {
     activeActor.name.toLowerCase().includes(e.full_name.toLowerCase()) ||
     (activeActor.role_key === 'guru' && e.current_role_slug === 'guru')
   ) || employees[0];
-
-  const isKaBidHrd = activeActor.role_key === 'hrd' || 
-    activeActor.role_key === 'kepala_kepegawaian' || 
-    activeActor.role_slug === 'kepala_kepegawaian' || 
-    activeActor.role_key === 'yayasan' || 
-    activeActor.role_key === 'wakil_yayasan';
 
   const handleOpenLeaveModal = () => {
     if (activeEmployee) {
@@ -432,123 +440,169 @@ export default function KepegawaianPage() {
         </div>
       )}
 
-      {/* Header Banner - Manajemen Kepegawaian */}
+      {/* Header Banner - Manajemen Kepegawaian vs Layanan Mandiri Pegawai */}
       <div className="bg-gradient-to-r from-emerald-800 to-teal-900 text-white rounded-2xl p-6 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2 flex-wrap gap-1">
             <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-700/80 border border-emerald-500/40">
-              DIVISI HRD &amp; KEPEGAWAIAN
+              {isKaBidHrd ? 'DIVISI HRD & KEPEGAWAIAN' : 'LAYANAN MANDIRI PEGAWAI'}
             </span>
             <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-teal-950/60 text-teal-200 border border-teal-500/30">
-              Domain: People Management & Approval Cuti
+              {isKaBidHrd ? 'Domain: People Management & Approval Cuti' : 'Pengajuan Cuti & Izin Resmi'}
             </span>
           </div>
-          <h1 className="text-2xl font-bold mt-2">Pusat Kepegawaian & SDM Pesantren</h1>
+          <h1 className="text-2xl font-bold mt-2">
+            {isKaBidHrd ? 'Pusat Kepegawaian & SDM Pesantren' : 'Portal Cuti & Izin Mandiri Pegawai'}
+          </h1>
           <p className="text-xs text-emerald-200 mt-1">
-            Pengelolaan Siklus Hidup Pegawai: Rekrutmen, Presensi, Approval Cuti Ber-notifikasi, Kinerja berbasis Bukti & Clearance 4-Pintu
+            {isKaBidHrd 
+              ? 'Pengelolaan Siklus Hidup Pegawai: Rekrutmen, Presensi, Approval Cuti Ber-notifikasi, Kinerja berbasis Bukti & Clearance 4-Pintu'
+              : 'Ajukan permohonan cuti tahunan, cuti sakit, atau izin dinas secara mandiri langsung ke Bagian Kepegawaian & HRD.'}
           </p>
           <div className="mt-2.5 flex items-center space-x-2 text-[11px] text-emerald-100 flex-wrap gap-1.5">
             <span className="px-2 py-0.5 rounded bg-emerald-900/60 border border-emerald-500/30">
-              ✓ Otoritas Tunggal: Approval Cuti Pegawai & Asatidz
+              👤 Pegawai: {activeActor.name} ({activeActor.nip || 'Pegawai Terdaftar'})
             </span>
             <span className="px-2 py-0.5 rounded bg-slate-900/60 border border-slate-600/40 text-slate-300">
-              🔒 Batas: Dilarang Melihat Nominal Gaji (Wewenang Keuangan)
+              {activeActor.dept}
             </span>
           </div>
         </div>
 
-        {/* Simulator Aktor Sesi Terhubung ke Header */}
-        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-3 flex flex-col gap-1.5 text-xs text-white shrink-0">
-          <div className="flex items-center justify-between gap-3">
-            <span className="font-semibold flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-emerald-300" />
-              Aktor Sesi Aktif:
-            </span>
-            <span className="font-mono text-[11px] text-emerald-200 font-bold">{activeActor.name}</span>
+        {/* Info Cuti Mandiri Staf (Tanpa Role Hijacking Simulator) */}
+        {!isKaBidHrd ? (
+          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-3 flex flex-col gap-2 text-xs text-white shrink-0">
+            <div className="flex items-center justify-between gap-3">
+              <span className="font-semibold flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-emerald-300" />
+                Sisa Hak Cuti Anda:
+              </span>
+              <span className="font-mono text-sm text-emerald-200 font-black">
+                {activeEmployee?.leave_balance ?? 12} Hari
+              </span>
+            </div>
+            <button
+              onClick={handleOpenLeaveModal}
+              className="w-full py-2 px-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>+ Ajukan Cuti Mandiri</span>
+            </button>
           </div>
-          <select
-            value={activeActor.role_key}
-            onChange={e => setActiveActorByRole(e.target.value)}
-            className="bg-emerald-950/90 border border-emerald-500/50 text-xs rounded-lg px-2.5 py-1.5 text-emerald-100 font-medium focus:outline-none cursor-pointer"
-          >
-            <option value="kepala_kepegawaian">Kepala HRD (Dilarang Lihat Gaji)</option>
-            <option value="keuangan">Kepala Keuangan (Boleh Lihat Gaji)</option>
-            <option value="mudir">Mudir KBM (Dilarang Lihat Gaji)</option>
-            <option value="kepala_rumah_tangga">Kepala RT (Dilarang Lihat Gaji)</option>
-            <option value="yayasan">Ketua Yayasan (Information Only)</option>
-          </select>
-        </div>
+        ) : (
+          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-3 flex flex-col gap-1.5 text-xs text-white shrink-0">
+            <div className="flex items-center justify-between gap-3">
+              <span className="font-semibold flex items-center gap-1.5">
+                <Shield className="w-3.5 h-3.5 text-emerald-300" />
+                Akses HRD Aktif:
+              </span>
+              <span className="font-mono text-[11px] text-emerald-200 font-bold">{activeActor.name}</span>
+            </div>
+            <div className="text-[11px] text-emerald-200">
+              Wewenang: Approval Cuti, Evaluasi &amp; Offboarding
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Kartu Metrik KPI SDM */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm space-y-1">
-          <div className="text-xs text-slate-500 font-medium">Total Pegawai</div>
-          <div className="text-2xl font-bold font-mono text-slate-800">{metrics.total_employees}</div>
-          <div className="text-[11px] text-emerald-600 flex items-center gap-1 font-semibold">
-            <CheckCircle2 className="w-3 h-3" /> {metrics.active_employees} Aktif
+      {/* Kartu Metrik KPI SDM (Hanya Ditampilkan untuk KaBid HRD / Yayasan) */}
+      {isKaBidHrd ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm space-y-1">
+            <div className="text-xs text-slate-500 font-medium">Total Pegawai</div>
+            <div className="text-2xl font-bold font-mono text-slate-800">{metrics.total_employees}</div>
+            <div className="text-[11px] text-emerald-600 flex items-center gap-1 font-semibold">
+              <CheckCircle2 className="w-3 h-3" /> {metrics.active_employees} Aktif
+            </div>
+          </div>
+
+          <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm space-y-1">
+            <div className="text-xs text-slate-500 font-medium">Cuti Hari Ini</div>
+            <div className="text-2xl font-bold font-mono text-amber-600">{metrics.on_leave_today}</div>
+            <div className="text-[11px] text-slate-500">Notifikasi ke Unit</div>
+          </div>
+
+          <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm space-y-1">
+            <div className="text-xs text-slate-500 font-medium">Antrean ACC Cuti</div>
+            <div className="text-2xl font-bold font-mono text-blue-600">{metrics.pending_leave_approvals}</div>
+            <div className="text-[11px] text-blue-600 font-semibold">Wewenang HRD</div>
+          </div>
+
+          <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm space-y-1">
+            <div className="text-xs text-slate-500 font-medium">Kasus Disiplin</div>
+            <div className="text-2xl font-bold font-mono text-rose-600">{metrics.active_disciplinary_cases}</div>
+            <div className="text-[11px] text-rose-600 font-semibold">Teguran Aktif</div>
+          </div>
+
+          <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm space-y-1">
+            <div className="text-xs text-slate-500 font-medium">Pending Clearance</div>
+            <div className="text-2xl font-bold font-mono text-orange-600">{metrics.pending_offboarding_clearances}</div>
+            <div className="text-[11px] text-orange-600 font-semibold">4-Pintu Resign</div>
+          </div>
+
+          <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm space-y-1">
+            <div className="text-xs text-slate-500 font-medium">Kontrak Expiring</div>
+            <div className="text-2xl font-bold font-mono text-purple-600">{metrics.contracts_expiring_soon}</div>
+            <div className="text-[11px] text-purple-600 font-semibold">Masa PKWT</div>
           </div>
         </div>
-
-        <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm space-y-1">
-          <div className="text-xs text-slate-500 font-medium">Cuti Hari Ini</div>
-          <div className="text-2xl font-bold font-mono text-amber-600">{metrics.on_leave_today}</div>
-          <div className="text-[11px] text-slate-500">Notifikasi ke Unit</div>
+      ) : (
+        /* Kartu Hak Cuti Mandiri untuk Pegawai Biasa */
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm space-y-1">
+            <div className="text-xs text-slate-500 font-medium">Hak Cuti Tahunan</div>
+            <div className="text-2xl font-bold font-mono text-slate-800">12 Hari Kerja</div>
+            <div className="text-[11px] text-emerald-600 font-semibold">Jatah Kalender 2026</div>
+          </div>
+          <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm space-y-1">
+            <div className="text-xs text-slate-500 font-medium">Sisa Kuota Cuti Anda</div>
+            <div className="text-2xl font-bold font-mono text-emerald-700">
+              {activeEmployee?.leave_balance ?? 12} Hari
+            </div>
+            <div className="text-[11px] text-slate-500">Dapat diajukan kapan saja</div>
+          </div>
+          <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm space-y-1">
+            <div className="text-xs text-slate-500 font-medium">Pengajuan Cuti Anda</div>
+            <div className="text-2xl font-bold font-mono text-blue-600">
+              {leaves.filter(l => l.employee_id === activeEmployee?.id).length} Permohonan
+            </div>
+            <div className="text-[11px] text-blue-600 font-semibold">Terdaftar di Sistem HRD</div>
+          </div>
         </div>
-
-        <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm space-y-1">
-          <div className="text-xs text-slate-500 font-medium">Antrean ACC Cuti</div>
-          <div className="text-2xl font-bold font-mono text-blue-600">{metrics.pending_leave_approvals}</div>
-          <div className="text-[11px] text-blue-600 font-semibold">Wewenang HRD</div>
-        </div>
-
-        <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm space-y-1">
-          <div className="text-xs text-slate-500 font-medium">Kasus Disiplin</div>
-          <div className="text-2xl font-bold font-mono text-rose-600">{metrics.active_disciplinary_cases}</div>
-          <div className="text-[11px] text-rose-600 font-semibold">Teguran Aktif</div>
-        </div>
-
-        <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm space-y-1">
-          <div className="text-xs text-slate-500 font-medium">Pending Clearance</div>
-          <div className="text-2xl font-bold font-mono text-orange-600">{metrics.pending_offboarding_clearances}</div>
-          <div className="text-[11px] text-orange-600 font-semibold">4-Pintu Resign</div>
-        </div>
-
-        <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm space-y-1">
-          <div className="text-xs text-slate-500 font-medium">Kontrak Expiring</div>
-          <div className="text-2xl font-bold font-mono text-purple-600">{metrics.contracts_expiring_soon}</div>
-          <div className="text-[11px] text-purple-600 font-semibold">Masa PKWT</div>
-        </div>
-      </div>
+      )}
 
       {/* Tabs Navigation (Klikabel & Persisten via URL Query - Responsive Mobile Swipe) */}
       <div className="flex border-b border-slate-200 gap-1.5 overflow-x-auto no-scrollbar pb-1 text-xs font-semibold -mx-1 px-1 sm:mx-0 sm:px-0 select-none">
-        <button
-          onClick={() => handleSwitchTab('overview')}
-          className={`px-3.5 sm:px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 border ${
-            activeTab === 'overview'
-              ? 'bg-white border-emerald-600 shadow-sm text-emerald-800 ring-2 ring-emerald-500/20'
-              : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-          }`}
-        >
-          <Building className="w-4 h-4 text-emerald-600" />
-          <span>Overview & Struktur</span>
-        </button>
+        {isKaBidHrd && (
+          <button
+            onClick={() => handleSwitchTab('overview')}
+            className={`px-3.5 sm:px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 border ${
+              activeTab === 'overview'
+                ? 'bg-white border-emerald-600 shadow-sm text-emerald-800 ring-2 ring-emerald-500/20'
+                : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+            }`}
+          >
+            <Building className="w-4 h-4 text-emerald-600" />
+            <span>Overview &amp; Struktur</span>
+          </button>
+        )}
 
-        <button
-          onClick={() => handleSwitchTab('direktori')}
-          className={`px-3.5 sm:px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 border ${
-            activeTab === 'direktori'
-              ? 'bg-white border-emerald-600 shadow-sm text-emerald-800 ring-2 ring-emerald-500/20'
-              : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-          }`}
-        >
-          <Users className="w-4 h-4 text-emerald-600" />
-          <span>Direktori Pegawai</span>
-          <span className="text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded-full font-mono">
-            {employees.length}
-          </span>
-        </button>
+        {isKaBidHrd && (
+          <button
+            onClick={() => handleSwitchTab('direktori')}
+            className={`px-3.5 sm:px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 border ${
+              activeTab === 'direktori'
+                ? 'bg-white border-emerald-600 shadow-sm text-emerald-800 ring-2 ring-emerald-500/20'
+                : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+            }`}
+          >
+            <Users className="w-4 h-4 text-emerald-600" />
+            <span>Direktori Pegawai</span>
+            <span className="text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded-full font-mono">
+              {employees.length}
+            </span>
+          </button>
+        )}
 
         <button
           onClick={() => handleSwitchTab('cuti')}
@@ -559,61 +613,65 @@ export default function KepegawaianPage() {
           }`}
         >
           <Calendar className="w-4 h-4 text-emerald-600" />
-          <span>Manajemen Cuti & Izin</span>
-          {metrics.pending_leave_approvals > 0 && (
+          <span>{isKaBidHrd ? 'Manajemen Cuti & Izin' : 'Permohonan Cuti & Izin Mandiri'}</span>
+          {isKaBidHrd && metrics.pending_leave_approvals > 0 && (
             <span className="text-[10px] bg-amber-500 text-slate-950 font-bold px-1.5 py-0.2 rounded-full">
               {metrics.pending_leave_approvals}
             </span>
           )}
         </button>
 
-        <button
-          onClick={() => handleSwitchTab('kinerja')}
-          className={`px-3.5 sm:px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 border ${
-            activeTab === 'kinerja'
-              ? 'bg-white border-emerald-600 shadow-sm text-emerald-800 ring-2 ring-emerald-500/20'
-              : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-          }`}
-        >
-          <Award className="w-4 h-4 text-emerald-600" />
-          <span>Kinerja Berbasis Bukti</span>
-        </button>
+        {isKaBidHrd && (
+          <>
+            <button
+              onClick={() => handleSwitchTab('kinerja')}
+              className={`px-3.5 sm:px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 border ${
+                activeTab === 'kinerja'
+                  ? 'bg-white border-emerald-600 shadow-sm text-emerald-800 ring-2 ring-emerald-500/20'
+                  : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+              }`}
+            >
+              <Award className="w-4 h-4 text-emerald-600" />
+              <span>Kinerja Berbasis Bukti</span>
+            </button>
 
-        <button
-          onClick={() => handleSwitchTab('disiplin')}
-          className={`px-3.5 sm:px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 border ${
-            activeTab === 'disiplin'
-              ? 'bg-white border-emerald-600 shadow-sm text-emerald-800 ring-2 ring-emerald-500/20'
-              : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-          }`}
-        >
-          <AlertTriangle className="w-4 h-4 text-amber-500" />
-          <span>Disiplin & Sanksi</span>
-        </button>
+            <button
+              onClick={() => handleSwitchTab('disiplin')}
+              className={`px-3.5 sm:px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 border ${
+                activeTab === 'disiplin'
+                  ? 'bg-white border-emerald-600 shadow-sm text-emerald-800 ring-2 ring-emerald-500/20'
+                  : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+              }`}
+            >
+              <AlertTriangle className="w-4 h-4 text-amber-500" />
+              <span>Disiplin &amp; Sanksi</span>
+            </button>
 
-        <button
-          onClick={() => handleSwitchTab('offboarding')}
-          className={`px-3.5 sm:px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 border ${
-            activeTab === 'offboarding'
-              ? 'bg-white border-emerald-600 shadow-sm text-emerald-800 ring-2 ring-emerald-500/20'
-              : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-          }`}
-        >
-          <UserX className="w-4 h-4 text-rose-500" />
-          <span>4-Pintu Clearance</span>
-        </button>
+            <button
+              onClick={() => handleSwitchTab('offboarding')}
+              className={`px-3.5 sm:px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 border ${
+                activeTab === 'offboarding'
+                  ? 'bg-white border-emerald-600 shadow-sm text-emerald-800 ring-2 ring-emerald-500/20'
+                  : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+              }`}
+            >
+              <UserX className="w-4 h-4 text-rose-500" />
+              <span>4-Pintu Clearance</span>
+            </button>
 
-        <button
-          onClick={() => handleSwitchTab('audit')}
-          className={`px-3.5 sm:px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 border ${
-            activeTab === 'audit'
-              ? 'bg-white border-emerald-600 shadow-sm text-emerald-800 ring-2 ring-emerald-500/20'
-              : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-          }`}
-        >
-          <FileText className="w-4 h-4 text-blue-500" />
-          <span>Audit Trail SDM</span>
-        </button>
+            <button
+              onClick={() => handleSwitchTab('audit')}
+              className={`px-3.5 sm:px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 border ${
+                activeTab === 'audit'
+                  ? 'bg-white border-emerald-600 shadow-sm text-emerald-800 ring-2 ring-emerald-500/20'
+                  : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+              }`}
+            >
+              <FileText className="w-4 h-4 text-blue-500" />
+              <span>Audit Trail SDM</span>
+            </button>
+          </>
+        )}
       </div>
 
       {/* =====================================================================
@@ -841,19 +899,39 @@ export default function KepegawaianPage() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 gap-3">
-            {leaves.length === 0 ? (
-              <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center space-y-2">
-                <Calendar className="w-8 h-8 text-blue-600 mx-auto" />
-                <h3 className="font-bold text-slate-800 text-sm">Belum Ada Pengajuan Cuti</h3>
-                <p className="text-xs text-slate-500">Seluruh pegawai dan asatidz aktif bertugas dan tidak ada permohonan cuti tertunda.</p>
-              </div>
-            ) : (
-              leaves.map(lv => (
-              <div
-                key={lv.id}
-                className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
-              >
+          {/* Daftar Cuti: Jika KaBid HRD tampil semua, jika Pegawai biasa tampil cuti pribadi */}
+          {(() => {
+            const displayedLeaves = isKaBidHrd 
+              ? leaves 
+              : leaves.filter(lv => 
+                  lv.employee_id === activeEmployee?.id || 
+                  (lv.employee_nip && activeActor.nip && lv.employee_nip.toLowerCase() === activeActor.nip.toLowerCase()) || 
+                  (activeActor.name && lv.employee_name && lv.employee_name.toLowerCase().includes(activeActor.name.toLowerCase()))
+                );
+
+            if (displayedLeaves.length === 0) {
+              return (
+                <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center space-y-2">
+                  <Calendar className="w-8 h-8 text-blue-600 mx-auto" />
+                  <h3 className="font-bold text-slate-800 text-sm">
+                    {isKaBidHrd ? 'Belum Ada Pengajuan Cuti' : 'Anda Belum Mengajukan Cuti'}
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    {isKaBidHrd 
+                      ? 'Seluruh pegawai dan asatidz aktif bertugas dan tidak ada permohonan cuti tertunda.' 
+                      : 'Riwayat pengajuan cuti atau izin pribadi Anda akan muncul di sini setelah Anda mengajukan permohonan.'}
+                  </p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="grid grid-cols-1 gap-3">
+                {displayedLeaves.map(lv => (
+                  <div
+                    key={lv.id}
+                    className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+                  >
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-bold text-slate-800 text-sm">{lv.employee_name}</span>
@@ -933,10 +1011,12 @@ export default function KepegawaianPage() {
                   </div>
                 )}
               </div>
-            )))}
+            ))}
           </div>
-        </div>
-      )}
+        );
+      })()}
+    </div>
+  )}
 
       {/* =====================================================================
           TAB 4: KINERJA BERBASIS BUKTI (BR-HRD-006)

@@ -29,6 +29,8 @@ import {
 import { 
   getActiveActor, 
   setActiveActorByRole,
+  ActiveActor,
+  MASTER_PILLAR_ACTORS,
   APP_BRAND,
   useActiveTenant,
   updateTenantPesantrenLogo,
@@ -62,6 +64,7 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
   const { theme, isDark, toggleTheme } = useThemeMode();
 
   const [activeRole, setActiveRole] = useState<string>('yayasan');
+  const [currentActor, setCurrentActor] = useState<ActiveActor>(MASTER_PILLAR_ACTORS.yayasan);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
   const [isSandbox, setIsSandbox] = useState(false);
@@ -85,10 +88,21 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
   }, []);
 
   React.useEffect(() => {
-    setActiveRole(getActiveActor().role_key);
+    const actor = getActiveActor();
+    setCurrentActor(actor);
+    setActiveRole(actor.role_key);
     if (typeof document !== 'undefined') {
       setIsSandbox(document.cookie.includes('ks_demo_mode=true'));
     }
+
+    const handleActorChanged = () => {
+      const updated = getActiveActor();
+      setCurrentActor(updated);
+      setActiveRole(updated.role_key);
+    };
+
+    window.addEventListener('ks_session_actor_changed', handleActorChanged);
+    return () => window.removeEventListener('ks_session_actor_changed', handleActorChanged);
   }, []);
 
   React.useEffect(() => {
@@ -176,62 +190,10 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
     }
   };
 
-  // Sinkronkan Peran Aktif sesuai Rute (Kecuali jika Jalur Tenant Live aktif)
+  // Sinkronkan Peran Aktif dari Sesi Login yang Sah (Terkunci Sesuai Akun Login)
   React.useEffect(() => {
     const current = getActiveActor();
-    const currentKey = current.role_key;
-
-    if (isTenant) {
-      // Jalur Tenant Live terisolasi: Cegah peran Super Admin masuk ke tenant live
-      if (currentKey === 'super_admin' || currentKey === 'tenant_admin_nh') {
-        setActiveRole('yayasan');
-        setActiveActorByRole('yayasan');
-      }
-      return;
-    }
-
-    if (pathname.startsWith('/rumah-tangga') && ['laundry', 'dapur', 'satpam', 'kepala_rumah_tangga'].includes(currentKey)) {
-      return;
-    }
-    if (pathname.startsWith('/finance') && ['kasir', 'keuangan'].includes(currentKey)) {
-      return;
-    }
-    if (pathname.startsWith('/kepegawaian') && ['staf_hrd', 'kepala_kepegawaian'].includes(currentKey)) {
-      return;
-    }
-    if (pathname.startsWith('/akademik') && ['guru', 'guru_akhwat', 'musyrif', 'musyrifah', 'mudir'].includes(currentKey)) {
-      return;
-    }
-    if (pathname.startsWith('/presensi') && ['guru', 'guru_akhwat', 'musyrif', 'musyrifah', 'laundry', 'dapur', 'satpam', 'kasir', 'staf_hrd', 'kepala_kepegawaian', 'kepala_rumah_tangga', 'mudir'].includes(currentKey)) {
-      return;
-    }
-    if (pathname === '/dashboard') {
-      return;
-    }
-
-    let targetRole: string | null = null;
-    if (pathname.includes('/yayasan')) {
-      targetRole = 'yayasan';
-    } else if (pathname.includes('/wakil-yayasan')) {
-      targetRole = 'wakil_yayasan';
-    } else if (pathname.includes('/kepegawaian')) {
-      targetRole = 'kepala_kepegawaian';
-    } else if (pathname.includes('/mudir')) {
-      targetRole = 'mudir';
-    } else if (pathname.startsWith('/finance')) {
-      targetRole = 'keuangan';
-    } else if (pathname.startsWith('/rumah-tangga')) {
-      targetRole = 'kepala_rumah_tangga';
-    } else if (pathname.startsWith('/akademik/nilai')) {
-      targetRole = 'guru';
-    } else if (pathname.startsWith('/super-admin')) {
-      targetRole = 'super_admin';
-    }
-
-    if (targetRole && targetRole !== currentKey) {
-      setActiveRole(targetRole);
-      setActiveActorByRole(targetRole);
-    }
+    setActiveRole(current.role_key);
   }, [pathname]);
 
   const toggleSandbox = () => {
@@ -348,47 +310,61 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
 
         {/* Right Controls: Role Switcher, Dark/Light Mode, & Actions */}
         <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
-          {/* Role Switcher: 3 Commercial Roles */}
+          {/* User Profile Badge & Menu (Terkunci Sesuai Akun Login - Tidak Bisa Lintas Jabatan) */}
           <div className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center space-x-1 px-2.5 py-1.5 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-900 dark:text-blue-200 text-xs font-semibold rounded-lg border border-blue-200 dark:border-blue-800 transition"
-              title="Ganti Peran Pengguna"
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-900 dark:text-blue-200 text-xs font-semibold rounded-lg border border-blue-200 dark:border-blue-800 transition cursor-pointer"
+              title="Profil Pengguna"
             >
-              <span className="text-sm">{currentRoleObj?.icon || '🏛️'}</span>
-              <span className="font-bold">{currentRoleObj?.label || 'Yayasan'}</span>
+              <span className="text-sm">
+                {currentActor.role_key === 'yayasan' ? '🏛️' : currentActor.role_key === 'wali_santri' ? '👨‍👩‍👧' : '👨‍🏫'}
+              </span>
+              <span className="font-bold truncate max-w-[100px] sm:max-w-[140px]">
+                {currentActor.name || (currentActor.role_key === 'yayasan' ? 'Pimpinan Yayasan' : 'Pegawai')}
+              </span>
               <ChevronDown className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0 ml-0.5" />
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-20px)] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-2 z-50 animate-in fade-in zoom-in-95 duration-100">
-                <div className="px-3 py-1.5 text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 mb-1">
-                  <span>Pilih Peran:</span>
-                  <span className="text-[10px] bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded-full font-bold">3 Peran Utama</span>
-                </div>
-                <div className="space-y-1">
-                  {roles.map((r) => (
-                    <button
-                      key={r.id}
-                      onClick={() => handleSwitchRole(r.id)}
-                      className={`w-full text-left p-2.5 rounded-xl flex items-center space-x-3 transition ${
-                        activeRole === r.id
-                          ? 'bg-blue-600 text-white font-medium shadow-xs'
-                          : 'text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      <span className="text-xl shrink-0">{r.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-xs">{r.label}</span>
-                          {activeRole === r.id && <Check className="w-3.5 h-3.5 text-white" />}
-                        </div>
-                        <span className={`text-[10px] block truncate ${activeRole === r.id ? 'text-blue-100' : 'text-slate-400'}`}>
-                          {r.name ? `${r.title} • ${r.name}` : r.title}
-                        </span>
+              <div className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-20px)] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-3 z-50 animate-in fade-in zoom-in-95 duration-100">
+                <div className="border-b border-slate-100 dark:border-slate-800 pb-2.5 mb-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-2xl">
+                      {currentActor.role_key === 'yayasan' ? '🏛️' : currentActor.role_key === 'wali_santri' ? '👨‍👩‍👧' : '👨‍🏫'}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">
+                        {currentActor.name || 'Pengguna Resmi'}
                       </div>
-                    </button>
-                  ))}
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                        {currentActor.nip || 'NIP Terdaftar'}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-[10px] bg-slate-100 dark:bg-slate-800 p-1.5 rounded-lg text-slate-600 dark:text-slate-300">
+                    <div className="font-semibold">{currentActor.title || 'Akses Sistem'}</div>
+                    <div className="text-[9px] text-slate-400 truncate">{currentActor.dept || 'Pesantren'}</div>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Link
+                    href="/pengaturan"
+                    onClick={() => setDropdownOpen(false)}
+                    className="w-full text-left p-2 rounded-xl flex items-center space-x-2.5 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition font-medium"
+                  >
+                    <Settings className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <span>Pengaturan &amp; Ganti Password</span>
+                  </Link>
+
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left p-2 rounded-xl flex items-center space-x-2.5 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition font-medium cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Keluar Akun (Logout)</span>
+                  </button>
                 </div>
               </div>
             )}

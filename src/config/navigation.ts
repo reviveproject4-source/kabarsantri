@@ -184,16 +184,28 @@ export function getFilteredNavigation(
     ];
   }
 
-  // Khusus peran Pegawai: fokus ke operasional KBM, Presensi, Tahfidz, Kedisiplinan & Cuti
+  // Khusus peran Pegawai: fokus ke operasional Tahfidz, KBM, Presensi Diri, Cuti, & Pengaturan
   if (activeRole === 'pegawai') {
     return BACKOFFICE_NAVIGATION.filter(item => {
-      const allowed = ['/dashboard', '/akademik/tahfidz', '/presensi', '/akademik/nilai', '/akademik/disiplin', '/kepegawaian'];
+      const allowed = ['/dashboard', '/akademik/tahfidz', '/akademik/nilai', '/presensi', '/akademik/disiplin', '/kepegawaian', '/pengaturan'];
       return allowed.includes(item.href);
     }).map(item => {
       if (item.href === '/dashboard' && item.children) {
         return {
           ...item,
-          children: item.children.filter(c => c.href === '/dashboard')
+          children: [{ title: 'Dashboard Pegawai & Guru', href: '/dashboard' }]
+        };
+      }
+      if (item.href === '/presensi' && item.children) {
+        return {
+          ...item,
+          children: [{ title: 'Absen Diri Pegawai', href: '/presensi/diri', productCode: 'presensi' }]
+        };
+      }
+      if (item.href === '/kepegawaian' && item.children) {
+        return {
+          ...item,
+          children: [{ title: 'Permohonan Cuti Mandiri', href: '/kepegawaian?tab=cuti', productCode: 'hrd' }]
         };
       }
       return item;

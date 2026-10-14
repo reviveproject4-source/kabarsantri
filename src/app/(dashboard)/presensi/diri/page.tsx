@@ -396,15 +396,30 @@ export default function AbsenDiriPribadiPage() {
     }
   };
 
-  // Filter List Presensi
-  const filteredList = historyList.filter(item => {
-    if (filterDivisi === 'ALL') return true;
-    if (filterDivisi === 'KBM') return item.divisi === 'Akademik' || item.jabatan.includes('Guru');
-    if (filterDivisi === 'RT') return item.divisi === 'Rumah Tangga' || item.jabatan.includes('Laundry') || item.jabatan.includes('Dapur') || item.jabatan.includes('Satpam');
-    if (filterDivisi === 'ASRAMA') return item.divisi === 'Kesantrian' || item.jabatan.includes('Musyrif');
-    if (filterDivisi === 'KEUANGAN') return item.divisi === 'Keuangan' || item.jabatan.includes('Keuangan');
-    return true;
-  });
+  const isPimpinan = ['yayasan', 'wakil_yayasan', 'kepala_kepegawaian', 'super_admin'].includes(activeActor.role_key);
+
+  // Filter List Presensi:
+  // Untuk Guru & Pegawai biasa: HANYA bisa melihat presensi yang bersangkutan sendiri
+  // Untuk Pimpinan (Yayasan / HRD): Melihat monitoring seluruh staf
+  const filteredList = !isPimpinan
+    ? historyList.filter(item => {
+        const actorName = (activeActor.name || '').trim().toLowerCase();
+        const actorNip = (activeActor.nip || '').trim().toLowerCase();
+        const itemNip = (item.nip || '').trim().toLowerCase();
+        const itemNama = (item.pegawai_nama || '').trim().toLowerCase();
+        return (
+          (actorNip && itemNip && itemNip === actorNip) ||
+          (actorName && itemNama && (itemNama.includes(actorName) || actorName.includes(itemNama)))
+        );
+      })
+    : historyList.filter(item => {
+        if (filterDivisi === 'ALL') return true;
+        if (filterDivisi === 'KBM') return item.divisi === 'Akademik' || item.jabatan.includes('Guru');
+        if (filterDivisi === 'RT') return item.divisi === 'Rumah Tangga' || item.jabatan.includes('Laundry') || item.jabatan.includes('Dapur') || item.jabatan.includes('Satpam');
+        if (filterDivisi === 'ASRAMA') return item.divisi === 'Kesantrian' || item.jabatan.includes('Musyrif');
+        if (filterDivisi === 'KEUANGAN') return item.divisi === 'Keuangan' || item.jabatan.includes('Keuangan');
+        return true;
+      });
 
   return (
     <div className="space-y-6">
@@ -722,40 +737,48 @@ export default function AbsenDiriPribadiPage() {
             <div>
               <h2 className="font-bold text-slate-800 text-sm flex items-center space-x-2">
                 <Clock className="w-4 h-4 text-emerald-600" />
-                <span>Monitoring Presensi Seluruh Staf (Skala 50 - 150 Pegawai)</span>
+                <span>
+                  {isPimpinan 
+                    ? 'Monitoring Presensi Seluruh Staf (Skala 50 - 150 Pegawai)' 
+                    : `Riwayat Presensi Pribadi: ${activeActor.name}`}
+                </span>
               </h2>
               <p className="text-[11px] text-slate-500">
-                Pencatatan real-time mencakup Laundry, Dapur, Guru KBM, Musyrif, Satpam, & Manajemen
+                {isPimpinan 
+                  ? 'Pencatatan real-time mencakup Laundry, Dapur, Guru KBM, Musyrif, Satpam, & Manajemen' 
+                  : `Catatan presensi GPS mandiri Anda (${activeActor.nip || 'Pegawai'})`}
               </p>
             </div>
             <span className="text-[11px] px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-semibold self-start sm:self-auto">
-              Total Tercatat: {historyList.length} Pegawai
+              {isPimpinan ? `Total Tercatat: ${historyList.length} Pegawai` : `Tercatat: ${filteredList.length} Kali`}
             </span>
           </div>
 
-          {/* Filter Cepat Divisi */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-            <span className="text-[11px] text-slate-400 font-bold shrink-0">Filter Bagian:</span>
-            {[
-              { id: 'ALL', label: 'Semua (50+ Pegawai)' },
-              { id: 'RT', label: 'Rumah Tangga (Laundry & Dapur)' },
-              { id: 'KBM', label: 'Pendidikan (Guru)' },
-              { id: 'ASRAMA', label: 'Kesantrian (Musyrif)' },
-              { id: 'KEUANGAN', label: 'Kantor & Keuangan' },
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setFilterDivisi(tab.id)}
-                className={`px-3 py-1 rounded-lg text-[11px] font-bold shrink-0 transition ${
-                  filterDivisi === tab.id
-                    ? 'bg-slate-900 text-white shadow-xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          {/* Filter Cepat Divisi - Hanya Tampil untuk Pimpinan */}
+          {isPimpinan && (
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+              <span className="text-[11px] text-slate-400 font-bold shrink-0">Filter Bagian:</span>
+              {[
+                { id: 'ALL', label: 'Semua (50+ Pegawai)' },
+                { id: 'RT', label: 'Rumah Tangga (Laundry & Dapur)' },
+                { id: 'KBM', label: 'Pendidikan (Guru)' },
+                { id: 'ASRAMA', label: 'Kesantrian (Musyrif)' },
+                { id: 'KEUANGAN', label: 'Kantor & Keuangan' },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setFilterDivisi(tab.id)}
+                  className={`px-3 py-1 rounded-lg text-[11px] font-bold shrink-0 transition ${
+                    filterDivisi === tab.id
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="overflow-x-auto w-full -mx-2 px-2 sm:mx-0 sm:px-0">
             <table className="w-full min-w-[620px] text-left text-xs">

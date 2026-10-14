@@ -355,13 +355,18 @@ export function getActiveActor(): ActiveActor {
   if (typeof window === 'undefined') return MASTER_PILLAR_ACTORS.yayasan;
   try {
     const mode = getAppMode();
-    let baseActor = MASTER_PILLAR_ACTORS.yayasan;
+    let baseActor: ActiveActor = MASTER_PILLAR_ACTORS.yayasan;
 
     const raw = localStorage.getItem(SESSION_ACTOR_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed.role_key && MASTER_PILLAR_ACTORS[parsed.role_key]) {
-        baseActor = MASTER_PILLAR_ACTORS[parsed.role_key];
+        baseActor = {
+          ...MASTER_PILLAR_ACTORS[parsed.role_key],
+          ...parsed,
+        };
+      } else if (parsed.name && parsed.role_key) {
+        baseActor = parsed;
       }
     }
 
