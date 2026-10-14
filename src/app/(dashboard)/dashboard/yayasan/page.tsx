@@ -23,7 +23,8 @@ import {
   Lightbulb,
   PieChart,
   Percent,
-  Check
+  Check,
+  School
 } from 'lucide-react';
 import { 
   getSharedThresholds, 
@@ -39,10 +40,13 @@ import {
 import { supabase } from '@/lib/supabaseClient';
 import Laporan6BulanChart from '@/components/finance/Laporan6BulanChart';
 import { useSearchParams } from 'next/navigation';
-import { useAppMode } from '@/lib/sessionStore';
+import { useAppMode, useActiveTenant } from '@/lib/sessionStore';
+import { getActiveTenantPackageAndFeatures } from '@/lib/yayasanRegistrationStore';
 
 export default function DashboardKetuaYayasanPage() {
-  const [tier, setTier] = useState<'gratis' | 'premium'>('premium');
+  const tenant = useActiveTenant();
+  const tenantPackageInfo = getActiveTenantPackageAndFeatures(tenant.id);
+  const [tier, setTier] = useState<'gratis' | 'premium'>(tenantPackageInfo.paket === 'Enterprise' ? 'premium' : 'gratis');
   const [upgradeModal, setUpgradeModal] = useState(false);
   const [modalThreshold, setModalThreshold] = useState(false);
   const [modalRekening, setModalRekening] = useState(false);
@@ -197,7 +201,7 @@ export default function DashboardKetuaYayasanPage() {
             </span>
             <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center space-x-1">
               <Crown className="w-3.5 h-3.5 text-amber-400" />
-              <span>Paket Premium Terbuka</span>
+              <span>{tenantPackageInfo.paket === 'Gratis' ? 'Paket Free + Keuangan (ACC Super Admin)' : 'Paket Enterprise'}</span>
             </span>
           </div>
           <h1 className="text-2xl font-bold mt-2">Dashboard Ketua Yayasan (Strategic EIS)</h1>
@@ -421,6 +425,72 @@ export default function DashboardKetuaYayasanPage() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 🎓 LAPORAN EKSEKUTIF AKADEMIK & KESISWAAN (DARI MUDIR KE DEWAN YAYASAN)   */}
+      {/* ========================================================================= */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div>
+            <h2 className="font-bold text-slate-900 text-base flex items-center space-x-2">
+              <School className="w-5 h-5 text-emerald-600" />
+              <span>Laporan Terpadu Akademik &amp; Mudir ke Dewan Yayasan</span>
+            </h2>
+            <p className="text-xs text-slate-500">
+              Kompilasi Laporan Kepala Sekolah/Mudir: Rombongan Belajar, Disiplin KBM, &amp; Capaian Tahfidz Santri
+            </p>
+          </div>
+          <Link
+            href="/laporan/ringkasan"
+            className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center space-x-1.5 self-start sm:self-auto"
+          >
+            <FileText className="w-3.5 h-3.5 text-slate-500" />
+            <span>Buka Laporan Lengkap</span>
+          </Link>
+        </div>
+
+        <div className="grid md:grid-cols-4 gap-4 text-xs">
+          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+            <span className="text-slate-500 text-[11px] block font-medium">Rombongan Belajar (Rombel)</span>
+            <span className="text-xl font-bold font-mono text-slate-900">
+              {isTenant ? '1 Kelas Aktif' : '6 Rombel Aktif'}
+            </span>
+            <span className="text-[10px] text-emerald-700 font-semibold block">Madrasah &amp; Tahfidz</span>
+          </div>
+
+          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+            <span className="text-slate-500 text-[11px] block font-medium">Tingkat Disiplin KBM Guru</span>
+            <span className="text-xl font-bold font-mono text-emerald-700">
+              {isTenant ? '100%' : '96.4%'}
+            </span>
+            <span className="text-[10px] text-slate-500 block">Jadwal Terpenuhi Sesuai Roster</span>
+          </div>
+
+          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+            <span className="text-slate-500 text-[11px] block font-medium">Mutaba'ah &amp; Setoran Tahfidz</span>
+            <span className="text-xl font-bold font-mono text-blue-700">
+              {isTenant ? '100% Aktif' : '98.2% Lancar'}
+            </span>
+            <span className="text-[10px] text-slate-500 block">Mutaba'ah Harian Santri</span>
+          </div>
+
+          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+            <span className="text-slate-500 text-[11px] block font-medium">Status Catatan Mudir</span>
+            <span className="text-xl font-bold text-slate-800">
+              KBM Teratur
+            </span>
+            <span className="text-[10px] text-emerald-600 font-semibold block">✓ Nihil Kendala Kritis</span>
+          </div>
+        </div>
+
+        <div className="p-3.5 bg-slate-50/80 rounded-xl border border-slate-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center space-x-2 text-slate-700">
+            <span className="font-semibold text-slate-800">Catatan Mudir Terakhir:</span>
+            <span className="text-slate-600 italic">"Seluruh jadwal KBM berjalan normal. Evaluasi pekanan dan setoran tahfidz asrama telah disinkronkan ke Portal Wali."</span>
+          </div>
+          <span className="text-[10px] text-slate-500 font-mono shrink-0">Pelapor: Mudir Pesantren</span>
         </div>
       </div>
 

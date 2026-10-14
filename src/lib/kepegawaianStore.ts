@@ -1062,6 +1062,83 @@ export function registerEmployee(
 }
 
 /**
+ * Update Data Pegawai oleh Yayasan / HRD
+ */
+export function updateEmployee(
+  employeeId: string,
+  updatedData: Partial<Employee>,
+  actorName: string = 'Yayasan / Pimpinan Pesantren',
+  actorRole: string = 'Pimpinan Yayasan'
+): { success: boolean; message: string; employee?: Employee } {
+  const state = loadState();
+  const index = state.employees.findIndex(e => e.id === employeeId);
+  if (index === -1) {
+    return { success: false, message: 'Pegawai tidak ditemukan.' };
+  }
+
+  const existing = state.employees[index];
+
+  // 1. Uniqueness check if NIP is changed
+  if (updatedData.nip && updatedData.nip.trim().toLowerCase() !== existing.nip.trim().toLowerCase()) {
+    const duplicate = state.employees.find(
+      e => e.id !== employeeId && e.nip.trim().toLowerCase() === updatedData.nip!.trim().toLowerCase()
+    );
+    if (duplicate) {
+      return {
+        success: false,
+        message: `NIP ${updatedData.nip} sudah digunakan oleh ${duplicate.full_name}.`
+      };
+    }
+  }
+
+  // 2. Track position change if position or department changed
+  const posHistory = [...(existing.position_history || [])];
+  if (
+    (updatedData.current_position && updatedData.current_position !== existing.current_position) ||
+    (updatedData.current_department && updatedData.current_department !== existing.current_department)
+  ) {
+    posHistory.unshift({
+      id: `pos-${Date.now().toString(36)}`,
+      employee_id: employeeId,
+      department: updatedData.current_department || existing.current_department,
+      job_title: updatedData.current_position || existing.current_position,
+      role_slug: updatedData.current_role_slug || existing.current_role_slug,
+      supervisor_id: updatedData.supervisor_id || existing.supervisor_id,
+      supervisor_name: updatedData.supervisor_name || existing.supervisor_name,
+      start_date: new Date().toISOString().split('T')[0],
+      reason: 'PROMOTION_OR_TRANSFER',
+      sk_number: `SK/MUT/${new Date().getFullYear()}/${Date.now().toString().slice(-4)}`
+    });
+  }
+
+  const updatedEmployee: Employee = {
+    ...existing,
+    ...updatedData,
+    position_history: posHistory,
+    updated_at: new Date().toISOString()
+  };
+
+  state.employees[index] = updatedEmployee;
+
+  // Audit log
+  state.auditLogs.unshift({
+    id: `aud-${Date.now().toString(36)}`,
+    timestamp: new Date().toISOString(),
+    actor_name: actorName,
+    actor_role: actorRole,
+    action: 'EMPLOYEE_UPDATED',
+    details: `Memperbarui data profil pegawai: ${updatedEmployee.full_name} (${updatedEmployee.nip}).`
+  });
+
+  saveState(state);
+  return {
+    success: true,
+    message: `Data pegawai ${updatedEmployee.full_name} berhasil diperbarui.`,
+    employee: updatedEmployee
+  };
+}
+
+/**
  * BR-HRD-002: Non-destructive, Soft Delete / Archive
  */
 export function archiveEmployee(employeeId: string, actorName: string, reason: string): { success: boolean; message: string } {
@@ -1559,21 +1636,34 @@ export function getEmployeeContract(
   const state = loadState();
   const contract = state.contracts.find(c => c.employee_id === employeeId);
 
-  // Authorized roles: ONLY Keuangan and the employee themselves (ybs)
+  // Authorized roles: Keuangan, Yayasan (Pimpinan / Ketua Yayasan / Super Admin), and the employee themselves (ybs)
   const isFinance = ['keuangan', 'kepala_keuangan'].includes(requesterRole);
+  const isYayasan = ['yayasan', 'pimpinan_yayasan', 'ketua_yayasan', 'super_admin'].includes(requesterRole);
   const isSelf = requesterEmployeeId && requesterEmployeeId === employeeId;
 
-  if (isFinance || isSelf) {
+  if (isFinance || isYayasan || isSelf) {
+    const defaultContract: EmploymentContract = contract || {
+      id: `ctr-${employeeId}`,
+      employee_id: employeeId,
+      contract_type: 'TETAP',
+      basic_salary: 3500000,
+      allowances: [
+        { title: 'Tunjangan Jabatan & Kependidikan', amount: 500000 },
+        { title: 'Tunjangan Transport & Kehadiran', amount: 350000 }
+      ],
+      start_date: '2026-01-01',
+      signed_date: '2026-01-01'
+    };
     return {
       isAuthorized: true,
-      contract: contract
+      contract: defaultContract
     };
   }
 
   // Not authorized: HRD, Mudir, Kepala RT, Staff umum
   return {
     isAuthorized: false,
-    maskedSalary: 'Rp •••••••• (Akses Terbatas: Hanya Keuangan & Pegawai ybs)'
+    maskedSalary: 'Rp •••••••• (Akses Terbatas: Hanya Yayasan, Keuangan & Pegawai ybs)'
   };
 }
 

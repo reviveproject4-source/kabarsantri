@@ -471,6 +471,11 @@ export function authorizeCompensationRead(
     return { authorized: true };
   }
 
+  // AC-05b: Yayasan & Pimpinan Pesantren AUTHORIZED (Pemilik / Pimpinan Tertinggi Yayasan)
+  if (['yayasan', 'pimpinan_yayasan', 'ketua_yayasan', 'super_admin'].includes(actor.role)) {
+    return { authorized: true };
+  }
+
   // AC-06: Pegawai bersangkutan AUTHORIZED
   if (actor.id === targetEmployeeId) {
     return { authorized: true };
@@ -484,11 +489,11 @@ export function authorizeCompensationRead(
     };
   }
 
-  // AC-04: Mudir, Kepala RT, dan role lain DILARANG MELIHAT NOMINAL GAJI
-  if (['mudir', 'kepala_rumah_tangga', 'kepala_kesantrian', 'guru', 'teknisi_rt', 'ketua_yayasan'].includes(actor.role)) {
+  // AC-04: Mudir, Kepala RT, dan staff operasional DILARANG MELIHAT NOMINAL GAJI
+  if (['mudir', 'kepala_rumah_tangga', 'kepala_kesantrian', 'guru', 'teknisi_rt'].includes(actor.role)) {
     return {
       authorized: false,
-      reason: 'COMPENSATION_RESTRICTED: Nominal gaji dan insentif hanya dapat diakses oleh Bagian Keuangan dan pegawai yang bersangkutan.'
+      reason: 'COMPENSATION_RESTRICTED: Nominal gaji dan insentif bersifat rahasia dan hanya dapat diakses oleh Yayasan, Bagian Keuangan, dan pegawai yang bersangkutan.'
     };
   }
 

@@ -19,10 +19,13 @@ export interface YayasanFeature {
 
 export const AVAILABLE_YAYASAN_FEATURES: YayasanFeature[] = [
   { id: 'tahfidz', name: 'Tahfidz Al-Qur\'an & Hadis', desc: 'Setoran juz, mutaba\'ah, kelancaran & makhraj', category: 'Akademik' },
-  { id: 'spp', name: 'Keuangan & SPP Digital', desc: 'Tagihan SPP, validasi transfer & kuitansi WhatsApp', category: 'Keuangan' },
-  { id: 'presensi', name: 'Presensi Mandiri GPS', desc: 'Presensi guru KBM, staf asrama & pos gerbang', category: 'Operasional' },
+  { id: 'spp', name: 'Keuangan & SPP Digital', desc: 'Tagihan SPP, validasi transfer, kas pengeluaran & threshold', category: 'Keuangan' },
   { id: 'wali', name: 'Portal Transparansi Wali', desc: 'Akses wali murid via NIS+PIN pantau mutaba\'ah & izin', category: 'Kemitraan' },
+  { id: 'kepegawaian', name: 'Kepegawaian & SDM (HRD)', desc: 'Direktori pegawai, perizinan cuti & struktur pimpinan', category: 'Tata Kelola' },
+  { id: 'kbm', name: 'Penilaian KBM & Kurikulum', desc: 'Jadwal belajar, penilaian nilai KBM & ruang guru', category: 'Akademik' },
+  { id: 'presensi', name: 'Presensi Mandiri GPS', desc: 'Presensi guru KBM, staf asrama & pos gerbang', category: 'Operasional' },
   { id: 'rumah_tangga', name: 'Rumah Tangga & Sarpras', desc: 'Pengajuan belanja dapur, laundry, & poskestren', category: 'Fasilitas' },
+  { id: 'adab', name: 'Kedisiplinan, Adab & Izin', desc: 'Catatan kedisiplinan, reward prestasi & perizinan santri', category: 'Kesantrian' },
   { id: 'akuntansi', name: 'Akuntansi & Buku Besar', desc: 'Double-entry general ledger & laporan konsolidasi', category: 'Keuangan' },
 ];
 
@@ -63,9 +66,9 @@ const DEFAULT_REGISTRATIONS: YayasanRegistration[] = [
     kota: 'Cibuntu',
     estimasi_santri: '< 50 Santri',
     paket_pilihan: 'Gratis',
-    catatan: 'Tenant live resmi teraktivasi.',
+    catatan: 'Tenant live resmi teraktivasi (Paket Free + Keuangan & Kepegawaian).',
     status: 'active',
-    features: ['tahfidz', 'wali'],
+    features: ['tahfidz', 'spp', 'wali', 'kepegawaian'],
     created_at: '2026-10-12 02:01',
     activated_tenant_id: 'tenant-al-kausar-9033',
     admin_email: 'admin@al-kausar.kabarsantri.id',
@@ -569,4 +572,56 @@ export async function updateYayasanPassword(tenantIdOrEmail: string, newPassword
     return true;
   }
   return false;
+}
+
+/**
+ * Mendapatkan paket dan fitur aktif yang di-ACC Super Admin untuk tenant
+ */
+export function getActiveTenantPackageAndFeatures(tenantId?: string): {
+  paket: PaketType;
+  features: string[];
+  isEnterprise: boolean;
+  isFeatureUnlocked: (featureKey: string) => boolean;
+} {
+  const registrations = getYayasanRegistrations();
+  
+  // Cari registrasi tenant berdasarkan tenant_id atau fallback ke Al Kausar (reg-498363)
+  const reg = registrations.find(r => 
+    (tenantId && (r.activated_tenant_id === tenantId || r.id === tenantId)) ||
+    (r.id === 'reg-498363') ||
+    (r.status === 'active')
+  ) || registrations[0];
+
+  const paket: PaketType = reg?.paket_pilihan || 'Gratis';
+  const isEnterprise = paket === 'Enterprise';
+  const features = reg?.features || ['tahfidz', 'spp', 'wali', 'kepegawaian'];
+
+  const isFeatureUnlocked = (featureKey: string): boolean => {
+    if (isEnterprise) return true;
+    const key = (featureKey || '').toLowerCase();
+    
+    // Fitur inti selalu terbuka untuk institusi
+    if (['dashboard', 'yayasan', 'pengaturan', 'laporan', 'ringkasan'].includes(key)) return true;
+    
+    // Mapping alias fitur
+    if (features.includes(key)) return true;
+    if (['finance', 'spp', 'keuangan', 'uang-jajan'].includes(key) && features.includes('spp')) return true;
+    if (['hafalan', 'tahfidz'].includes(key) && features.includes('tahfidz')) return true;
+    if (['wali', 'portal-wali'].includes(key) && features.includes('wali')) return true;
+    if (['hrd', 'kepegawaian'].includes(key) && features.includes('kepegawaian')) return true;
+    if (['kbm', 'rapot', 'nilai'].includes(key) && features.includes('kbm')) return true;
+    if (['presensi', 'absen'].includes(key) && features.includes('presensi')) return true;
+    if (['rumah_tangga', 'sarpras'].includes(key) && features.includes('rumah_tangga')) return true;
+    if (['adab', 'disiplin', 'izin'].includes(key) && features.includes('adab')) return true;
+    if (['akuntansi'].includes(key) && features.includes('akuntansi')) return true;
+    
+    return false;
+  };
+
+  return {
+    paket,
+    features,
+    isEnterprise,
+    isFeatureUnlocked
+  };
 }

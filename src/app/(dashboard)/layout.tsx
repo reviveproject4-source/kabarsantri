@@ -30,6 +30,7 @@ import {
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { useActiveTenant, APP_BRAND, getActiveActor } from '@/lib/sessionStore';
+import { getActiveTenantPackageAndFeatures } from '@/lib/yayasanRegistrationStore';
 
 export default function DashboardLayout({
   children,
@@ -41,6 +42,7 @@ export default function DashboardLayout({
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const tenant = useActiveTenant();
+  const tenantPackageInfo = getActiveTenantPackageAndFeatures(tenant.id);
 
   useEffect(() => {
     setMounted(true);
@@ -137,11 +139,12 @@ export default function DashboardLayout({
     },
   ];
 
-  // Modul untuk Mobile Bottom Sheet
-  const allPillars = [
+  // Modul untuk Mobile Bottom Sheet yang disesuaikan dengan Paket & Fitur dari Super Admin
+  const rawPillars = [
     {
       title: 'Yayasan & Pimpinan',
       desc: 'Ringkasan Eksekutif & Informasi Strategis',
+      featureKey: 'dashboard',
       items: [
         { href: '/dashboard/yayasan', label: 'Dashboard Yayasan', icon: Building2 },
         { href: '/laporan/ringkasan', label: 'Ringkasan Eksekutif & Analitik', icon: FileText },
@@ -150,6 +153,7 @@ export default function DashboardLayout({
     {
       title: 'Operasional & Persetujuan',
       desc: 'Persetujuan Anggaran & Kebijakan',
+      featureKey: 'spp',
       items: [
         { href: '/dashboard/wakil-yayasan', label: 'Dashboard Persetujuan', icon: ShieldCheck },
         { href: '/finance/pengaturan-threshold', label: 'Batas Mandiri Persetujuan', icon: Wallet },
@@ -158,6 +162,7 @@ export default function DashboardLayout({
     {
       title: 'Kepegawaian & SDM',
       desc: 'Pusat Kepegawaian, Cuti & Presensi',
+      featureKey: 'kepegawaian',
       items: [
         { href: '/kepegawaian', label: 'Pusat Kepegawaian & Cuti', icon: Users },
         { href: '/presensi/diri', label: 'Presensi Diri Pegawai', icon: MapPin },
@@ -167,6 +172,7 @@ export default function DashboardLayout({
     {
       title: 'Keuangan & SPP',
       desc: 'SPP, Uang Saku & Pengeluaran Kas',
+      featureKey: 'spp',
       items: [
         { href: '/finance', label: 'Dashboard Keuangan', icon: Wallet },
         { href: '/finance/spp', label: 'Pembayaran SPP Santri', icon: FileText },
@@ -177,18 +183,24 @@ export default function DashboardLayout({
     {
       title: 'Akademik & Kesantrian',
       desc: 'KBM Guru, Tahfidz & Kesiswaan',
+      featureKey: 'tahfidz',
       items: [
-        { href: '/dashboard/mudir', label: 'Dashboard Akademik', icon: School },
-        { href: '/akademik/nilai', label: 'Ruang Guru (KBM & Nilai)', icon: BookOpen },
-        { href: '/akademik/perizinan', label: 'Perizinan Santri', icon: Clock },
-        { href: '/akademik/disiplin', label: 'Kedisiplinan & Pelanggaran', icon: ShieldCheck },
+        activeActor.role_key === 'mudir'
+          ? { href: '/dashboard/mudir', label: 'Console Operasional Mudir', icon: School }
+          : { href: '/laporan/ringkasan', label: 'Laporan Konsolidasi Akademik', icon: School },
         { href: '/akademik/tahfidz', label: 'Setoran Tahfidz Al-Qur\'an', icon: Award },
         { href: '/santri/list', label: 'Direktori Santri & Rombel', icon: Users },
+        ...(tenantPackageInfo.isFeatureUnlocked('kbm') ? [{ href: '/akademik/nilai', label: 'Ruang Guru (KBM & Nilai)', icon: BookOpen }] : []),
+        ...(tenantPackageInfo.isFeatureUnlocked('adab') ? [
+          { href: '/akademik/perizinan', label: 'Perizinan Santri', icon: Clock },
+          { href: '/akademik/disiplin', label: 'Kedisiplinan & Pelanggaran', icon: ShieldCheck }
+        ] : []),
       ]
     },
     {
       title: 'Sarana & Prasarana',
       desc: 'Fasilitas, Pemeliharaan & Logistik',
+      featureKey: 'rumah_tangga',
       items: [
         { href: '/rumah-tangga', label: 'Dashboard Logistik & Sarpras', icon: Home },
         { href: '/rumah-tangga/pengajuan', label: 'Pengajuan Pengadaan Fasilitas', icon: FileText },
@@ -197,12 +209,16 @@ export default function DashboardLayout({
     {
       title: 'Portal Orang Tua',
       desc: 'Akses Portal Wali Murid',
+      featureKey: 'wali',
       items: [
         { href: '/portal-wali', label: 'Portal Wali Santri', icon: ExternalLink },
         { href: '/login', label: 'Ganti Akun / Logout', icon: ArrowRight },
       ]
     }
   ];
+
+  // Filter pillar sesuai lisensi yang diberikan oleh Super Admin
+  const allPillars = rawPillars.filter(p => tenantPackageInfo.isFeatureUnlocked(p.featureKey));
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 overflow-hidden w-full max-w-full">

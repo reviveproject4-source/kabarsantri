@@ -24,6 +24,7 @@ import LockedFeatureModal from '@/components/common/LockedFeatureModal';
 import { APP_BRAND, useActiveTenant, getActiveActor, useAppMode } from '@/lib/sessionStore';
 import { checkStudentQuota } from '@/lib/tenantEntitlementStore';
 import { isTenantMode } from '@/lib/sharedDataStore';
+import { getActiveTenantPackageAndFeatures } from '@/lib/yayasanRegistrationStore';
 
 const ICON_MAP: Record<string, any> = {
   LayoutDashboard,
@@ -47,8 +48,6 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
   const router = useRouter();
   const tenant = useActiveTenant();
 
-  // Mode Pengujian: Premium Unlimited default
-  const [tier, setTier] = useState<'gratis' | 'premium'>('premium');
   const [lockedModalOpen, setLockedModalOpen] = useState(false);
   const [lockedFeatureName, setLockedFeatureName] = useState('');
   const [, setTick] = useState(0);
@@ -56,7 +55,15 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
   React.useEffect(() => {
     const handleUpdate = () => setTick(t => t + 1);
     window.addEventListener('ks_entitlements_updated', handleUpdate);
-    return () => window.removeEventListener('ks_entitlements_updated', handleUpdate);
+    window.addEventListener('ks_features_updated', handleUpdate);
+    window.addEventListener('ks_yayasan_registered', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('ks_entitlements_updated', handleUpdate);
+      window.removeEventListener('ks_features_updated', handleUpdate);
+      window.removeEventListener('ks_yayasan_registered', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
   }, []);
 
   const [mounted, setMounted] = useState(false);
@@ -84,6 +91,28 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
   const activeActor = isHydrated && typeof window !== 'undefined' ? getActiveActor() : { role_key: 'yayasan' };
   const activeRole = activeActor.role_key;
 
+  // Resolusi Lisensi & Fitur yang di-ACC oleh Super Admin untuk Tenant Aktif
+  const tenantPackageInfo = getActiveTenantPackageAndFeatures(tenant.id);
+  const isGratisPackage = tenantPackageInfo.paket === 'Gratis';
+
+  // Helper untuk mengecek apakah suatu item menu terkunci
+  const checkIsItemLocked = (item: NavItem): boolean => {
+    if (!isGratisPackage) return false;
+    const key = (
+      item.productCode ||
+      (item.href.includes('rumah-tangga') ? 'rumah_tangga' :
+       item.href.includes('presensi') ? 'presensi' :
+       item.href.includes('akademik/nilai') ? 'kbm' :
+       item.href.includes('akademik/disiplin') || item.href.includes('perizinan') ? 'adab' :
+       item.href.includes('kepegawaian') ? 'kepegawaian' :
+       item.href.includes('finance') ? 'spp' :
+       item.href.includes('tahfidz') ? 'tahfidz' :
+       item.href.includes('wali') ? 'wali' :
+       'dashboard')
+    );
+    return !tenantPackageInfo.isFeatureUnlocked(key);
+  };
+
   // Yayasan tidak memerlukan fitur presensi harian. Filter berdasarkan Produk Entitlement Tenant.
   // Super Admin Onboarding terisolasi dari Jalur Tenant Live dan tidak pernah ditampilkan untuk tenant.
   const menuItems = getFilteredNavigation(
@@ -105,7 +134,8 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
   });
 
   const handleMenuClick = (e: React.MouseEvent, item: NavItem, isMobile = false) => {
-    if (tier === 'gratis' && item.isLockedInFreeTier) {
+    const isLocked = checkIsItemLocked(item);
+    if (isLocked) {
       e.preventDefault();
       setLockedFeatureName(item.title);
       setLockedModalOpen(true);
@@ -156,11 +186,11 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
             </span>
           </div>
           <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono shrink-0 border ${
-            quotaInfo.isFreeZakat 
+            tenantPackageInfo.paket === 'Gratis'
               ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800' 
               : 'bg-blue-950 text-blue-300 border border-blue-900'
           }`}>
-            {quotaInfo.isFreeZakat ? 'Starter' : 'Full BOS'}
+            {tenantPackageInfo.paket === 'Gratis' ? 'Free + Keuangan' : 'Enterprise'}
           </span>
         </div>
       ) : null}
@@ -181,7 +211,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
                   <div className="mt-1 space-y-0.5 pl-2">
                     {group.children.map((child, cIdx) => {
                       const isChildActive = pathname === child.href;
-                      const isLocked = tier === 'gratis' && child.isLockedInFreeTier;
+                      const isLocked = checkIsItemLocked(child);
 
                       return (
                         <Link
@@ -217,16 +247,16 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
                   className={`flex items-center justify-between px-3 py-2 text-xs rounded-lg transition ${
                     pathname === group.href
                       ? 'bg-blue-600 text-white font-medium shadow-sm'
+                      : checkIsItemLocked(group)
+                      ? 'text-slate-500 hover:bg-slate-800/40 cursor-pointer'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                   }`}
                 >
                   <div className="flex items-center space-x-2.5">
                     {IconComponent && <IconComponent className="w-4 h-4" />}
                     <span>{group.title}</span>
+                    {checkIsItemLocked(group) && <Lock className="w-3 h-3 text-amber-500 shrink-0 ml-1" />}
                   </div>
-                  {tier === 'gratis' && group.isLockedInFreeTier && (
-                    <Lock className="w-3 h-3 text-amber-500" />
-                  )}
                 </Link>
               )}
             </div>

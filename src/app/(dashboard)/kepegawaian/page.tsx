@@ -30,7 +30,11 @@ import {
   Building,
   Key,
   DollarSign,
-  X
+  X,
+  Pencil,
+  Phone,
+  Smartphone,
+  Mail
 } from 'lucide-react';
 
 import {
@@ -49,6 +53,7 @@ import {
   getEmployees,
   getEmployeeById,
   registerEmployee,
+  updateEmployee,
   archiveEmployee,
   getLeaveRequests,
   submitLeaveRequest,
@@ -144,6 +149,69 @@ export default function KepegawaianPage() {
   const [modalNewPerformance, setModalNewPerformance] = useState(false);
   const [modalNewMutation, setModalNewMutation] = useState(false);
   const [modalNewOffboarding, setModalNewOffboarding] = useState(false);
+  const [modalEditEmployee, setModalEditEmployee] = useState(false);
+  const [editingEmpId, setEditingEmpId] = useState<string>('');
+  const [formEditEmp, setFormEditEmp] = useState({
+    nip: '',
+    nik: '',
+    full_name: '',
+    email: '',
+    phone_number: '',
+    gender: 'L' as 'L' | 'P',
+    date_of_birth: '1990-01-01',
+    join_date: new Date().toISOString().split('T')[0],
+    current_department: 'PENDIDIKAN_KBM' as DepartmentUnit,
+    current_position: '',
+    current_role_slug: 'guru',
+    supervisor_name: defaultSupervisorName,
+    user_account_active: true,
+    leave_allowance_annual: 12
+  });
+
+  const handleOpenEditModal = (emp: Employee) => {
+    setEditingEmpId(emp.id);
+    setFormEditEmp({
+      nip: emp.nip,
+      nik: emp.nik || '',
+      full_name: emp.full_name,
+      email: emp.email,
+      phone_number: emp.phone_number,
+      gender: emp.gender,
+      date_of_birth: emp.date_of_birth,
+      join_date: emp.join_date,
+      current_department: emp.current_department,
+      current_position: emp.current_position,
+      current_role_slug: emp.current_role_slug,
+      supervisor_name: emp.supervisor_name,
+      user_account_active: emp.user_account_active,
+      leave_allowance_annual: emp.leave_allowance_annual || 12
+    });
+    setModalEditEmployee(true);
+  };
+
+  const handleSaveEditEmployee = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formEditEmp.full_name || !formEditEmp.nip || !formEditEmp.phone_number) {
+      showToast('error', 'Nama lengkap, NIP, dan Nomor HP wajib diisi.');
+      return;
+    }
+    const res = updateEmployee(
+      editingEmpId,
+      formEditEmp,
+      activeActor.name || 'Pimpinan Yayasan',
+      activeActor.title || 'Yayasan'
+    );
+    if (res.success && res.employee) {
+      showToast('success', res.message);
+      setEmployees(getEmployees());
+      if (selectedEmployee && selectedEmployee.id === editingEmpId) {
+        setSelectedEmployee(res.employee);
+      }
+      setModalEditEmployee(false);
+    } else {
+      showToast('error', res.message);
+    }
+  };
 
   // Deteksi profil pegawai pemohon "Yang Bersangkutan"
   const activeEmployee = employees.find(e => 
@@ -836,10 +904,10 @@ export default function KepegawaianPage() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
                   <tr>
-                    <th className="py-3 px-4">Pegawai / NIP</th>
-                    <th className="py-3 px-4">Unit & Jabatan</th>
+                    <th className="py-3 px-4">Pegawai, NIP &amp; No. HP</th>
+                    <th className="py-3 px-4">Unit &amp; Jabatan</th>
                     <th className="py-3 px-4">Atasan Langsung</th>
-                    <th className="py-3 px-4">Status & Akun</th>
+                    <th className="py-3 px-4">Status &amp; Akun</th>
                     <th className="py-3 px-4 text-center">Sisa Cuti</th>
                     <th className="py-3 px-4 text-center">Aksi</th>
                   </tr>
@@ -850,6 +918,10 @@ export default function KepegawaianPage() {
                       <td className="py-3 px-4">
                         <div className="font-bold text-slate-800">{emp.full_name}</div>
                         <div className="text-[11px] text-emerald-700 font-mono">{emp.nip}</div>
+                        <div className="text-[11px] text-slate-700 flex items-center gap-1.5 mt-1 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200/80 w-fit">
+                          <Phone className="w-3 h-3 text-emerald-600 shrink-0" />
+                          <span className="font-semibold text-slate-800 font-mono">{emp.phone_number || 'Belum diisi'}</span>
+                        </div>
                       </td>
                       <td className="py-3 px-4">
                         <div className="font-medium text-slate-800">{emp.current_position}</div>
@@ -882,12 +954,22 @@ export default function KepegawaianPage() {
                         <span className="font-bold text-slate-800">{emp.leave_balance}</span> / {emp.leave_allowance_annual} hari
                       </td>
                       <td className="py-3 px-4 text-center">
-                        <button
-                          onClick={() => setSelectedEmployee(emp)}
-                          className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-2.5 py-1 rounded-lg font-semibold transition inline-flex items-center gap-1"
-                        >
-                          <Eye className="w-3.5 h-3.5 text-slate-500" /> Detail Profil
-                        </button>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => setSelectedEmployee(emp)}
+                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-2.5 py-1 rounded-lg font-semibold transition inline-flex items-center gap-1"
+                            title="Lihat Detail Profil &amp; Gaji"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-slate-500" /> Detail
+                          </button>
+                          <button
+                            onClick={() => handleOpenEditModal(emp)}
+                            className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs px-2.5 py-1 rounded-lg font-semibold transition inline-flex items-center gap-1"
+                            title="Edit Data Pegawai &amp; Kontak"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-emerald-600" /> Edit
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -1392,19 +1474,36 @@ export default function KepegawaianPage() {
                   NIP: {selectedEmployee.nip} &bull; {selectedEmployee.current_position} ({selectedEmployee.current_department})
                 </p>
               </div>
-              <button
-                onClick={() => setSelectedEmployee(null)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const emp = selectedEmployee;
+                    setSelectedEmployee(null);
+                    handleOpenEditModal(emp);
+                  }}
+                  className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition"
+                >
+                  <Pencil className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Edit Pegawai</span>
+                </button>
+                <button
+                  onClick={() => setSelectedEmployee(null)}
+                  className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Profil Ringkas */}
             <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-3.5 rounded-xl border border-slate-100">
               <div>
-                <span className="text-slate-500 block text-[10px]">Email & Kontak:</span>
-                <span className="font-semibold text-slate-800">{selectedEmployee.email} ({selectedEmployee.phone_number})</span>
+                <span className="text-slate-500 block text-[10px]">Nomor HP / WhatsApp:</span>
+                <span className="font-bold text-emerald-800 font-mono flex items-center gap-1.5 mt-0.5">
+                  <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                  {selectedEmployee.phone_number || 'Belum diisi'}
+                </span>
+                <span className="text-[11px] text-slate-500 block mt-1">{selectedEmployee.email}</span>
               </div>
               <div>
                 <span className="text-slate-500 block text-[10px]">Tanggal Bergabung:</span>
@@ -1412,12 +1511,12 @@ export default function KepegawaianPage() {
               </div>
               <div>
                 <span className="text-slate-500 block text-[10px]">Atasan Langsung:</span>
-                <span className="font-semibold text-slate-800">{selectedEmployee.supervisor_name}</span>
+                <span className="font-semibold text-slate-800">{selectedEmployee.supervisor_name || '—'}</span>
               </div>
               <div>
                 <span className="text-slate-500 block text-[10px]">Status Akun Login:</span>
                 <span className={selectedEmployee.user_account_active ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold'}>
-                  {selectedEmployee.user_account_active ? 'Aktif' : 'Dinonaktifkan'}
+                  {selectedEmployee.user_account_active ? 'Aktif (4 digit HP)' : 'Dinonaktifkan'}
                 </span>
               </div>
             </div>
@@ -1435,8 +1534,8 @@ export default function KepegawaianPage() {
             {/* KERAHASIAAN GAJI & KOMPENSASI (SECTION 7 LOCK & USER DECISION #1) */}
             <div className="border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-amber-800 flex items-center gap-1.5">
-                  <DollarSign className="w-4 h-4 text-amber-600" /> Informasi Kompensasi & Gaji Pokok
+                <span className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
+                  <DollarSign className="w-4 h-4 text-emerald-600" /> Informasi Kompensasi & Gaji Pokok
                 </span>
                 <span className="text-[10px] text-slate-500 font-mono">
                   Dilihat Sebagai: <strong className="text-slate-800">{activeActor.title} ({activeActor.role_slug})</strong>
@@ -1462,14 +1561,14 @@ export default function KepegawaianPage() {
                   );
                 } else {
                   return (
-                    <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs space-y-1">
-                      <div className="flex items-center gap-1.5 text-rose-700 font-bold">
-                        <Lock className="w-4 h-4" /> AKSES DITOLAK (SECTION 7 BUSINESS RULE LOCK)
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs space-y-1">
+                      <div className="flex items-center gap-1.5 text-amber-800 font-bold">
+                        <Lock className="w-4 h-4 text-amber-600" /> INFORMASI KONFIDENSIAL LEMBAGA
                       </div>
                       <p className="text-slate-600 text-[11px]">
-                        Nominal gaji dan insentif adalah wewenang <strong>Bagian Keuangan dan Pegawai yang bersangkutan</strong>. HRD, Kepala RT, Mudir, dan Ketua Yayasan <strong>tidak diizinkan</strong> melihat nominal kompensasi pegawai.
+                        Nominal gaji dan insentif adalah wewenang <strong>Pimpinan Yayasan, Bagian Keuangan, dan Pegawai yang bersangkutan</strong>.
                       </p>
-                      <div className="font-mono text-rose-800 font-semibold text-xs mt-1">
+                      <div className="font-mono text-amber-900 font-semibold text-xs mt-1">
                         Status Nominal: {contractAuth.maskedSalary}
                       </div>
                     </div>
@@ -1501,12 +1600,25 @@ export default function KepegawaianPage() {
               >
                 Arsipkan Pegawai Ini (Soft-Archive)
               </button>
-              <button
-                onClick={() => setSelectedEmployee(null)}
-                className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2 rounded-xl shadow transition"
-              >
-                Tutup
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const emp = selectedEmployee;
+                    setSelectedEmployee(null);
+                    handleOpenEditModal(emp);
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-xs transition flex items-center gap-1.5"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  <span>Edit Data Pegawai</span>
+                </button>
+                <button
+                  onClick={() => setSelectedEmployee(null)}
+                  className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2 rounded-xl shadow transition"
+                >
+                  Tutup
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1670,6 +1782,209 @@ export default function KepegawaianPage() {
                   className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs"
                 >
                   Simpan Pegawai
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================================
+          MODAL: EDIT DATA PEGAWAI & KONTAK (WEWENANG YAYASAN)
+      ===================================================================== */}
+      {modalEditEmployee && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl my-8 text-slate-800">
+            <div className="flex justify-between items-start border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <Pencil className="w-5 h-5 text-emerald-600" />
+                  <span>Edit Data Pegawai &amp; Kontak (Wewenang Yayasan)</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Perbarui identitas, nomor telepon/HP, jabatan, atasan, atau status login pegawai.
+                </p>
+              </div>
+              <button 
+                onClick={() => setModalEditEmployee(false)} 
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditEmployee} className="space-y-3 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-slate-600 font-semibold">NIP Pegawai *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formEditEmp.nip}
+                    onChange={e => setFormEditEmp({ ...formEditEmp, nip: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono focus:ring-2 focus:ring-emerald-500 font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-600 font-semibold">NIK KTP</label>
+                  <input
+                    type="text"
+                    value={formEditEmp.nik}
+                    onChange={e => setFormEditEmp({ ...formEditEmp, nik: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono focus:ring-2 focus:ring-emerald-500 font-medium"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-slate-600 font-semibold">Nama Lengkap &amp; Gelar *</label>
+                <input
+                  type="text"
+                  required
+                  value={formEditEmp.full_name}
+                  onChange={e => setFormEditEmp({ ...formEditEmp, full_name: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-800 mt-1 focus:ring-2 focus:ring-emerald-500 font-semibold text-sm"
+                />
+              </div>
+
+              <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-emerald-900 font-bold flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>Nomor HP / WhatsApp Pegawai *</span>
+                  </label>
+                  <span className="text-[10px] bg-white text-emerald-800 px-2 py-0.5 rounded font-mono font-bold border border-emerald-300">
+                    Kunci PIN Login: {formEditEmp.phone_number ? formEditEmp.phone_number.slice(-4) : '—'}
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  required
+                  placeholder="Contoh: 081234567890"
+                  value={formEditEmp.phone_number}
+                  onChange={e => setFormEditEmp({ ...formEditEmp, phone_number: e.target.value })}
+                  className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-slate-900 font-mono text-sm font-bold focus:ring-2 focus:ring-emerald-500"
+                />
+                <p className="text-[10px] text-emerald-700">
+                  ✓ Pegawai otomatis dapat login menggunakan NIP atau No. HP dengan PIN 4 angka terakhir nomor ini.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-slate-600 font-semibold">Unit Departemen</label>
+                  <select
+                    value={formEditEmp.current_department}
+                    onChange={e => setFormEditEmp({ ...formEditEmp, current_department: e.target.value as any })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-800 mt-1 focus:ring-2 focus:ring-emerald-500 font-semibold"
+                  >
+                    <option value="PENDIDIKAN_KBM">Pendidikan KBM</option>
+                    <option value="KESANTRIAN">Kesantrian &amp; Asrama</option>
+                    <option value="RUMAH_TANGGA">Rumah Tangga &amp; Logistik</option>
+                    <option value="KEUANGAN">Keuangan</option>
+                    <option value="KEPEGAWAIAN">Kepegawaian</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-slate-600 font-semibold">Jabatan Pekerjaan *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formEditEmp.current_position}
+                    onChange={e => setFormEditEmp({ ...formEditEmp, current_position: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-800 mt-1 focus:ring-2 focus:ring-emerald-500 font-medium"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-slate-600 font-semibold">Email</label>
+                  <input
+                    type="email"
+                    value={formEditEmp.email}
+                    onChange={e => setFormEditEmp({ ...formEditEmp, email: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-600 font-semibold">Jatah Cuti Tahunan (Hari)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="60"
+                    value={formEditEmp.leave_allowance_annual}
+                    onChange={e => setFormEditEmp({ ...formEditEmp, leave_allowance_annual: Number(e.target.value) })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-800 mt-1 focus:ring-2 focus:ring-emerald-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-slate-600 font-semibold">Atasan Langsung (Pimpinan / Supervisor) *</label>
+                <input
+                  type="text"
+                  required
+                  value={formEditEmp.supervisor_name}
+                  onChange={e => setFormEditEmp({ ...formEditEmp, supervisor_name: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-800 mt-1 focus:ring-2 focus:ring-emerald-500 font-medium"
+                />
+                <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                  <span className="text-[10px] text-slate-400">Pilihan Cepat:</span>
+                  <button
+                    type="button"
+                    onClick={() => setFormEditEmp({ ...formEditEmp, supervisor_name: defaultSupervisorName })}
+                    className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold hover:bg-emerald-100 transition"
+                  >
+                    {defaultSupervisorName}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormEditEmp({ ...formEditEmp, supervisor_name: 'Mudir Pesantren' })}
+                    className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-semibold hover:bg-slate-200 transition"
+                  >
+                    Mudir Pesantren
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormEditEmp({ ...formEditEmp, supervisor_name: 'Kepala Pengasuhan & Asrama' })}
+                    className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-semibold hover:bg-slate-200 transition"
+                  >
+                    Kepala Asrama
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                <div>
+                  <span className="font-semibold text-slate-800 block">Status Akses Login</span>
+                  <span className="text-[10px] text-slate-500">Jika dinonaktifkan, pegawai tidak dapat login ke aplikasi</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formEditEmp.user_account_active}
+                    onChange={e => setFormEditEmp({ ...formEditEmp, user_account_active: e.target.checked })}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setModalEditEmployee(false)}
+                  className="px-4 py-2 border border-slate-300 rounded-xl text-slate-700 font-semibold hover:bg-slate-50"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs flex items-center gap-1.5"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Simpan Perubahan</span>
                 </button>
               </div>
             </form>

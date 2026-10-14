@@ -58,10 +58,12 @@ import {
   assignSubstituteTeacherByMudir, 
   LeaveRequest 
 } from '@/lib/kepegawaianStore';
-import { useActiveTenant } from '@/lib/sessionStore';
+import { useActiveTenant, useActiveActor } from '@/lib/sessionStore';
 
 export default function DashboardKepalaSekolahPage() {
   const tenant = useActiveTenant();
+  const activeActor = useActiveActor();
+  const isYayasan = activeActor.role_key === 'yayasan' || activeActor.role_slug?.includes('yayasan');
   const [activeTab, setActiveTab] = useState<'kbm' | 'inval' | 'absen' | 'hafalan' | 'dokumentasi' | 'assign_kelas'>('kbm');
   const [modalDokumentasi, setModalDokumentasi] = useState(false);
   const [notif, setNotif] = useState('');
@@ -599,6 +601,25 @@ export default function DashboardKepalaSekolahPage() {
 
   return (
     <div className="space-y-6">
+      {/* Banner Khusus jika Dewan Yayasan Membuka Console Operasional Mudir */}
+      {isYayasan && (
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-xs">
+          <div className="flex items-center space-x-2.5">
+            <span className="text-xl">🏛️</span>
+            <div>
+              <div className="font-bold text-blue-900">Akses Dewan Yayasan: Tinjauan Operasional Kepala Sekolah (Mudir)</div>
+              <div className="text-slate-600">Laporan eksekutif terpadu dan rangkuman makro akademik telah dihimpun langsung pada Dashboard Yayasan.</div>
+            </div>
+          </div>
+          <Link
+            href="/dashboard/yayasan"
+            className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shrink-0 transition"
+          >
+            Kembali ke Dashboard Yayasan
+          </Link>
+        </div>
+      )}
+
       {/* Header Mudir - Manajemen Akademik */}
       <div className="bg-gradient-to-r from-emerald-800 to-teal-900 text-white rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
