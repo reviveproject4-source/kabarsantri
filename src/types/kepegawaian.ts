@@ -23,6 +23,7 @@ export type EmploymentType =
   | 'OUTSOURCING';    // Tenaga Alih Daya (Keamanan/Kebersihan Luar)
 
 export type DepartmentUnit =
+  | 'TAHFIDZ_ALQURAN' // Madrasah Tahfidz & Halaqah Al-Qur'an (Prioritas Utama Pesantren)
   | 'YAYASAN'        // Dewan Pembina & Pengurus Yayasan
   | 'KEPEGAWAIAN'    // HRD & People Governance
   | 'KEUANGAN'       // Bendahara & Akuntansi

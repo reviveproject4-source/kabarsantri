@@ -739,6 +739,9 @@ export interface SetoranTahfidzRecord {
   musyrif: string;
   tanggal: string;
   catatan?: string;
+  juz?: number;
+  halaman?: string;
+  jenis_setoran?: 'ZIYADAH' | 'MURAJAAH';
 }
 
 const DEFAULT_SETORAN_RECORDS: SetoranTahfidzRecord[] = [

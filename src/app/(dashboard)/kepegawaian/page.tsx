@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import {
   Users,
@@ -163,10 +163,10 @@ export default function KepegawaianPage() {
     gender: 'L' as 'L' | 'P',
     date_of_birth: '1990-01-01',
     join_date: new Date().toISOString().split('T')[0],
-    current_department: 'PENDIDIKAN_KBM' as DepartmentUnit,
+    current_department: 'TAHFIDZ_ALQURAN' as DepartmentUnit,
     current_position: '',
     current_role_slug: 'guru',
-    supervisor_name: defaultSupervisorName,
+    supervisor_name: '',
     user_account_active: true,
     leave_allowance_annual: 12,
     basic_salary: 3500000,
@@ -238,6 +238,40 @@ export default function KepegawaianPage() {
     showToast('error', 'Fitur Terkunci: Modul pengajuan cuti & izin online hanya tersedia pada Paket Enterprise.');
   };
 
+  // Daftar Atasan Langsung Berdasarkan Hierarki (Hanya Pejabat Struktural di Atasnya)
+  const availableSupervisors = useMemo(() => {
+    const list: { id: string; name: string; position: string; level: number }[] = [];
+    
+    // Level 1: Pimpinan Yayasan
+    const yysLeader = tenant.leader_name || activeActor.name || 'Pimpinan Yayasan';
+    list.push({
+      id: 'emp-yys-pimpinan',
+      name: yysLeader,
+      position: 'Ketua / Pimpinan Yayasan',
+      level: 1
+    });
+
+    // Level 2, 3, 4 dari pegawai aktif pesantren
+    employees.forEach(emp => {
+      const posLower = (emp.current_position || '').toLowerCase();
+      const roleLower = (emp.current_role_slug || '').toLowerCase();
+      
+      const isMudir = posLower.includes('mudir') || roleLower.includes('mudir') || posLower.includes('kepala madrasah') || posLower.includes('kepala sekolah');
+      const isWakilYayasan = posLower.includes('wakil') || roleLower.includes('wakil_yayasan');
+      const isKabid = posLower.includes('kepala') || posLower.includes('kabid') || posLower.includes('koordinator');
+
+      if (isWakilYayasan && !list.some(l => l.name === emp.full_name)) {
+        list.push({ id: emp.id, name: emp.full_name, position: emp.current_position || 'Wakil Yayasan', level: 2 });
+      } else if (isMudir && !list.some(l => l.name === emp.full_name)) {
+        list.push({ id: emp.id, name: emp.full_name, position: emp.current_position || 'Mudir Pesantren', level: 3 });
+      } else if (isKabid && !list.some(l => l.name === emp.full_name)) {
+        list.push({ id: emp.id, name: emp.full_name, position: emp.current_position || 'Kepala Bagian / Koordinator', level: 4 });
+      }
+    });
+
+    return list;
+  }, [employees, tenant.leader_name, activeActor.name]);
+
   // Form states
   const [formEmp, setFormEmp] = useState({
     tenant_id: tenant.id || 'tenant-al-kausar-9033',
@@ -250,12 +284,12 @@ export default function KepegawaianPage() {
     date_of_birth: '1990-01-01',
     join_date: new Date().toISOString().split('T')[0],
     lifecycle_status: 'ACTIVE' as const,
-    current_department: 'PENDIDIKAN_KBM' as DepartmentUnit,
+    current_department: 'TAHFIDZ_ALQURAN' as DepartmentUnit,
     current_position: '',
     current_role_slug: 'guru',
-    supervisor_id: activeActor.id || 'emp-yys-001',
-    supervisor_name: defaultSupervisorName,
-    job_description: ['Mengajar santri sesuai kurikulum madrasah', 'Mengisi jurnal pembelajaran KBM'],
+    supervisor_id: '',
+    supervisor_name: '',
+    job_description: ['Pengampu Halaqah Tahfidz & Bimbingan Santri', 'Mengisi mutaba\'ah hafalan'],
     user_account_id: '',
     user_account_active: true,
     leave_allowance_annual: 12,
@@ -264,20 +298,29 @@ export default function KepegawaianPage() {
   });
 
   const handleOpenNewEmployeeModal = () => {
-    setFormEmp(prev => ({
-      ...prev,
+    setFormEmp({
       tenant_id: tenant.id || 'tenant-al-kausar-9033',
-      supervisor_id: activeActor.id || 'emp-yys-001',
-      supervisor_name: defaultSupervisorName,
       nip: '',
       nik: '',
       full_name: '',
       email: '',
       phone_number: '',
+      gender: 'L',
+      date_of_birth: '1990-01-01',
+      join_date: new Date().toISOString().split('T')[0],
+      lifecycle_status: 'ACTIVE',
+      current_department: 'TAHFIDZ_ALQURAN',
       current_position: '',
+      current_role_slug: 'guru',
+      supervisor_id: '',
+      supervisor_name: '',
+      job_description: ['Pengampu Halaqah Tahfidz & Bimbingan Santri', 'Mengisi mutaba\'ah hafalan'],
+      user_account_id: '',
+      user_account_active: true,
+      leave_allowance_annual: 12,
       basic_salary: 3500000,
       tunjangan: 500000
-    }));
+    });
     setModalNewEmployee(true);
   };
 
@@ -345,6 +388,10 @@ export default function KepegawaianPage() {
   // Handler Register Employee
   const handleRegisterEmployee = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formEmp.supervisor_name || !formEmp.supervisor_name.trim() || formEmp.supervisor_name === 'CUSTOM_OTHER') {
+      showToast('error', 'Silakan tentukan Atasan Langsung sesuai hierarki organisasi pesantren.');
+      return;
+    }
     const res = registerEmployee(formEmp);
     if (res.success && res.employee) {
       saveEmployeeContract(res.employee.id, formEmp.basic_salary, [
@@ -1856,11 +1903,12 @@ export default function KepegawaianPage() {
                     onChange={e => setFormEmp({ ...formEmp, current_department: e.target.value as any })}
                     className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-800 mt-1 focus:ring-2 focus:ring-emerald-500 font-semibold"
                   >
-                    <option value="RUMAH_TANGGA">Rumah Tangga</option>
+                    <option value="TAHFIDZ_ALQURAN">Tahfidz Al-Qur'an (Utama)</option>
                     <option value="PENDIDIKAN_KBM">Pendidikan KBM</option>
-                    <option value="KESANTRIAN">Kesantrian</option>
+                    <option value="KESANTRIAN">Kesantrian &amp; Asrama</option>
                     <option value="KEUANGAN">Keuangan</option>
-                    <option value="KEPEGAWAIAN">Kepegawaian</option>
+                    <option value="RUMAH_TANGGA">Rumah Tangga &amp; Sarpras</option>
+                    <option value="KEPEGAWAIAN">Kepegawaian / HRD</option>
                   </select>
                 </div>
                 <div>
@@ -1868,7 +1916,7 @@ export default function KepegawaianPage() {
                   <input
                     type="text"
                     required
-                    placeholder="Contoh: Guru Fiqih Wustha"
+                    placeholder="Contoh: Guru Tahfidz Halaqah"
                     value={formEmp.current_position}
                     onChange={e => setFormEmp({ ...formEmp, current_position: e.target.value })}
                     className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-800 mt-1 focus:ring-2 focus:ring-emerald-500 font-medium"
@@ -1931,39 +1979,41 @@ export default function KepegawaianPage() {
               </div>
 
               <div>
-                <label className="text-slate-600 font-semibold">Atasan Langsung (Pimpinan / Supervisor) *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Nama Pimpinan Yayasan / Mudir Pesantren"
-                  value={formEmp.supervisor_name}
-                  onChange={e => setFormEmp({ ...formEmp, supervisor_name: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-800 mt-1 focus:ring-2 focus:ring-emerald-500 font-medium"
-                />
-                <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                  <span className="text-[10px] text-slate-400">Pilihan Cepat:</span>
-                  <button
-                    type="button"
-                    onClick={() => setFormEmp({ ...formEmp, supervisor_name: defaultSupervisorName })}
-                    className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold hover:bg-emerald-100 transition"
-                  >
-                    {defaultSupervisorName}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormEmp({ ...formEmp, supervisor_name: 'Mudir Pesantren' })}
-                    className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-semibold hover:bg-slate-200 transition"
-                  >
-                    Mudir Pesantren
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormEmp({ ...formEmp, supervisor_name: 'Kepala Pengasuhan & Asrama' })}
-                    className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-semibold hover:bg-slate-200 transition"
-                  >
-                    Kepala Asrama
-                  </button>
+                <div className="flex items-center justify-between">
+                  <label className="text-slate-600 font-semibold">Atasan Langsung (Pimpinan / Supervisor) *</label>
+                  <span className="text-[10px] text-emerald-700 font-medium">Berdasarkan Hierarki Organisasi</span>
                 </div>
+                <select
+                  required
+                  value={formEmp.supervisor_name}
+                  onChange={e => {
+                    const selectedName = e.target.value;
+                    const match = availableSupervisors.find(s => s.name === selectedName);
+                    setFormEmp({
+                      ...formEmp,
+                      supervisor_name: selectedName,
+                      supervisor_id: match?.id || 'emp-yys-001'
+                    });
+                  }}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-800 mt-1 focus:ring-2 focus:ring-emerald-500 font-medium"
+                >
+                  <option value="">-- Pilih Atasan Langsung Berdasarkan Hierarki --</option>
+                  {availableSupervisors.map(sup => (
+                    <option key={sup.id} value={sup.name}>
+                      {sup.name} ({sup.position})
+                    </option>
+                  ))}
+                  <option value="CUSTOM_OTHER">-- Ketik Nama Atasan Lainnya --</option>
+                </select>
+                {formEmp.supervisor_name === 'CUSTOM_OTHER' && (
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ketik nama lengkap pimpinan / atasan langsung..."
+                    onChange={e => setFormEmp({ ...formEmp, supervisor_name: e.target.value })}
+                    className="w-full bg-white border border-emerald-400 rounded-xl p-2.5 text-slate-800 mt-2 focus:ring-2 focus:ring-emerald-500 font-medium text-xs"
+                  />
+                )}
               </div>
 
               <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
@@ -2075,6 +2125,7 @@ export default function KepegawaianPage() {
                     onChange={e => setFormEditEmp({ ...formEditEmp, current_department: e.target.value as any })}
                     className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-800 mt-1 focus:ring-2 focus:ring-emerald-500 font-semibold"
                   >
+                    <option value="TAHFIDZ_ALQURAN">Tahfidz Al-Qur'an (Utama)</option>
                     <option value="PENDIDIKAN_KBM">Pendidikan KBM</option>
                     <option value="KESANTRIAN">Kesantrian &amp; Asrama</option>
                     <option value="RUMAH_TANGGA">Rumah Tangga &amp; Logistik</option>
@@ -2149,38 +2200,41 @@ export default function KepegawaianPage() {
               </div>
 
               <div>
-                <label className="text-slate-600 font-semibold">Atasan Langsung (Pimpinan / Supervisor) *</label>
-                <input
-                  type="text"
+                <div className="flex items-center justify-between">
+                  <label className="text-slate-600 font-semibold">Atasan Langsung (Pimpinan / Supervisor) *</label>
+                  <span className="text-[10px] text-emerald-700 font-medium">Berdasarkan Hierarki Organisasi</span>
+                </div>
+                <select
                   required
                   value={formEditEmp.supervisor_name}
-                  onChange={e => setFormEditEmp({ ...formEditEmp, supervisor_name: e.target.value })}
+                  onChange={e => {
+                    const selectedName = e.target.value;
+                    setFormEditEmp({
+                      ...formEditEmp,
+                      supervisor_name: selectedName
+                    });
+                  }}
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-800 mt-1 focus:ring-2 focus:ring-emerald-500 font-medium"
-                />
-                <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                  <span className="text-[10px] text-slate-400">Pilihan Cepat:</span>
-                  <button
-                    type="button"
-                    onClick={() => setFormEditEmp({ ...formEditEmp, supervisor_name: defaultSupervisorName })}
-                    className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold hover:bg-emerald-100 transition"
-                  >
-                    {defaultSupervisorName}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormEditEmp({ ...formEditEmp, supervisor_name: 'Mudir Pesantren' })}
-                    className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-semibold hover:bg-slate-200 transition"
-                  >
-                    Mudir Pesantren
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormEditEmp({ ...formEditEmp, supervisor_name: 'Kepala Pengasuhan & Asrama' })}
-                    className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-semibold hover:bg-slate-200 transition"
-                  >
-                    Kepala Asrama
-                  </button>
-                </div>
+                >
+                  <option value="">-- Pilih Atasan Langsung Berdasarkan Hierarki --</option>
+                  {availableSupervisors
+                    .filter(sup => sup.name !== formEditEmp.full_name) // Cegah memilih diri sendiri
+                    .map(sup => (
+                      <option key={sup.id} value={sup.name}>
+                        {sup.name} ({sup.position})
+                      </option>
+                    ))}
+                  <option value="CUSTOM_OTHER">-- Ketik Nama Atasan Lainnya --</option>
+                </select>
+                {formEditEmp.supervisor_name === 'CUSTOM_OTHER' && (
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ketik nama lengkap pimpinan / atasan langsung..."
+                    onChange={e => setFormEditEmp({ ...formEditEmp, supervisor_name: e.target.value })}
+                    className="w-full bg-white border border-emerald-400 rounded-xl p-2.5 text-slate-800 mt-2 focus:ring-2 focus:ring-emerald-500 font-medium text-xs"
+                  />
+                )}
               </div>
 
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">

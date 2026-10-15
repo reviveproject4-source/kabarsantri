@@ -1152,22 +1152,6 @@ export default function LearningSessionKBMPage() {
               </tbody>
             </table>
           </div>
-
-          {/* Banner Integrasi ke Mudir */}
-          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center space-x-2 text-slate-700">
-              <School className="w-5 h-5 text-emerald-600 shrink-0" />
-              <span>
-                <strong>Integrasi Real-Time:</strong> Seluruh hasil sesi pembelajaran, jurnal mengajar, dan data remedial ini langsung masuk ke Dashboard Kepala Sekolah / Mudir.
-              </span>
-            </div>
-            <Link
-              href="/dashboard/mudir"
-              className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center space-x-1 underline shrink-0"
-            >
-              <span>Lihat Laporan Aktual di Dashboard Mudir ➔</span>
-            </Link>
-          </div>
         </div>
       )}
     </div>

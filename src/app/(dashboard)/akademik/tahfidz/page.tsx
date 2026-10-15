@@ -46,6 +46,9 @@ interface SetoranRecord {
   musyrif: string;
   tanggal: string;
   catatan?: string;
+  juz?: number;
+  halaman?: string;
+  jenis_setoran?: 'ZIYADAH' | 'MURAJAAH';
 }
 
 export default function TahfidzManagementPage() {
@@ -75,6 +78,14 @@ export default function TahfidzManagementPage() {
   const [tipeHafalan, setTipeHafalan] = useState<'quran' | 'hadis' | 'kitab' | 'custom_yayasan'>('quran');
   const [selectedMateriId, setSelectedMateriId] = useState('');
   const [rincianHafalan, setRincianHafalan] = useState('Surah An-Nazi\'at (1 - 46)');
+
+  // Input Khusus Progress Guru Tahfidz (Halaqah Al-Qur'an): Halaman & Juz
+  const [jenisSetoran, setJenisSetoran] = useState<'ZIYADAH' | 'MURAJAAH'>('ZIYADAH');
+  const [nomorJuz, setNomorJuz] = useState<number>(30);
+  const [halamanMulai, setHalamanMulai] = useState<string>('582');
+  const [halamanSelesai, setHalamanSelesai] = useState<string>('583');
+  const [surahAyat, setSurahAyat] = useState<string>("An-Naba' (1 - 40)");
+
   // Step 4: Nilai
   const [skorKelancaran, setSkorKelancaran] = useState(90);
   const [skorTajwid, setSkorTajwid] = useState(90);
@@ -160,6 +171,18 @@ export default function TahfidzManagementPage() {
     const kelasNama = selectedKelasObj ? selectedKelasObj.nama_kelas : 'Kelas';
     const materiNama = selectedMateriObj ? selectedMateriObj.nama_materi : 'Materi Hafalan';
 
+    const finalHalaman = (halamanSelesai && halamanSelesai !== halamanMulai)
+      ? `Hal. ${halamanMulai} - ${halamanSelesai}`
+      : (halamanMulai ? `Hal. ${halamanMulai}` : '');
+
+    const compiledRincian = tipeHafalan === 'quran'
+      ? `[${jenisSetoran === 'ZIYADAH' ? 'Ziyadah' : 'Muraja\'ah'}] Juz ${nomorJuz}${finalHalaman ? ` • ${finalHalaman}` : ''} • ${surahAyat || rincianHafalan}`
+      : rincianHafalan;
+
+    const compiledMateri = tipeHafalan === 'quran'
+      ? `Al-Qur'an (Juz ${nomorJuz})`
+      : materiNama;
+
     const newRecord: SetoranRecord = {
       id: `st-${Date.now()}`,
       santri: santriNama,
@@ -172,8 +195,8 @@ export default function TahfidzManagementPage() {
         tipeHafalan === 'quran' ? "Al-Qur'an" :
         tipeHafalan === 'hadis' ? 'Hadis Nabawi' :
         tipeHafalan === 'kitab' ? 'Kitab Kuning / Matan' : 'Kustom Yayasan',
-      nama_materi: materiNama,
-      rincian_hafalan: rincianHafalan,
+      nama_materi: compiledMateri,
+      rincian_hafalan: compiledRincian,
       kelancaran: Number(skorKelancaran),
       tajwid: Number(skorTajwid),
       makhraj: Number(skorMakhraj),
@@ -181,21 +204,25 @@ export default function TahfidzManagementPage() {
       musyrif: currentActor.name,
       tanggal: new Date().toISOString().split('T')[0],
       catatan,
+      juz: tipeHafalan === 'quran' ? nomorJuz : undefined,
+      halaman: tipeHafalan === 'quran' ? finalHalaman : undefined,
+      jenis_setoran: tipeHafalan === 'quran' ? jenisSetoran : undefined,
     };
 
     setSetoranList([newRecord, ...setoranList]);
+    addSharedTahfidzSetoran(newRecord as any);
 
     try {
       const { supabase } = await import('@/lib/supabaseClient');
       await supabase.from('tahfidz_setoran_v2').insert({
         jenis_setoran: tipeHafalan,
-        juz: tipeHafalan === 'quran' ? 30 : null,
-        halaman_mulai: 1,
-        halaman_selesai: 1,
+        juz: tipeHafalan === 'quran' ? nomorJuz : null,
+        halaman_mulai: Number(halamanMulai) || 1,
+        halaman_selesai: Number(halamanSelesai) || 1,
         skor_tajwid: Number(skorTajwid),
         skor_kelancaran: Number(skorKelancaran),
         skor_makhraj: Number(skorMakhraj),
-        catatan_musyrif: `[${kelasNama}] ${materiNama}: ${rincianHafalan} - ${catatan}`,
+        catatan_musyrif: `[${kelasNama}] ${compiledMateri}: ${compiledRincian} - ${catatan}`,
         status_kelulusan: Number(skorKelancaran) >= 75 ? 'lulus' : 'belum_lulus',
       });
     } catch (err) {
@@ -438,7 +465,23 @@ export default function TahfidzManagementPage() {
                     {getTipeBadge(item.tipe_hafalan)}
                   </td>
                   <td className="p-3 max-w-xs">
-                    <div className="font-bold text-slate-800">{item.nama_materi}</div>
+                    <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                      <span className="font-bold text-slate-800">{item.nama_materi}</span>
+                      {item.jenis_setoran && (
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
+                          item.jenis_setoran === 'ZIYADAH'
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                            : 'bg-blue-100 text-blue-800 border border-blue-300'
+                        }`}>
+                          {item.jenis_setoran === 'ZIYADAH' ? 'Ziyadah' : 'Muraja\'ah'}
+                        </span>
+                      )}
+                      {item.halaman && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-850 border border-amber-300 font-mono font-bold">
+                          📖 {item.halaman}
+                        </span>
+                      )}
+                    </div>
                     <div className="text-[11px] text-slate-600 leading-snug">{item.rincian_hafalan}</div>
                     {item.catatan && (
                       <div className="text-[10px] text-slate-400 italic mt-0.5">"{item.catatan}"</div>
@@ -575,45 +618,156 @@ export default function TahfidzManagementPage() {
                 </div>
               </div>
 
-              {/* STEP 4: PILIH MATERI & RINCIAN */}
-              <div className="grid sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    Materi / Kitab / Bab
-                  </label>
-                  {availableMateri.length > 0 ? (
-                    <select
-                      value={selectedMateriId}
-                      onChange={(e) => setSelectedMateriId(e.target.value)}
-                      className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 font-semibold text-slate-800"
-                    >
-                      {availableMateri.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.nama_materi}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <div className="p-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-[11px]">
-                      Belum ada kurikulum materi untuk kategori ini. Tambahkan via "+ Kurikulum Hafalan Yayasan".
-                    </div>
-                  )}
-                </div>
+              {/* STEP 4: PROGRESS HALAQAH TAHFIDZ (HALAMAN & JUZ SANTRI) */}
+              {tipeHafalan === 'quran' ? (
+                <div className="p-3.5 bg-emerald-50/70 rounded-xl border border-emerald-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="block font-bold text-emerald-950 text-xs">
+                      4. Progres Setoran Halaqah Al-Qur'an (Halaman &amp; Juz)
+                    </label>
+                    <span className="text-[10px] text-emerald-700 font-semibold bg-white px-2 py-0.5 rounded border border-emerald-300">
+                      Standar Mushaf Madinah (604 Halaman)
+                    </span>
+                  </div>
 
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    Rincian (Surah/Ayat/Hadis ke-/Bait)
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={rincianHafalan}
-                    onChange={(e) => setRincianHafalan(e.target.value)}
-                    placeholder="Contoh: An-Naba: 1-40 / Hadis 1-5"
-                    className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  />
+                  {/* Jenis Setoran: Ziyadah vs Muraja'ah */}
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Jenis Setoran Santri *
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setJenisSetoran('ZIYADAH')}
+                        className={`py-2 px-3 rounded-lg text-xs font-bold border transition flex items-center justify-center space-x-1.5 ${
+                          jenisSetoran === 'ZIYADAH'
+                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                            : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>🌱 Ziyadah (Hafalan Baru)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setJenisSetoran('MURAJAAH')}
+                        className={`py-2 px-3 rounded-lg text-xs font-bold border transition flex items-center justify-center space-x-1.5 ${
+                          jenisSetoran === 'MURAJAAH'
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                            : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>🔄 Muraja'ah (Pengulangan)</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Grid Juz & Halaman */}
+                  <div className="grid grid-cols-3 gap-2.5">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                        Juz Al-Qur'an *
+                      </label>
+                      <select
+                        value={nomorJuz}
+                        onChange={(e) => setNomorJuz(Number(e.target.value))}
+                        className="w-full p-2 bg-white border border-slate-300 rounded-lg font-bold text-xs text-slate-800 focus:ring-2 focus:ring-emerald-500"
+                      >
+                        {Array.from({ length: 30 }, (_, i) => i + 1).map((j) => (
+                          <option key={j} value={j}>
+                            Juz {j}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                        Halaman Mulai *
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={604}
+                        required
+                        value={halamanMulai}
+                        onChange={(e) => setHalamanMulai(e.target.value)}
+                        placeholder="Contoh: 582"
+                        className="w-full p-2 bg-white border border-slate-300 rounded-lg font-mono font-bold text-xs text-slate-800 text-center focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                        Halaman Selesai *
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={604}
+                        required
+                        value={halamanSelesai}
+                        onChange={(e) => setHalamanSelesai(e.target.value)}
+                        placeholder="Contoh: 583"
+                        className="w-full p-2 bg-white border border-slate-300 rounded-lg font-mono font-bold text-xs text-slate-800 text-center focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Surah & Ayat */}
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Nama Surah &amp; Ayat *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={surahAyat}
+                      onChange={(e) => setSurahAyat(e.target.value)}
+                      placeholder="Contoh: An-Naba' : 1 - 40"
+                      className="w-full p-2 bg-white border border-slate-300 rounded-lg font-semibold text-xs text-slate-800 focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Materi / Kitab / Bab
+                    </label>
+                    {availableMateri.length > 0 ? (
+                      <select
+                        value={selectedMateriId}
+                        onChange={(e) => setSelectedMateriId(e.target.value)}
+                        className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 font-semibold text-slate-800"
+                      >
+                        {availableMateri.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.nama_materi}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div className="p-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-[11px]">
+                        Belum ada kurikulum materi untuk kategori ini. Tambahkan via "+ Kurikulum Hafalan Yayasan".
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Rincian (Surah/Ayat/Hadis ke-/Bait)
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={rincianHafalan}
+                      onChange={(e) => setRincianHafalan(e.target.value)}
+                      placeholder="Contoh: An-Naba: 1-40 / Hadis 1-5"
+                      className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* STEP 5: PENILAIAN */}
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
