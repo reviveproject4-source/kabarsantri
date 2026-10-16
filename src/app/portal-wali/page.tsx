@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import PrintableKuitansi from '@/components/finance/PrintableKuitansi';
 import { useActiveTenant, useAppMode } from '@/lib/sessionStore';
-import { getSharedSantriList, isTenantMode } from '@/lib/sharedDataStore';
+import { getSharedSantriList, isTenantMode, getSharedTahfidzSetoran } from '@/lib/sharedDataStore';
 
 const DEMO_CHILDREN = [
   {
@@ -117,22 +117,33 @@ export default function PortalWaliSantriPage() {
   }, []);
 
   const isTenantActive = mounted ? (isTenant || isTenantMode()) : false;
+  const allSetorans = mounted ? getSharedTahfidzSetoran() : [];
 
   const childrenData = isTenantActive
-    ? realSantriList.map((s, idx) => ({
-        id: s.id || s.nis || `c-${idx}`,
-        nama: s.nama,
-        nis: s.nis,
-        unit: s.kelas_nama || 'Madrasah / Pondok',
-        kamar: s.kamar || s.asrama || 'Asrama Santri',
-        tahfidz_terakhir: 'Belum ada catatan setoran',
-        status_sholat: 'Hadir Lengkap',
-        saldo_jajan: s.saldo_jajan || 0,
-        limit_harian: 20000,
-        kondisi_kesehatan: 'Sehat Wal Afiat',
-        tagihan_spp: 0,
-        spp_status: 'Lunas',
-      }))
+    ? realSantriList.map((s, idx) => {
+        const childSetoran = allSetorans.find(st => 
+          (st.nis && s.nis && st.nis.trim() === s.nis.trim()) ||
+          (st.santri && s.nama && st.santri.trim().toLowerCase() === s.nama.trim().toLowerCase())
+        );
+        const lastTahfidzText = childSetoran
+          ? `${childSetoran.juz ? `Juz ${childSetoran.juz} ` : ''}(${childSetoran.rincian_hafalan || childSetoran.nama_materi}) - Nilai: ${childSetoran.kelancaran} (${childSetoran.is_lulus ? 'Mutqin' : 'Mengulang'})`
+          : 'Belum ada catatan setoran';
+
+        return {
+          id: s.id || s.nis || `c-${idx}`,
+          nama: s.nama,
+          nis: s.nis,
+          unit: s.kelas_nama || 'Madrasah / Pondok',
+          kamar: s.kamar || s.asrama || 'Asrama Santri',
+          tahfidz_terakhir: lastTahfidzText,
+          status_sholat: 'Hadir Lengkap',
+          saldo_jajan: s.saldo_jajan || 0,
+          limit_harian: 20000,
+          kondisi_kesehatan: 'Sehat Wal Afiat',
+          tagihan_spp: 0,
+          spp_status: 'Lunas',
+        };
+      })
     : DEMO_CHILDREN;
 
   const currentChild = childrenData.find(c => c.id === selectedChild) || childrenData[0] || null;

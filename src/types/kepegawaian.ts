@@ -44,6 +44,7 @@ export interface EmploymentContract {
     title: string;
     amount: number;
   }[];
+  kasbon?: number;           // Sisa Pinjaman / Kasbon Pegawai
   document_url?: string;
   is_active: boolean;
   notes?: string;
@@ -86,6 +87,12 @@ export interface Employee {
   leave_allowance_annual: number;     // Jatah cuti tahunan (default 12 hari)
   leave_balance: number;              // Sisa cuti aktif
   position_history: PositionHistory[];
+  
+  // Data Keluarga & Finansial Tambahan (Instruksi Mami Lina)
+  nama_pasangan?: string;             // Nama Suami / Istri Pegawai
+  jumlah_tanggungan?: number;         // Jumlah Anak / Tanggungan Keluarga
+  kasbon?: number;                    // Sisa Pinjaman / Kasbon Pegawai (Rp)
+
   created_at: string;
   updated_at: string;
   archived_at?: string;

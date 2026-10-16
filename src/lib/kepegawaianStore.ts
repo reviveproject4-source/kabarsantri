@@ -1671,21 +1671,25 @@ export function getEmployeeContract(
 export function saveEmployeeContract(
   employeeId: string,
   basicSalary: number,
-  allowances: { title: string; amount: number }[] = []
+  allowances: { title: string; amount: number }[] = [],
+  kasbon?: number
 ): boolean {
   const state = loadState();
   const existingIdx = state.contracts.findIndex(c => c.employee_id === employeeId);
+  const existingContract = existingIdx >= 0 ? state.contracts[existingIdx] : null;
+
   const contractData: EmploymentContract = {
-    id: existingIdx >= 0 ? state.contracts[existingIdx].id : `ctr-${employeeId}`,
+    id: existingContract ? existingContract.id : `ctr-${employeeId}`,
     employee_id: employeeId,
-    contract_number: existingIdx >= 0 ? state.contracts[existingIdx].contract_number : `CTR/2026/${employeeId.slice(0, 4).toUpperCase()}`,
-    type: existingIdx >= 0 ? state.contracts[existingIdx].type : 'TETAP',
-    start_date: existingIdx >= 0 ? state.contracts[existingIdx].start_date : new Date().toISOString().split('T')[0],
+    contract_number: existingContract ? existingContract.contract_number : `CTR/2026/${employeeId.slice(0, 4).toUpperCase()}`,
+    type: existingContract ? existingContract.type : 'TETAP',
+    start_date: existingContract ? existingContract.start_date : new Date().toISOString().split('T')[0],
     end_date: null,
     basic_salary: basicSalary,
     allowances: allowances.length > 0 ? allowances : [
       { title: 'Tunjangan Jabatan & Kehadiran', amount: 500000 }
     ],
+    kasbon: kasbon !== undefined ? kasbon : (existingContract?.kasbon || 0),
     is_active: true
   };
 
@@ -1693,6 +1697,14 @@ export function saveEmployeeContract(
     state.contracts[existingIdx] = contractData;
   } else {
     state.contracts.push(contractData);
+  }
+
+  // Sinkronisasi kasbon ke Employee record jika ditemukan
+  if (kasbon !== undefined) {
+    const empIdx = state.employees.findIndex(e => e.id === employeeId);
+    if (empIdx >= 0) {
+      state.employees[empIdx].kasbon = kasbon;
+    }
   }
 
   saveState(state);

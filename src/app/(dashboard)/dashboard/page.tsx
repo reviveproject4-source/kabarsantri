@@ -328,14 +328,15 @@ export default function UnifiedRoleDashboardPage() {
   };
 
   // Status Role: Apakah Pimpinan atau Tim Pegawai?
-  const isPimpinan = ['yayasan', 'wakil_yayasan', 'mudir', 'kepala_kepegawaian', 'keuangan', 'kepala_rumah_tangga', 'super_admin', 'tenant_admin_nh'].includes(currentActor.role_key);
-  const isGuru = currentActor.role_key === 'guru' || currentActor.role_key === 'guru_akhwat' || currentActor.role_key === 'pegawai';
-  const isMusyrif = currentActor.role_key === 'musyrif' || currentActor.role_key === 'musyrifah';
-  const isLaundry = currentActor.role_key === 'laundry';
-  const isDapur = currentActor.role_key === 'dapur';
-  const isSatpam = currentActor.role_key === 'satpam';
-  const isKasir = currentActor.role_key === 'kasir';
-  const isStafHrd = currentActor.role_key === 'staf_hrd';
+  const isPimpinan = ['yayasan', 'wakil_yayasan', 'mudir', 'kepala_kepegawaian', 'keuangan', 'kepala_rumah_tangga', 'super_admin', 'tenant_admin_nh'].includes(currentActor.role_key) || ['yayasan', 'wakil_yayasan', 'mudir', 'kepala_kepegawaian', 'keuangan', 'kepala_rumah_tangga'].includes(currentActor.role_slug);
+  const isSatpam = currentActor.role_key === 'satpam' || currentActor.role_slug === 'satpam';
+  const isMusyrif = currentActor.role_key === 'musyrif' || currentActor.role_key === 'musyrifah' || currentActor.role_slug === 'musyrif' || currentActor.role_slug === 'musyrifah';
+  const isLaundry = currentActor.role_key === 'laundry' || currentActor.role_slug === 'laundry';
+  const isDapur = currentActor.role_key === 'dapur' || currentActor.role_slug === 'dapur';
+  const isKasir = currentActor.role_key === 'kasir' || currentActor.role_slug === 'kasir';
+  const isStafHrd = currentActor.role_key === 'staf_hrd' || currentActor.role_slug === 'staf_hrd';
+  const isTahfidzSpecialist = currentActor.dept === 'TAHFIDZ_ALQURAN' || currentActor.role_slug === 'tahfidz' || (currentActor.title || '').toLowerCase().includes('tahfidz');
+  const isGuru = currentActor.role_key === 'guru' || currentActor.role_key === 'guru_akhwat' || currentActor.role_slug === 'guru' || isTahfidzSpecialist || (currentActor.role_key === 'pegawai' && !isSatpam && !isMusyrif && !isLaundry && !isDapur && !isKasir && !isStafHrd);
 
   // Ambil data sesi KBM jika Guru
   const mySessions = (sessions || []).filter(s => 
@@ -1551,6 +1552,29 @@ export default function UnifiedRoleDashboardPage() {
                   </Link>
                 </div>
               </div>
+
+              {/* Banner Spesialis Guru Tahfidz & Mutaba'ah Wali */}
+              {isTahfidzSpecialist && (
+                <div className="p-3.5 bg-gradient-to-r from-emerald-500/15 via-emerald-500/10 to-transparent border border-emerald-500/30 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                    <div>
+                      <span className="font-bold text-emerald-950 dark:text-emerald-200 block">
+                        Portal Khusus Guru Tahfidz &amp; Musyrif Halaqah Qur'an
+                      </span>
+                      <p className="text-[11px] text-emerald-800 dark:text-emerald-300">
+                        Setiap progres setoran hafalan (Juz, Surat, Ayat, Kelancaran) yang Anda input di sini otomatis mengalir ke buku pantau Portal Wali Santri.
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    href="/akademik/tahfidz"
+                    className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shrink-0 transition text-center shadow-xs"
+                  >
+                    Buka Meja Halaqah &rarr;
+                  </Link>
+                </div>
+              )}
 
               {/* CARD PRIORITAS TAHFIDZ SANTRI */}
               <div className="bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/50 rounded-2xl p-4 sm:p-5 space-y-3">

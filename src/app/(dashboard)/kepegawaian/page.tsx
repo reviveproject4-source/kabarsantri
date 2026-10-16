@@ -170,7 +170,10 @@ export default function KepegawaianPage() {
     user_account_active: true,
     leave_allowance_annual: 12,
     basic_salary: 3500000,
-    tunjangan: 500000
+    tunjangan: 500000,
+    nama_pasangan: '',
+    jumlah_tanggungan: 0,
+    kasbon: 0
   });
 
   const handleOpenEditModal = (emp: Employee) => {
@@ -178,6 +181,7 @@ export default function KepegawaianPage() {
     const contractAuth = getEmployeeContract(emp.id, 'yayasan', emp.id);
     const currentSalary = contractAuth.contract?.basic_salary || 3500000;
     const currentTunjangan = contractAuth.contract?.allowances?.[0]?.amount || 500000;
+    const currentKasbon = emp.kasbon !== undefined ? emp.kasbon : (contractAuth.contract?.kasbon || 0);
 
     setFormEditEmp({
       nip: emp.nip,
@@ -195,7 +199,10 @@ export default function KepegawaianPage() {
       user_account_active: emp.user_account_active,
       leave_allowance_annual: emp.leave_allowance_annual || 12,
       basic_salary: currentSalary,
-      tunjangan: currentTunjangan
+      tunjangan: currentTunjangan,
+      nama_pasangan: emp.nama_pasangan || '',
+      jumlah_tanggungan: emp.jumlah_tanggungan || 0,
+      kasbon: currentKasbon
     });
     setModalEditEmployee(true);
   };
@@ -213,9 +220,12 @@ export default function KepegawaianPage() {
       activeActor.title || 'Yayasan'
     );
     if (res.success && res.employee) {
-      saveEmployeeContract(editingEmpId, formEditEmp.basic_salary, [
-        { title: 'Tunjangan Jabatan & Kehadiran', amount: formEditEmp.tunjangan }
-      ]);
+      saveEmployeeContract(
+        editingEmpId, 
+        formEditEmp.basic_salary, 
+        [{ title: 'Tunjangan Jabatan & Kehadiran', amount: formEditEmp.tunjangan }],
+        formEditEmp.kasbon
+      );
       showToast('success', res.message);
       setEmployees(getEmployees());
       if (selectedEmployee && selectedEmployee.id === editingEmpId) {
@@ -294,7 +304,10 @@ export default function KepegawaianPage() {
     user_account_active: true,
     leave_allowance_annual: 12,
     basic_salary: 3500000,
-    tunjangan: 500000
+    tunjangan: 500000,
+    nama_pasangan: '',
+    jumlah_tanggungan: 0,
+    kasbon: 0
   });
 
   const handleOpenNewEmployeeModal = () => {
@@ -319,7 +332,10 @@ export default function KepegawaianPage() {
       user_account_active: true,
       leave_allowance_annual: 12,
       basic_salary: 3500000,
-      tunjangan: 500000
+      tunjangan: 500000,
+      nama_pasangan: '',
+      jumlah_tanggungan: 0,
+      kasbon: 0
     });
     setModalNewEmployee(true);
   };
@@ -352,8 +368,8 @@ export default function KepegawaianPage() {
     new_department: 'PENDIDIKAN_KBM' as DepartmentUnit,
     new_position: '',
     new_role_slug: 'guru',
-    new_supervisor_id: 'emp-mdr-001',
-    new_supervisor_name: 'Dr. KH. Mahmud Ridwan, M.A.',
+    new_supervisor_id: 'emp-yys-pimpinan',
+    new_supervisor_name: 'Pimpinan Yayasan',
     sk_number: 'SK/YYS/2026/088',
     reason: 'PROMOTION' as const,
     effective_date: new Date().toISOString().split('T')[0]
@@ -394,9 +410,12 @@ export default function KepegawaianPage() {
     }
     const res = registerEmployee(formEmp);
     if (res.success && res.employee) {
-      saveEmployeeContract(res.employee.id, formEmp.basic_salary, [
-        { title: 'Tunjangan Jabatan & Kehadiran', amount: formEmp.tunjangan }
-      ]);
+      saveEmployeeContract(
+        res.employee.id, 
+        formEmp.basic_salary, 
+        [{ title: 'Tunjangan Jabatan & Kehadiran', amount: formEmp.tunjangan }],
+        formEmp.kasbon
+      );
       showToast('success', res.message);
       setModalNewEmployee(false);
       refreshData();
@@ -974,6 +993,20 @@ export default function KepegawaianPage() {
                       <td className="py-3 px-4">
                         <div className="font-medium text-slate-800">{emp.current_position}</div>
                         <div className="text-[11px] text-slate-500">{emp.current_department}</div>
+                        {((emp.jumlah_tanggungan !== undefined && emp.jumlah_tanggungan > 0) || (emp.kasbon !== undefined && emp.kasbon > 0)) && (
+                          <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                            {emp.jumlah_tanggungan !== undefined && emp.jumlah_tanggungan > 0 && (
+                              <span className="text-[10px] text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded font-medium">
+                                {emp.jumlah_tanggungan} Tanggungan
+                              </span>
+                            )}
+                            {emp.kasbon !== undefined && emp.kasbon > 0 && (
+                              <span className="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-medium">
+                                Kasbon: Rp {(emp.kasbon / 1000).toLocaleString('id-ID')}rb
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </td>
                       <td className="py-3 px-4">
                         {(() => {
@@ -1718,6 +1751,23 @@ export default function KepegawaianPage() {
               </div>
             </div>
 
+            {/* Profil Keluarga & Tanggungan */}
+            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100 space-y-2 text-xs">
+              <h4 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-blue-600" /> Profil Keluarga &amp; Tanggungan
+              </h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <span className="text-slate-500 block text-[10px]">Nama Pasangan (Suami / Istri):</span>
+                  <span className="font-semibold text-slate-800">{selectedEmployee.nama_pasangan || 'Belum diisi / Lajang'}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block text-[10px]">Jumlah Tanggungan (Anak):</span>
+                  <span className="font-bold text-slate-800">{selectedEmployee.jumlah_tanggungan ?? 0} Orang</span>
+                </div>
+              </div>
+            </div>
+
             {/* Job Description */}
             <div className="space-y-1.5">
               <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Job Description &amp; Tanggung Jawab</h4>
@@ -1746,6 +1796,7 @@ export default function KepegawaianPage() {
                   activeActor.id
                 );
                 if (contractAuth.isAuthorized && contractAuth.contract) {
+                  const sisaKasbon = (selectedEmployee.kasbon !== undefined ? selectedEmployee.kasbon : contractAuth.contract.kasbon) || 0;
                   return (
                     <div className="space-y-2 text-xs pt-1">
                       <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex justify-between items-center">
@@ -1758,6 +1809,12 @@ export default function KepegawaianPage() {
                         <span className="font-semibold text-slate-700">Tunjangan:</span>{' '}
                         {contractAuth.contract.allowances.map(a => `${a.title} (Rp ${a.amount.toLocaleString('id-ID')})`).join(', ')}
                       </div>
+                      <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl flex justify-between items-center">
+                        <span className="text-amber-900 font-medium">Sisa Kasbon / Pinjaman Pegawai:</span>
+                        <span className="font-bold text-amber-800 text-sm font-mono">
+                          Rp {sisaKasbon.toLocaleString('id-ID')}
+                        </span>
+                      </div>
                       <div className="pt-2 flex justify-end">
                         <button
                           onClick={() => {
@@ -1767,7 +1824,7 @@ export default function KepegawaianPage() {
                           }}
                           className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition shadow-xs cursor-pointer"
                         >
-                          <Pencil className="w-3 h-3" /> Ubah Gaji &amp; Tunjangan
+                          <Pencil className="w-3 h-3" /> Ubah Gaji, Kasbon &amp; Tunjangan
                         </button>
                       </div>
                     </div>
@@ -1947,33 +2004,82 @@ export default function KepegawaianPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl">
+              {/* Data Keluarga & Tanggungan */}
+              <div className="grid grid-cols-2 gap-3 p-3 bg-blue-50/60 border border-blue-200 rounded-xl">
                 <div>
-                  <label className="text-emerald-900 font-bold flex items-center gap-1">
-                    <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Gaji Pokok Bulanan (Rp)</span>
+                  <label className="text-blue-900 font-bold flex items-center gap-1 text-xs">
+                    <Users className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Nama Pasangan (Suami / Istri)</span>
                   </label>
                   <input
-                    type="number"
-                    min="0"
-                    step="50000"
-                    value={formEmp.basic_salary}
-                    onChange={e => setFormEmp({ ...formEmp, basic_salary: Number(e.target.value) })}
-                    className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold focus:ring-2 focus:ring-emerald-500"
+                    type="text"
+                    placeholder="Kosongkan jika lajang"
+                    value={formEmp.nama_pasangan}
+                    onChange={e => setFormEmp({ ...formEmp, nama_pasangan: e.target.value })}
+                    className="w-full bg-white border border-blue-300 rounded-xl p-2 text-slate-800 mt-1 font-medium text-xs focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="text-emerald-900 font-bold flex items-center gap-1">
-                    <Award className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Tunjangan &amp; Kehadiran (Rp)</span>
+                  <label className="text-blue-900 font-bold flex items-center gap-1 text-xs">
+                    <Users className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Jumlah Tanggungan (Anak)</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="20"
+                    value={formEmp.jumlah_tanggungan}
+                    onChange={e => setFormEmp({ ...formEmp, jumlah_tanggungan: Number(e.target.value) })}
+                    className="w-full bg-white border border-blue-300 rounded-xl p-2 text-slate-800 mt-1 font-mono font-bold text-xs focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Kompensasi, Gaji Pokok & Kasbon */}
+              <div className="p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-emerald-900 font-bold flex items-center gap-1 text-xs">
+                      <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Gaji Pokok Bulanan (Rp)</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="50000"
+                      value={formEmp.basic_salary}
+                      onChange={e => setFormEmp({ ...formEmp, basic_salary: Number(e.target.value) })}
+                      className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-emerald-900 font-bold flex items-center gap-1 text-xs">
+                      <Award className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Tunjangan &amp; Kehadiran (Rp)</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="50000"
+                      value={formEmp.tunjangan}
+                      onChange={e => setFormEmp({ ...formEmp, tunjangan: Number(e.target.value) })}
+                      className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-amber-900 font-bold flex items-center gap-1 text-xs">
+                    <DollarSign className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Kasbon / Sisa Pinjaman Pegawai (Rp)</span>
                   </label>
                   <input
                     type="number"
                     min="0"
                     step="50000"
-                    value={formEmp.tunjangan}
-                    onChange={e => setFormEmp({ ...formEmp, tunjangan: Number(e.target.value) })}
-                    className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold focus:ring-2 focus:ring-emerald-500"
+                    placeholder="0 jika tidak ada sisa kasbon"
+                    value={formEmp.kasbon}
+                    onChange={e => setFormEmp({ ...formEmp, kasbon: Number(e.target.value) })}
+                    className="w-full bg-white border border-amber-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold text-xs focus:ring-2 focus:ring-amber-500"
                   />
                 </div>
               </div>
@@ -2168,33 +2274,82 @@ export default function KepegawaianPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl">
+              {/* Data Keluarga & Tanggungan */}
+              <div className="grid grid-cols-2 gap-3 p-3 bg-blue-50/60 border border-blue-200 rounded-xl">
                 <div>
-                  <label className="text-emerald-900 font-bold flex items-center gap-1">
-                    <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Gaji Pokok Bulanan (Rp)</span>
+                  <label className="text-blue-900 font-bold flex items-center gap-1 text-xs">
+                    <Users className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Nama Pasangan (Suami / Istri)</span>
                   </label>
                   <input
-                    type="number"
-                    min="0"
-                    step="50000"
-                    value={formEditEmp.basic_salary}
-                    onChange={e => setFormEditEmp({ ...formEditEmp, basic_salary: Number(e.target.value) })}
-                    className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold focus:ring-2 focus:ring-emerald-500"
+                    type="text"
+                    placeholder="Kosongkan jika lajang"
+                    value={formEditEmp.nama_pasangan}
+                    onChange={e => setFormEditEmp({ ...formEditEmp, nama_pasangan: e.target.value })}
+                    className="w-full bg-white border border-blue-300 rounded-xl p-2 text-slate-800 mt-1 font-medium text-xs focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="text-emerald-900 font-bold flex items-center gap-1">
-                    <Award className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Tunjangan &amp; Kehadiran (Rp)</span>
+                  <label className="text-blue-900 font-bold flex items-center gap-1 text-xs">
+                    <Users className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Jumlah Tanggungan (Anak)</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="20"
+                    value={formEditEmp.jumlah_tanggungan}
+                    onChange={e => setFormEditEmp({ ...formEditEmp, jumlah_tanggungan: Number(e.target.value) })}
+                    className="w-full bg-white border border-blue-300 rounded-xl p-2 text-slate-800 mt-1 font-mono font-bold text-xs focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Kompensasi, Gaji Pokok & Kasbon */}
+              <div className="p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-emerald-900 font-bold flex items-center gap-1 text-xs">
+                      <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Gaji Pokok Bulanan (Rp)</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="50000"
+                      value={formEditEmp.basic_salary}
+                      onChange={e => setFormEditEmp({ ...formEditEmp, basic_salary: Number(e.target.value) })}
+                      className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-emerald-900 font-bold flex items-center gap-1 text-xs">
+                      <Award className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Tunjangan &amp; Kehadiran (Rp)</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="50000"
+                      value={formEditEmp.tunjangan}
+                      onChange={e => setFormEditEmp({ ...formEditEmp, tunjangan: Number(e.target.value) })}
+                      className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-amber-900 font-bold flex items-center gap-1 text-xs">
+                    <DollarSign className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Kasbon / Sisa Pinjaman Pegawai (Rp)</span>
                   </label>
                   <input
                     type="number"
                     min="0"
                     step="50000"
-                    value={formEditEmp.tunjangan}
-                    onChange={e => setFormEditEmp({ ...formEditEmp, tunjangan: Number(e.target.value) })}
-                    className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold focus:ring-2 focus:ring-emerald-500"
+                    placeholder="0 jika tidak ada sisa kasbon"
+                    value={formEditEmp.kasbon}
+                    onChange={e => setFormEditEmp({ ...formEditEmp, kasbon: Number(e.target.value) })}
+                    className="w-full bg-white border border-amber-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold text-xs focus:ring-2 focus:ring-amber-500"
                   />
                 </div>
               </div>
