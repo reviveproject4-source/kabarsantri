@@ -12,9 +12,11 @@ import {
   UserPlus, 
   Search,
   CheckCircle2,
-  UserX
+  UserX,
+  MessageCircle
 } from 'lucide-react';
 import { isTenantMode, getSharedSantriList } from '@/lib/sharedDataStore';
+import { openWhatsAppQuickModal } from '@/components/common/WhatsAppQuickModal';
 
 const DEFAULT_DEMO_WALI = [
   {
@@ -184,14 +186,32 @@ export default function WaliSantriManagementPage() {
                       {wali.status_akun}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-right space-x-2">
+                  <td className="py-3 px-4 text-right space-x-1.5 whitespace-nowrap">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        openWhatsAppQuickModal({
+                          phone: wali.no_whatsapp,
+                          recipientName: wali.nama,
+                          templateKey: 'pengumuman',
+                          params: {
+                            santriNama: wali.santri,
+                          }
+                        });
+                      }}
+                      className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold rounded-lg text-xs inline-flex items-center space-x-1 shadow-2xs transition cursor-pointer"
+                      title="Buka WA Cepat untuk Wali Santri Ini"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Chat WA</span>
+                    </button>
                     {!wali.has_pin ? (
                       <button
                         onClick={() => handleOpenAction(wali, 'create_pin')}
                         className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-sm transition inline-flex items-center space-x-1"
                       >
                         <KeyRound className="w-3.5 h-3.5" />
-                        <span>Aktivasi Akun (Buat PIN)</span>
+                        <span>Aktivasi PIN</span>
                       </button>
                     ) : (
                       <button

@@ -23,7 +23,8 @@ import {
   TrendingUp,
   AlertTriangle,
   Calendar,
-  Plus
+  Plus,
+  Printer
 } from 'lucide-react';
 import { 
   getSharedLearningSessions, 
@@ -244,10 +245,19 @@ export default function LearningSessionKBMPage() {
           <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-700/80 border border-emerald-500/40 uppercase">
             KBM Learning Session Engine (TO-BE)
           </span>
-          <h1 className="text-xl font-bold mt-2">Sesi Pembelajaran & Penilaian Akademik Guru</h1>
+          <h1 className="text-xl font-bold mt-2">Sesi Pembelajaran &amp; Penilaian Akademik Guru</h1>
           <p className="text-xs text-emerald-200 mt-1">
             Alur Terintegrasi: Jadwal ➔ Sesi IN_PROGRESS ➔ Presensi Santri ➔ Learning Activity ➔ Assessment ➔ Evaluasi Capaian (Remedial / Pengayaan) ➔ COMPLETED
           </p>
+          <div className="mt-3 flex items-center gap-2">
+            <Link
+              href="/akademik/raport"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-400/40 rounded-xl text-xs font-bold transition shadow-xs"
+            >
+              <Printer className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Cetak Raport Digital Santri →</span>
+            </Link>
+          </div>
         </div>
 
         {/* Status Sesi Aktif */}

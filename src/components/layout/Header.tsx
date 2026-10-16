@@ -23,7 +23,8 @@ import {
   Moon,
   MoreVertical,
   Check,
-  Settings
+  Settings,
+  MessageCircle
 } from 'lucide-react';
 
 import { 
@@ -310,6 +311,20 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
 
         {/* Right Controls: Role Switcher, Dark/Light Mode, & Actions */}
         <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+          {/* TOMBOL WA CEPAT (1-KLIK BUKA LAYAR & TEMPLATE PESAN) */}
+          <button
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('ks_open_wa_quick', { detail: {} }));
+              }
+            }}
+            className="inline-flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition shadow-xs shrink-0 cursor-pointer"
+            title="Buka Layar WA Cepat: Pilih Template & Kirim Pesan Tanpa Simpan Nomor"
+          >
+            <MessageCircle className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">WA Cepat</span>
+          </button>
+
           {/* User Profile Badge & Menu (Terkunci Sesuai Akun Login - Tidak Bisa Lintas Jabatan) */}
           <div className="relative">
             <button

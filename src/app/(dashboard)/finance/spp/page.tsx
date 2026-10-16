@@ -17,6 +17,7 @@ import {
   X
 } from 'lucide-react';
 import PrintableKuitansi, { KuitansiData } from '@/components/finance/PrintableKuitansi';
+import { openWhatsAppQuickModal } from '@/components/common/WhatsAppQuickModal';
 import { 
   isTenantMode, 
   getSharedRekeningList, 
@@ -539,13 +540,37 @@ export default function SPPBillingPage() {
                             <span>Kuitansi &amp; WA</span>
                           </button>
                         ) : (
-                          <button
-                            onClick={() => handleBukaValidasi(tagihan)}
-                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-xs text-xs transition flex items-center space-x-1"
-                          >
-                            <DollarSign className="w-3.5 h-3.5" />
-                            <span>Validasi Lunas</span>
-                          </button>
+                          <div className="flex items-center space-x-1">
+                            <button
+                              onClick={() => {
+                                const sisa = tagihan.nominal - (tagihan.terbayar || 0);
+                                openWhatsAppQuickModal({
+                                  phone: tagihan.wali_phone || '081234567890',
+                                  recipientName: tagihan.wali || ('Wali ' + tagihan.santri),
+                                  templateKey: 'spp_tagihan',
+                                  params: {
+                                    santriNama: tagihan.santri,
+                                    nis: tagihan.nis,
+                                    kelas: tagihan.unit,
+                                    periode: `SPP Bulan ${selectedBulan}/2026`,
+                                    nominal: sisa > 0 ? sisa : tagihan.nominal,
+                                  }
+                                });
+                              }}
+                              className="px-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold rounded-lg text-xs flex items-center space-x-1 shadow-xs transition cursor-pointer"
+                              title="Kirim Pesan Tagihan ke WhatsApp Wali Santri"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>Tagih WA</span>
+                            </button>
+                            <button
+                              onClick={() => handleBukaValidasi(tagihan)}
+                              className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-xs text-xs transition flex items-center space-x-1"
+                            >
+                              <DollarSign className="w-3.5 h-3.5" />
+                              <span>Validasi</span>
+                            </button>
+                          </div>
                         )}
                       </div>
                     </td>

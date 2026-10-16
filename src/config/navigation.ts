@@ -57,6 +57,7 @@ export const BACKOFFICE_NAVIGATION: NavItem[] = [
     productCode: 'rapot',
     children: [
       { title: 'Nilai Pelajaran KBM', href: '/akademik/nilai', productCode: 'rapot' },
+      { title: 'Cetak Raport Santri', href: '/akademik/raport', productCode: 'rapot' },
     ],
   },
   {

@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
+import WhatsAppQuickModal from '@/components/common/WhatsAppQuickModal';
 import { useActiveTenant, APP_BRAND, getActiveActor } from '@/lib/sessionStore';
 import { getActiveTenantPackageAndFeatures } from '@/lib/yayasanRegistrationStore';
 
@@ -444,6 +445,9 @@ export default function DashboardLayout({
             </div>
           </div>
         )}
+
+        {/* Global WhatsApp Quick Sender Modal */}
+        <WhatsAppQuickModal />
       </div>
     </div>
   );
