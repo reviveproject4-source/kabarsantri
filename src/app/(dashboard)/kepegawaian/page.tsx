@@ -34,7 +34,13 @@ import {
   Pencil,
   Phone,
   Smartphone,
-  Mail
+  Mail,
+  ChevronDown,
+  ChevronUp,
+  CheckSquare,
+  Square,
+  Gift,
+  Wallet
 } from 'lucide-react';
 
 import {
@@ -154,6 +160,9 @@ export default function KepegawaianPage() {
   const [modalNewOffboarding, setModalNewOffboarding] = useState(false);
   const [modalEditEmployee, setModalEditEmployee] = useState(false);
   const [editingEmpId, setEditingEmpId] = useState<string>('');
+  const [dropdownFasilitasOpenEmp, setDropdownFasilitasOpenEmp] = useState(false);
+  const [dropdownFasilitasOpenEdit, setDropdownFasilitasOpenEdit] = useState(false);
+
   const [formEditEmp, setFormEditEmp] = useState({
     nip: '',
     nik: '',
@@ -173,7 +182,10 @@ export default function KepegawaianPage() {
     tunjangan: 500000,
     nama_pasangan: '',
     jumlah_tanggungan: 0,
-    kasbon: 0
+    kasbon: 0,
+    jamsostek: 150000,
+    bonus_insentif: 300000,
+    fasilitas_aktif: ['tunjangan'] as string[]
   });
 
   const handleOpenEditModal = (emp: Employee) => {
@@ -182,6 +194,14 @@ export default function KepegawaianPage() {
     const currentSalary = contractAuth.contract?.basic_salary || 3500000;
     const currentTunjangan = contractAuth.contract?.allowances?.[0]?.amount || 500000;
     const currentKasbon = emp.kasbon !== undefined ? emp.kasbon : (contractAuth.contract?.kasbon || 0);
+    const currentJamsostek = emp.jamsostek !== undefined ? emp.jamsostek : (contractAuth.contract?.jamsostek || 0);
+    const currentBonus = emp.bonus_insentif !== undefined ? emp.bonus_insentif : (contractAuth.contract?.bonus_insentif || 0);
+    const activeFacList: string[] = emp.fasilitas_aktif || contractAuth.contract?.fasilitas_aktif || [
+      ...(currentTunjangan > 0 ? ['tunjangan'] : []),
+      ...(currentKasbon > 0 ? ['pinjaman'] : []),
+      ...(currentJamsostek > 0 ? ['jamsostek'] : []),
+      ...(currentBonus > 0 ? ['bonus'] : [])
+    ];
 
     setFormEditEmp({
       nip: emp.nip,
@@ -199,12 +219,26 @@ export default function KepegawaianPage() {
       user_account_active: emp.user_account_active,
       leave_allowance_annual: emp.leave_allowance_annual || 12,
       basic_salary: currentSalary,
-      tunjangan: currentTunjangan,
+      tunjangan: currentTunjangan || 500000,
       nama_pasangan: emp.nama_pasangan || '',
       jumlah_tanggungan: emp.jumlah_tanggungan || 0,
-      kasbon: currentKasbon
+      kasbon: currentKasbon,
+      jamsostek: currentJamsostek || 150000,
+      bonus_insentif: currentBonus || 300000,
+      fasilitas_aktif: activeFacList.length > 0 ? activeFacList : ['tunjangan']
     });
+    setDropdownFasilitasOpenEdit(false);
     setModalEditEmployee(true);
+  };
+
+  const toggleFasilitasEdit = (key: string) => {
+    setFormEditEmp(prev => {
+      const exists = prev.fasilitas_aktif.includes(key);
+      const updated = exists 
+        ? prev.fasilitas_aktif.filter(k => k !== key)
+        : [...prev.fasilitas_aktif, key];
+      return { ...prev, fasilitas_aktif: updated };
+    });
   };
 
   const handleSaveEditEmployee = (e: React.FormEvent) => {
@@ -223,8 +257,13 @@ export default function KepegawaianPage() {
       saveEmployeeContract(
         editingEmpId, 
         formEditEmp.basic_salary, 
-        [{ title: 'Tunjangan Jabatan & Kehadiran', amount: formEditEmp.tunjangan }],
-        formEditEmp.kasbon
+        formEditEmp.fasilitas_aktif.includes('tunjangan') 
+          ? [{ title: 'Tunjangan Jabatan & Kehadiran', amount: formEditEmp.tunjangan }]
+          : [],
+        formEditEmp.fasilitas_aktif.includes('pinjaman') ? formEditEmp.kasbon : 0,
+        formEditEmp.fasilitas_aktif.includes('jamsostek') ? formEditEmp.jamsostek : 0,
+        formEditEmp.fasilitas_aktif.includes('bonus') ? formEditEmp.bonus_insentif : 0,
+        formEditEmp.fasilitas_aktif
       );
       showToast('success', res.message);
       setEmployees(getEmployees());
@@ -307,7 +346,10 @@ export default function KepegawaianPage() {
     tunjangan: 500000,
     nama_pasangan: '',
     jumlah_tanggungan: 0,
-    kasbon: 0
+    kasbon: 0,
+    jamsostek: 150000,
+    bonus_insentif: 300000,
+    fasilitas_aktif: ['tunjangan'] as string[]
   });
 
   const handleOpenNewEmployeeModal = () => {
@@ -335,9 +377,23 @@ export default function KepegawaianPage() {
       tunjangan: 500000,
       nama_pasangan: '',
       jumlah_tanggungan: 0,
-      kasbon: 0
+      kasbon: 0,
+      jamsostek: 150000,
+      bonus_insentif: 300000,
+      fasilitas_aktif: ['tunjangan']
     });
+    setDropdownFasilitasOpenEmp(false);
     setModalNewEmployee(true);
+  };
+
+  const toggleFasilitasEmp = (key: string) => {
+    setFormEmp(prev => {
+      const exists = prev.fasilitas_aktif.includes(key);
+      const updated = exists 
+        ? prev.fasilitas_aktif.filter(k => k !== key)
+        : [...prev.fasilitas_aktif, key];
+      return { ...prev, fasilitas_aktif: updated };
+    });
   };
 
   const [formLeave, setFormLeave] = useState({
@@ -413,8 +469,13 @@ export default function KepegawaianPage() {
       saveEmployeeContract(
         res.employee.id, 
         formEmp.basic_salary, 
-        [{ title: 'Tunjangan Jabatan & Kehadiran', amount: formEmp.tunjangan }],
-        formEmp.kasbon
+        formEmp.fasilitas_aktif.includes('tunjangan') 
+          ? [{ title: 'Tunjangan Jabatan & Kehadiran', amount: formEmp.tunjangan }]
+          : [],
+        formEmp.fasilitas_aktif.includes('pinjaman') ? formEmp.kasbon : 0,
+        formEmp.fasilitas_aktif.includes('jamsostek') ? formEmp.jamsostek : 0,
+        formEmp.fasilitas_aktif.includes('bonus') ? formEmp.bonus_insentif : 0,
+        formEmp.fasilitas_aktif
       );
       showToast('success', res.message);
       setModalNewEmployee(false);
@@ -993,7 +1054,10 @@ export default function KepegawaianPage() {
                       <td className="py-3 px-4">
                         <div className="font-medium text-slate-800">{emp.current_position}</div>
                         <div className="text-[11px] text-slate-500">{emp.current_department}</div>
-                        {((emp.jumlah_tanggungan !== undefined && emp.jumlah_tanggungan > 0) || (emp.kasbon !== undefined && emp.kasbon > 0)) && (
+                        {((emp.jumlah_tanggungan !== undefined && emp.jumlah_tanggungan > 0) || 
+                          (emp.kasbon !== undefined && emp.kasbon > 0) ||
+                          (emp.jamsostek !== undefined && emp.jamsostek > 0) ||
+                          (emp.bonus_insentif !== undefined && emp.bonus_insentif > 0)) && (
                           <div className="flex flex-wrap items-center gap-1.5 mt-1">
                             {emp.jumlah_tanggungan !== undefined && emp.jumlah_tanggungan > 0 && (
                               <span className="text-[10px] text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded font-medium">
@@ -1003,6 +1067,16 @@ export default function KepegawaianPage() {
                             {emp.kasbon !== undefined && emp.kasbon > 0 && (
                               <span className="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-medium">
                                 Pinjaman: Rp {(emp.kasbon / 1000).toLocaleString('id-ID')}rb
+                              </span>
+                            )}
+                            {emp.jamsostek !== undefined && emp.jamsostek > 0 && (
+                              <span className="text-[10px] text-sky-700 bg-sky-50 border border-sky-200 px-1.5 py-0.5 rounded font-medium">
+                                Jamsostek
+                              </span>
+                            )}
+                            {emp.bonus_insentif !== undefined && emp.bonus_insentif > 0 && (
+                              <span className="text-[10px] text-purple-700 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded font-medium">
+                                Bonus
                               </span>
                             )}
                           </div>
@@ -1797,25 +1871,92 @@ export default function KepegawaianPage() {
                 );
                 if (contractAuth.isAuthorized && contractAuth.contract) {
                   const sisaKasbon = (selectedEmployee.kasbon !== undefined ? selectedEmployee.kasbon : contractAuth.contract.kasbon) || 0;
+                  const jamsostek = (selectedEmployee.jamsostek !== undefined ? selectedEmployee.jamsostek : contractAuth.contract.jamsostek) || 0;
+                  const bonusInsentif = (selectedEmployee.bonus_insentif !== undefined ? selectedEmployee.bonus_insentif : contractAuth.contract.bonus_insentif) || 0;
+                  const tunjanganTotal = contractAuth.contract.allowances.reduce((acc, a) => acc + (a.amount || 0), 0);
+                  const takeHomePay = contractAuth.contract.basic_salary + tunjanganTotal + bonusInsentif - sisaKasbon - jamsostek;
+
                   return (
-                    <div className="space-y-2 text-xs pt-1">
+                    <div className="space-y-2.5 text-xs pt-1">
                       <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex justify-between items-center">
                         <span className="text-emerald-900 font-medium">Gaji Pokok Bulanan:</span>
-                        <span className="font-bold text-emerald-700 text-sm">
+                        <span className="font-bold text-emerald-700 text-sm font-mono">
                           Rp {contractAuth.contract.basic_salary.toLocaleString('id-ID')}
                         </span>
                       </div>
-                      <div className="text-[11px] text-slate-600">
-                        <span className="font-semibold text-slate-700">Tunjangan:</span>{' '}
-                        {contractAuth.contract.allowances.map(a => `${a.title} (Rp ${a.amount.toLocaleString('id-ID')})`).join(', ')}
+
+                      {/* Fasilitas Tambahan yang Dicentang Yayasan */}
+                      <div className="bg-white border border-slate-200 rounded-xl p-3 space-y-2">
+                        <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">
+                          Rincian Fasilitas Tambahan
+                        </span>
+                        
+                        {tunjanganTotal > 0 && (
+                          <div className="flex justify-between items-center text-slate-700">
+                            <span className="flex items-center gap-1.5">
+                              <Award className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>Tunjangan &amp; Kehadiran:</span>
+                            </span>
+                            <span className="font-semibold font-mono text-emerald-700">
+                              + Rp {tunjanganTotal.toLocaleString('id-ID')}
+                            </span>
+                          </div>
+                        )}
+
+                        {bonusInsentif > 0 && (
+                          <div className="flex justify-between items-center text-slate-700">
+                            <span className="flex items-center gap-1.5">
+                              <Gift className="w-3.5 h-3.5 text-purple-600" />
+                              <span>Bonus / Insentif Kinerja:</span>
+                            </span>
+                            <span className="font-semibold font-mono text-purple-700">
+                              + Rp {bonusInsentif.toLocaleString('id-ID')}
+                            </span>
+                          </div>
+                        )}
+
+                        {jamsostek > 0 && (
+                          <div className="flex justify-between items-center text-slate-700">
+                            <span className="flex items-center gap-1.5">
+                              <Wallet className="w-3.5 h-3.5 text-blue-600" />
+                              <span>Jamsostek / BPJS Ketenagakerjaan:</span>
+                            </span>
+                            <span className="font-semibold font-mono text-blue-700">
+                              (Subsidi Rp {jamsostek.toLocaleString('id-ID')})
+                            </span>
+                          </div>
+                        )}
+
+                        {sisaKasbon > 0 && (
+                          <div className="flex justify-between items-center text-slate-700">
+                            <span className="flex items-center gap-1.5">
+                              <DollarSign className="w-3.5 h-3.5 text-amber-600" />
+                              <span>Sisa Pinjaman Pegawai:</span>
+                            </span>
+                            <span className="font-semibold font-mono text-amber-700">
+                              - Rp {sisaKasbon.toLocaleString('id-ID')}
+                            </span>
+                          </div>
+                        )}
+
+                        {tunjanganTotal === 0 && bonusInsentif === 0 && jamsostek === 0 && sisaKasbon === 0 && (
+                          <div className="text-slate-400 italic text-[11px]">
+                            Hanya gaji pokok (tidak ada fasilitas tambahan yang dicentang).
+                          </div>
+                        )}
                       </div>
-                      <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl flex justify-between items-center">
-                        <span className="text-amber-900 font-medium">Sisa Pinjaman Pegawai:</span>
-                        <span className="font-bold text-amber-800 text-sm font-mono">
-                          Rp {sisaKasbon.toLocaleString('id-ID')}
+
+                      <div className="p-3 bg-slate-100/80 border border-slate-200 rounded-xl flex justify-between items-center">
+                        <div>
+                          <span className="text-slate-700 font-bold block">Estimasi Kompensasi Bersih:</span>
+                          <span className="text-[10px] text-slate-500">(Gaji Pokok + Tunjangan + Bonus - Pinjaman)</span>
+                        </div>
+                        <span className="font-bold text-slate-900 text-sm font-mono">
+                          Rp {Math.max(0, takeHomePay).toLocaleString('id-ID')}
                         </span>
                       </div>
-                      <div className="pt-2 flex justify-end">
+
+                      <div className="pt-1 flex justify-end">
                         <button
                           onClick={() => {
                             const emp = selectedEmployee;
@@ -1824,7 +1965,7 @@ export default function KepegawaianPage() {
                           }}
                           className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition shadow-xs cursor-pointer"
                         >
-                          <Pencil className="w-3 h-3" /> Ubah Gaji, Pinjaman &amp; Tunjangan
+                          <Pencil className="w-3 h-3" /> Ubah Gaji &amp; Fasilitas
                         </button>
                       </div>
                     </div>
@@ -2035,52 +2176,226 @@ export default function KepegawaianPage() {
                 </div>
               </div>
 
-              {/* Kompensasi, Gaji Pokok & Kasbon */}
+              {/* Kompensasi, Gaji Pokok & Fasilitas Tambahan (Dropdown Bercentang) */}
               <div className="p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-emerald-900 font-bold flex items-center gap-1 text-xs">
-                      <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Gaji Pokok Bulanan (Rp)</span>
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="50000"
-                      value={formEmp.basic_salary}
-                      onChange={e => setFormEmp({ ...formEmp, basic_salary: Number(e.target.value) })}
-                      className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-emerald-900 font-bold flex items-center gap-1 text-xs">
-                      <Award className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Tunjangan &amp; Kehadiran (Rp)</span>
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="50000"
-                      value={formEmp.tunjangan}
-                      onChange={e => setFormEmp({ ...formEmp, tunjangan: Number(e.target.value) })}
-                      className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-emerald-950 font-bold flex items-center gap-1.5 text-xs">
+                    <DollarSign className="w-4 h-4 text-emerald-600" />
+                    <span>Gaji Pokok &amp; Fasilitas Lembaga</span>
+                  </label>
+                  <span className="text-[10px] text-emerald-700 font-medium">Sesuai Kebijakan Yayasan</span>
                 </div>
+
                 <div>
-                  <label className="text-amber-900 font-bold flex items-center gap-1 text-xs">
-                    <DollarSign className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Sisa Pinjaman Pegawai (Rp)</span>
+                  <label className="text-emerald-900 font-bold flex items-center gap-1 text-xs">
+                    <span>Gaji Pokok Bulanan (Rp) *</span>
                   </label>
                   <input
                     type="number"
                     min="0"
                     step="50000"
-                    placeholder="0 jika tidak ada pinjaman"
-                    value={formEmp.kasbon}
-                    onChange={e => setFormEmp({ ...formEmp, kasbon: Number(e.target.value) })}
-                    className="w-full bg-white border border-amber-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold text-xs focus:ring-2 focus:ring-amber-500"
+                    required
+                    value={formEmp.basic_salary}
+                    onChange={e => setFormEmp({ ...formEmp, basic_salary: Number(e.target.value) })}
+                    className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold focus:ring-2 focus:ring-emerald-500"
                   />
+                </div>
+
+                {/* Dropdown Trigger Fasilitas Tambahan */}
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-slate-700 font-bold text-xs flex items-center gap-1.5">
+                      <Gift className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Fasilitas &amp; Tunjangan Tambahan</span>
+                    </label>
+                    <span className="text-[10px] text-emerald-800 font-semibold bg-emerald-100 px-2 py-0.5 rounded-full">
+                      {formEmp.fasilitas_aktif.length} Dipilih
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setDropdownFasilitasOpenEmp(!dropdownFasilitasOpenEmp)}
+                    className="w-full bg-white border border-emerald-300 hover:border-emerald-400 rounded-xl p-2.5 text-left text-xs font-semibold text-slate-800 flex items-center justify-between shadow-xs transition"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Wallet className="w-4 h-4 text-emerald-600" />
+                      <span>Atur Fasilitas (Tunjangan, Jamsostek, Bonus, Pinjaman)</span>
+                    </span>
+                    {dropdownFasilitasOpenEmp ? (
+                      <ChevronUp className="w-4 h-4 text-emerald-600" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-slate-500" />
+                    )}
+                  </button>
+
+                  {/* Popover Menu Dropdown */}
+                  {dropdownFasilitasOpenEmp && (
+                    <div className="mt-2 bg-white border border-emerald-200 rounded-xl p-3 shadow-lg space-y-3 animate-in fade-in zoom-in-95 duration-100">
+                      <div className="text-[11px] text-slate-500 pb-1 border-b border-slate-100 flex items-center justify-between">
+                        <span>Centang fasilitas yang diberikan untuk pegawai ini:</span>
+                        <button
+                          type="button"
+                          onClick={() => setDropdownFasilitasOpenEmp(false)}
+                          className="text-emerald-700 hover:text-emerald-800 font-bold text-[10px] bg-emerald-50 px-2 py-0.5 rounded"
+                        >
+                          Tutup
+                        </button>
+                      </div>
+
+                      {/* 1. Tunjangan Jabatan & Kehadiran */}
+                      <div className="p-2.5 rounded-lg border border-slate-200 hover:border-emerald-300 transition bg-slate-50/50 space-y-2">
+                        <div 
+                          onClick={() => toggleFasilitasEmp('tunjangan')}
+                          className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-slate-800"
+                        >
+                          {formEmp.fasilitas_aktif.includes('tunjangan') ? (
+                            <CheckSquare className="w-4 h-4 text-emerald-600" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-400" />
+                          )}
+                          <span>Tunjangan Jabatan &amp; Kehadiran</span>
+                        </div>
+                        {formEmp.fasilitas_aktif.includes('tunjangan') && (
+                          <div className="pl-6 pt-1">
+                            <span className="text-[10px] text-slate-500 block mb-1">Nominal Tunjangan Bulanan (Rp):</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="25000"
+                              value={formEmp.tunjangan}
+                              onChange={e => setFormEmp({ ...formEmp, tunjangan: Number(e.target.value) })}
+                              className="w-full bg-white border border-emerald-300 rounded-lg p-1.5 text-xs font-mono font-bold text-slate-800"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 2. Jamsostek / BPJS Ketenagakerjaan */}
+                      <div className="p-2.5 rounded-lg border border-slate-200 hover:border-blue-300 transition bg-slate-50/50 space-y-2">
+                        <div 
+                          onClick={() => toggleFasilitasEmp('jamsostek')}
+                          className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-slate-800"
+                        >
+                          {formEmp.fasilitas_aktif.includes('jamsostek') ? (
+                            <CheckSquare className="w-4 h-4 text-blue-600" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-400" />
+                          )}
+                          <span>Jamsostek / BPJS Ketenagakerjaan Pesantren</span>
+                        </div>
+                        {formEmp.fasilitas_aktif.includes('jamsostek') && (
+                          <div className="pl-6 pt-1">
+                            <span className="text-[10px] text-slate-500 block mb-1">Iuran / Subsidi Jamsostek Bulanan (Rp):</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="25000"
+                              value={formEmp.jamsostek}
+                              onChange={e => setFormEmp({ ...formEmp, jamsostek: Number(e.target.value) })}
+                              className="w-full bg-white border border-blue-300 rounded-lg p-1.5 text-xs font-mono font-bold text-slate-800"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 3. Bonus / Insentif Kinerja */}
+                      <div className="p-2.5 rounded-lg border border-slate-200 hover:border-purple-300 transition bg-slate-50/50 space-y-2">
+                        <div 
+                          onClick={() => toggleFasilitasEmp('bonus')}
+                          className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-slate-800"
+                        >
+                          {formEmp.fasilitas_aktif.includes('bonus') ? (
+                            <CheckSquare className="w-4 h-4 text-purple-600" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-400" />
+                          )}
+                          <span>Bonus &amp; Insentif Kinerja / Halaqah</span>
+                        </div>
+                        {formEmp.fasilitas_aktif.includes('bonus') && (
+                          <div className="pl-6 pt-1">
+                            <span className="text-[10px] text-slate-500 block mb-1">Nominal Bonus / Insentif (Rp):</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="25000"
+                              value={formEmp.bonus_insentif}
+                              onChange={e => setFormEmp({ ...formEmp, bonus_insentif: Number(e.target.value) })}
+                              className="w-full bg-white border border-purple-300 rounded-lg p-1.5 text-xs font-mono font-bold text-slate-800"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 4. Sisa Pinjaman Pegawai */}
+                      <div className="p-2.5 rounded-lg border border-slate-200 hover:border-amber-300 transition bg-slate-50/50 space-y-2">
+                        <div 
+                          onClick={() => toggleFasilitasEmp('pinjaman')}
+                          className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-slate-800"
+                        >
+                          {formEmp.fasilitas_aktif.includes('pinjaman') ? (
+                            <CheckSquare className="w-4 h-4 text-amber-600" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-400" />
+                          )}
+                          <span className="text-amber-900">Pinjaman Pegawai</span>
+                        </div>
+                        {formEmp.fasilitas_aktif.includes('pinjaman') && (
+                          <div className="pl-6 pt-1">
+                            <span className="text-[10px] text-slate-500 block mb-1">Nominal Sisa Pinjaman (Rp):</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="50000"
+                              value={formEmp.kasbon}
+                              onChange={e => setFormEmp({ ...formEmp, kasbon: Number(e.target.value) })}
+                              className="w-full bg-white border border-amber-300 rounded-lg p-1.5 text-xs font-mono font-bold text-slate-800"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Ringkasan Fasilitas Aktif (Pill Tags) */}
+                  <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                    {formEmp.fasilitas_aktif.map(fac => {
+                      if (fac === 'tunjangan') {
+                        return (
+                          <span key={fac} className="inline-flex items-center gap-1 text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-md font-semibold">
+                            ✓ Tunjangan: Rp {Number(formEmp.tunjangan).toLocaleString('id-ID')}
+                          </span>
+                        );
+                      }
+                      if (fac === 'jamsostek') {
+                        return (
+                          <span key={fac} className="inline-flex items-center gap-1 text-[10px] bg-blue-100 text-blue-800 border border-blue-300 px-2 py-0.5 rounded-md font-semibold">
+                            ✓ Jamsostek: Rp {Number(formEmp.jamsostek).toLocaleString('id-ID')}
+                          </span>
+                        );
+                      }
+                      if (fac === 'bonus') {
+                        return (
+                          <span key={fac} className="inline-flex items-center gap-1 text-[10px] bg-purple-100 text-purple-800 border border-purple-300 px-2 py-0.5 rounded-md font-semibold">
+                            ✓ Bonus: Rp {Number(formEmp.bonus_insentif).toLocaleString('id-ID')}
+                          </span>
+                        );
+                      }
+                      if (fac === 'pinjaman') {
+                        return (
+                          <span key={fac} className="inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-md font-semibold">
+                            ✓ Pinjaman: Rp {Number(formEmp.kasbon).toLocaleString('id-ID')}
+                          </span>
+                        );
+                      }
+                      return null;
+                    })}
+                    {formEmp.fasilitas_aktif.length === 0 && (
+                      <span className="text-[10px] text-slate-400 italic">
+                        Hanya gaji pokok (tidak ada fasilitas tambahan yang dicentang).
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -2305,52 +2620,226 @@ export default function KepegawaianPage() {
                 </div>
               </div>
 
-              {/* Kompensasi, Gaji Pokok & Kasbon */}
+              {/* Kompensasi, Gaji Pokok & Fasilitas Tambahan (Dropdown Bercentang) */}
               <div className="p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-emerald-900 font-bold flex items-center gap-1 text-xs">
-                      <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Gaji Pokok Bulanan (Rp)</span>
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="50000"
-                      value={formEditEmp.basic_salary}
-                      onChange={e => setFormEditEmp({ ...formEditEmp, basic_salary: Number(e.target.value) })}
-                      className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-emerald-900 font-bold flex items-center gap-1 text-xs">
-                      <Award className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Tunjangan &amp; Kehadiran (Rp)</span>
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="50000"
-                      value={formEditEmp.tunjangan}
-                      onChange={e => setFormEditEmp({ ...formEditEmp, tunjangan: Number(e.target.value) })}
-                      className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-emerald-950 font-bold flex items-center gap-1.5 text-xs">
+                    <DollarSign className="w-4 h-4 text-emerald-600" />
+                    <span>Gaji Pokok &amp; Fasilitas Lembaga</span>
+                  </label>
+                  <span className="text-[10px] text-emerald-700 font-medium">Sesuai Kebijakan Yayasan</span>
                 </div>
+
                 <div>
-                  <label className="text-amber-900 font-bold flex items-center gap-1 text-xs">
-                    <DollarSign className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Sisa Pinjaman Pegawai (Rp)</span>
+                  <label className="text-emerald-900 font-bold flex items-center gap-1 text-xs">
+                    <span>Gaji Pokok Bulanan (Rp) *</span>
                   </label>
                   <input
                     type="number"
                     min="0"
                     step="50000"
-                    placeholder="0 jika tidak ada pinjaman"
-                    value={formEditEmp.kasbon}
-                    onChange={e => setFormEditEmp({ ...formEditEmp, kasbon: Number(e.target.value) })}
-                    className="w-full bg-white border border-amber-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold text-xs focus:ring-2 focus:ring-amber-500"
+                    required
+                    value={formEditEmp.basic_salary}
+                    onChange={e => setFormEditEmp({ ...formEditEmp, basic_salary: Number(e.target.value) })}
+                    className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold focus:ring-2 focus:ring-emerald-500"
                   />
+                </div>
+
+                {/* Dropdown Trigger Fasilitas Tambahan */}
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-slate-700 font-bold text-xs flex items-center gap-1.5">
+                      <Gift className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Fasilitas &amp; Tunjangan Tambahan</span>
+                    </label>
+                    <span className="text-[10px] text-emerald-800 font-semibold bg-emerald-100 px-2 py-0.5 rounded-full">
+                      {formEditEmp.fasilitas_aktif.length} Dipilih
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setDropdownFasilitasOpenEdit(!dropdownFasilitasOpenEdit)}
+                    className="w-full bg-white border border-emerald-300 hover:border-emerald-400 rounded-xl p-2.5 text-left text-xs font-semibold text-slate-800 flex items-center justify-between shadow-xs transition"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Wallet className="w-4 h-4 text-emerald-600" />
+                      <span>Atur Fasilitas (Tunjangan, Jamsostek, Bonus, Pinjaman)</span>
+                    </span>
+                    {dropdownFasilitasOpenEdit ? (
+                      <ChevronUp className="w-4 h-4 text-emerald-600" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-slate-500" />
+                    )}
+                  </button>
+
+                  {/* Popover Menu Dropdown */}
+                  {dropdownFasilitasOpenEdit && (
+                    <div className="mt-2 bg-white border border-emerald-200 rounded-xl p-3 shadow-lg space-y-3 animate-in fade-in zoom-in-95 duration-100">
+                      <div className="text-[11px] text-slate-500 pb-1 border-b border-slate-100 flex items-center justify-between">
+                        <span>Centang fasilitas yang diberikan untuk pegawai ini:</span>
+                        <button
+                          type="button"
+                          onClick={() => setDropdownFasilitasOpenEdit(false)}
+                          className="text-emerald-700 hover:text-emerald-800 font-bold text-[10px] bg-emerald-50 px-2 py-0.5 rounded"
+                        >
+                          Tutup
+                        </button>
+                      </div>
+
+                      {/* 1. Tunjangan Jabatan & Kehadiran */}
+                      <div className="p-2.5 rounded-lg border border-slate-200 hover:border-emerald-300 transition bg-slate-50/50 space-y-2">
+                        <div 
+                          onClick={() => toggleFasilitasEdit('tunjangan')}
+                          className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-slate-800"
+                        >
+                          {formEditEmp.fasilitas_aktif.includes('tunjangan') ? (
+                            <CheckSquare className="w-4 h-4 text-emerald-600" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-400" />
+                          )}
+                          <span>Tunjangan Jabatan &amp; Kehadiran</span>
+                        </div>
+                        {formEditEmp.fasilitas_aktif.includes('tunjangan') && (
+                          <div className="pl-6 pt-1">
+                            <span className="text-[10px] text-slate-500 block mb-1">Nominal Tunjangan Bulanan (Rp):</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="25000"
+                              value={formEditEmp.tunjangan}
+                              onChange={e => setFormEditEmp({ ...formEditEmp, tunjangan: Number(e.target.value) })}
+                              className="w-full bg-white border border-emerald-300 rounded-lg p-1.5 text-xs font-mono font-bold text-slate-800"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 2. Jamsostek / BPJS Ketenagakerjaan */}
+                      <div className="p-2.5 rounded-lg border border-slate-200 hover:border-blue-300 transition bg-slate-50/50 space-y-2">
+                        <div 
+                          onClick={() => toggleFasilitasEdit('jamsostek')}
+                          className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-slate-800"
+                        >
+                          {formEditEmp.fasilitas_aktif.includes('jamsostek') ? (
+                            <CheckSquare className="w-4 h-4 text-blue-600" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-400" />
+                          )}
+                          <span>Jamsostek / BPJS Ketenagakerjaan Pesantren</span>
+                        </div>
+                        {formEditEmp.fasilitas_aktif.includes('jamsostek') && (
+                          <div className="pl-6 pt-1">
+                            <span className="text-[10px] text-slate-500 block mb-1">Iuran / Subsidi Jamsostek Bulanan (Rp):</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="25000"
+                              value={formEditEmp.jamsostek}
+                              onChange={e => setFormEditEmp({ ...formEditEmp, jamsostek: Number(e.target.value) })}
+                              className="w-full bg-white border border-blue-300 rounded-lg p-1.5 text-xs font-mono font-bold text-slate-800"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 3. Bonus / Insentif Kinerja */}
+                      <div className="p-2.5 rounded-lg border border-slate-200 hover:border-purple-300 transition bg-slate-50/50 space-y-2">
+                        <div 
+                          onClick={() => toggleFasilitasEdit('bonus')}
+                          className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-slate-800"
+                        >
+                          {formEditEmp.fasilitas_aktif.includes('bonus') ? (
+                            <CheckSquare className="w-4 h-4 text-purple-600" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-400" />
+                          )}
+                          <span>Bonus &amp; Insentif Kinerja / Halaqah</span>
+                        </div>
+                        {formEditEmp.fasilitas_aktif.includes('bonus') && (
+                          <div className="pl-6 pt-1">
+                            <span className="text-[10px] text-slate-500 block mb-1">Nominal Bonus / Insentif (Rp):</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="25000"
+                              value={formEditEmp.bonus_insentif}
+                              onChange={e => setFormEditEmp({ ...formEditEmp, bonus_insentif: Number(e.target.value) })}
+                              className="w-full bg-white border border-purple-300 rounded-lg p-1.5 text-xs font-mono font-bold text-slate-800"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 4. Sisa Pinjaman Pegawai */}
+                      <div className="p-2.5 rounded-lg border border-slate-200 hover:border-amber-300 transition bg-slate-50/50 space-y-2">
+                        <div 
+                          onClick={() => toggleFasilitasEdit('pinjaman')}
+                          className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-slate-800"
+                        >
+                          {formEditEmp.fasilitas_aktif.includes('pinjaman') ? (
+                            <CheckSquare className="w-4 h-4 text-amber-600" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-400" />
+                          )}
+                          <span className="text-amber-900">Pinjaman Pegawai</span>
+                        </div>
+                        {formEditEmp.fasilitas_aktif.includes('pinjaman') && (
+                          <div className="pl-6 pt-1">
+                            <span className="text-[10px] text-slate-500 block mb-1">Nominal Sisa Pinjaman (Rp):</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="50000"
+                              value={formEditEmp.kasbon}
+                              onChange={e => setFormEditEmp({ ...formEditEmp, kasbon: Number(e.target.value) })}
+                              className="w-full bg-white border border-amber-300 rounded-lg p-1.5 text-xs font-mono font-bold text-slate-800"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Ringkasan Fasilitas Aktif (Pill Tags) */}
+                  <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                    {formEditEmp.fasilitas_aktif.map(fac => {
+                      if (fac === 'tunjangan') {
+                        return (
+                          <span key={fac} className="inline-flex items-center gap-1 text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-md font-semibold">
+                            ✓ Tunjangan: Rp {Number(formEditEmp.tunjangan).toLocaleString('id-ID')}
+                          </span>
+                        );
+                      }
+                      if (fac === 'jamsostek') {
+                        return (
+                          <span key={fac} className="inline-flex items-center gap-1 text-[10px] bg-blue-100 text-blue-800 border border-blue-300 px-2 py-0.5 rounded-md font-semibold">
+                            ✓ Jamsostek: Rp {Number(formEditEmp.jamsostek).toLocaleString('id-ID')}
+                          </span>
+                        );
+                      }
+                      if (fac === 'bonus') {
+                        return (
+                          <span key={fac} className="inline-flex items-center gap-1 text-[10px] bg-purple-100 text-purple-800 border border-purple-300 px-2 py-0.5 rounded-md font-semibold">
+                            ✓ Bonus: Rp {Number(formEditEmp.bonus_insentif).toLocaleString('id-ID')}
+                          </span>
+                        );
+                      }
+                      if (fac === 'pinjaman') {
+                        return (
+                          <span key={fac} className="inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-md font-semibold">
+                            ✓ Pinjaman: Rp {Number(formEditEmp.kasbon).toLocaleString('id-ID')}
+                          </span>
+                        );
+                      }
+                      return null;
+                    })}
+                    {formEditEmp.fasilitas_aktif.length === 0 && (
+                      <span className="text-[10px] text-slate-400 italic">
+                        Hanya gaji pokok (tidak ada fasilitas tambahan yang dicentang).
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 

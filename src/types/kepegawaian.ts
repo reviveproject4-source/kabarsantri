@@ -44,7 +44,10 @@ export interface EmploymentContract {
     title: string;
     amount: number;
   }[];
-  kasbon?: number;           // Sisa Pinjaman / Kasbon Pegawai
+  kasbon?: number;           // Sisa Pinjaman Pegawai (Rp)
+  jamsostek?: number;        // Jamsostek / BPJS Ketenagakerjaan (Rp)
+  bonus_insentif?: number;   // Bonus / Insentif Kinerja (Rp)
+  fasilitas_aktif?: string[]; // Fasilitas yang dicentang aktif oleh Yayasan: 'tunjangan' | 'pinjaman' | 'jamsostek' | 'bonus'
   document_url?: string;
   is_active: boolean;
   notes?: string;
@@ -91,7 +94,10 @@ export interface Employee {
   // Data Keluarga & Finansial Tambahan (Instruksi Mami Lina)
   nama_pasangan?: string;             // Nama Suami / Istri Pegawai
   jumlah_tanggungan?: number;         // Jumlah Anak / Tanggungan Keluarga
-  kasbon?: number;                    // Sisa Pinjaman / Kasbon Pegawai (Rp)
+  kasbon?: number;                    // Sisa Pinjaman Pegawai (Rp)
+  jamsostek?: number;                 // Iuran Jamsostek / BPJS Ketenagakerjaan (Rp)
+  bonus_insentif?: number;            // Bonus / Insentif Kinerja (Rp)
+  fasilitas_aktif?: string[];         // Fasilitas yang dicentang aktif oleh Yayasan
 
   created_at: string;
   updated_at: string;

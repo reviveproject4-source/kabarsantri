@@ -1640,17 +1640,22 @@ export function getEmployeeContract(
   const isSelf = requesterEmployeeId && requesterEmployeeId === employeeId;
 
   if (isFinance || isYayasan || isSelf) {
+    const emp = state.employees.find(e => e.id === employeeId);
     const defaultContract: EmploymentContract = contract || {
       id: `ctr-${employeeId}`,
       employee_id: employeeId,
       contract_type: 'TETAP',
       basic_salary: 3500000,
       allowances: [
-        { title: 'Tunjangan Jabatan & Kependidikan', amount: 500000 },
-        { title: 'Tunjangan Transport & Kehadiran', amount: 350000 }
+        { title: 'Tunjangan Jabatan & Kehadiran', amount: 500000 }
       ],
+      kasbon: emp?.kasbon || 0,
+      jamsostek: emp?.jamsostek || 0,
+      bonus_insentif: emp?.bonus_insentif || 0,
+      fasilitas_aktif: emp?.fasilitas_aktif || ['tunjangan'],
       start_date: '2026-01-01',
-      signed_date: '2026-01-01'
+      signed_date: '2026-01-01',
+      is_active: true
     };
     return {
       isAuthorized: true,
@@ -1672,7 +1677,10 @@ export function saveEmployeeContract(
   employeeId: string,
   basicSalary: number,
   allowances: { title: string; amount: number }[] = [],
-  kasbon?: number
+  kasbon?: number,
+  jamsostek?: number,
+  bonusInsentif?: number,
+  fasilitasAktif?: string[]
 ): boolean {
   const state = loadState();
   const existingIdx = state.contracts.findIndex(c => c.employee_id === employeeId);
@@ -1690,6 +1698,9 @@ export function saveEmployeeContract(
       { title: 'Tunjangan Jabatan & Kehadiran', amount: 500000 }
     ],
     kasbon: kasbon !== undefined ? kasbon : (existingContract?.kasbon || 0),
+    jamsostek: jamsostek !== undefined ? jamsostek : (existingContract?.jamsostek || 0),
+    bonus_insentif: bonusInsentif !== undefined ? bonusInsentif : (existingContract?.bonus_insentif || 0),
+    fasilitas_aktif: fasilitasAktif || existingContract?.fasilitas_aktif || ['tunjangan'],
     is_active: true
   };
 
@@ -1699,12 +1710,13 @@ export function saveEmployeeContract(
     state.contracts.push(contractData);
   }
 
-  // Sinkronisasi kasbon ke Employee record jika ditemukan
-  if (kasbon !== undefined) {
-    const empIdx = state.employees.findIndex(e => e.id === employeeId);
-    if (empIdx >= 0) {
-      state.employees[empIdx].kasbon = kasbon;
-    }
+  // Sinkronisasi data finansial dan fasilitas ke Employee record jika ditemukan
+  const empIdx = state.employees.findIndex(e => e.id === employeeId);
+  if (empIdx >= 0) {
+    if (kasbon !== undefined) state.employees[empIdx].kasbon = kasbon;
+    if (jamsostek !== undefined) state.employees[empIdx].jamsostek = jamsostek;
+    if (bonusInsentif !== undefined) state.employees[empIdx].bonus_insentif = bonusInsentif;
+    if (fasilitasAktif !== undefined) state.employees[empIdx].fasilitas_aktif = fasilitasAktif;
   }
 
   saveState(state);
