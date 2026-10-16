@@ -22,7 +22,10 @@ import {
   updatePengajuanStatus, 
   saveSharedPengajuan, 
   getSharedThresholds,
+  getSharedRekeningList,
+  saveSharedTransaksiKas,
   PengajuanItem,
+  RekeningPesantren,
   DEFAULT_THRESHOLDS 
 } from '@/lib/sharedDataStore';
 
@@ -31,17 +34,28 @@ export default function PengeluaranApprovalPage() {
   const [modalInputManual, setModalInputManual] = useState(false);
   const [notif, setNotif] = useState('');
 
+  // Rekening Bank Yayasan
+  const [rekeningList, setRekeningList] = useState<RekeningPesantren[]>([]);
+
   // Threshold Dinamis Tenant dari Shared Store (SSR Safe)
   const [thresholds, setThresholds] = useState(DEFAULT_THRESHOLDS);
 
   // Daftar Pengajuan Kebutuhan dari Rumah Tangga & Mudir (Live Shared Data)
   const [pengajuanList, setPengajuanList] = useState<PengajuanItem[]>([]);
 
+  // Modal Pencairan ACC Pengajuan
+  const [modalAccPencairan, setModalAccPencairan] = useState(false);
+  const [itemForAcc, setItemForAcc] = useState<PengajuanItem | null>(null);
+  const [metodeAcc, setMetodeAcc] = useState<'CASH' | 'TRANSFER'>('CASH');
+  const [rekeningIdAcc, setRekeningIdAcc] = useState('');
+
   // Form state input manual pengeluaran oleh keuangan
   const [formDataManual, setFormDataManual] = useState({
     penerima: '',
     kategori: 'Listrik & Air PLN',
     nominal: 1250000,
+    metode: 'CASH' as 'CASH' | 'TRANSFER',
+    rekeningId: '',
     keterangan: '',
   });
 
@@ -49,6 +63,12 @@ export default function PengeluaranApprovalPage() {
   useEffect(() => {
     setPengajuanList(getSharedPengajuanList());
     setThresholds(getSharedThresholds());
+    const rek = getSharedRekeningList();
+    setRekeningList(rek);
+    if (rek.length > 0) {
+      setFormDataManual(prev => ({ ...prev, rekeningId: rek[0].id }));
+      setRekeningIdAcc(rek[0].id);
+    }
 
     const handleUpdate = () => {
       setPengajuanList(getSharedPengajuanList());
@@ -64,18 +84,54 @@ export default function PengeluaranApprovalPage() {
     };
   }, []);
 
-  const handleAccKeuangan = (id: string, nominal: number, divisi: string) => {
-    const isMudir = divisi === 'Mudir KBM';
+  const handleBukaAcc = (item: PengajuanItem) => {
+    const isMudir = item.divisi === 'Mudir KBM';
     const maxLimit = isMudir ? thresholds.max_keuangan_kbm_mudir : thresholds.max_keuangan_rumah_tangga;
 
-    if (nominal > maxLimit) {
-      alert(`Pemberitahuan: Nominal Rp ${nominal.toLocaleString('id-ID')} melampaui batas kewenangan Keuangan (Rp ${maxLimit.toLocaleString('id-ID')}). Pengajuan ini diteruskan ke Wakil Ketua & Ketua Yayasan untuk persetujuan.`);
-      updatePengajuanStatus(id, 'MENUNGGU_WAKIL_YAYASAN', 'Menunggu Persetujuan Yayasan');
+    if (item.nominal > maxLimit) {
+      alert(`Pemberitahuan: Nominal Rp ${item.nominal.toLocaleString('id-ID')} melampaui batas kewenangan Keuangan (Rp ${maxLimit.toLocaleString('id-ID')}). Pengajuan ini diteruskan ke Wakil Ketua & Ketua Yayasan untuk persetujuan.`);
+      updatePengajuanStatus(item.id, 'MENUNGGU_WAKIL_YAYASAN', 'Menunggu Persetujuan Yayasan');
       return;
     }
 
-    updatePengajuanStatus(id, 'DISETUJUI', 'Telah di-ACC Bagian Keuangan');
-    setNotif(`✓ Pengeluaran sebesar Rp ${nominal.toLocaleString('id-ID')} berhasil disetujui (ACC) oleh Bagian Keuangan!`);
+    setItemForAcc(item);
+    // Jika nominal > 1 jt default transfer, jika kecil default cash
+    setMetodeAcc(item.nominal >= 1000000 ? 'TRANSFER' : 'CASH');
+    setModalAccPencairan(true);
+  };
+
+  const handleKonfirmasiPencairanAcc = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!itemForAcc) return;
+
+    const rek = rekeningList.find(r => r.id === rekeningIdAcc);
+    const labelMetode = metodeAcc === 'CASH'
+      ? 'Tunai (Kas Kecil)'
+      : `Transfer ${rek?.nama_bank || 'Bank'}`;
+
+    // 1. Update status pengajuan
+    updatePengajuanStatus(itemForAcc.id, 'DISETUJUI', `Telah di-ACC & Dicairkan via ${labelMetode}`);
+
+    // 2. Simpan ke Unified Kas Store (Single Source of Truth)
+    saveSharedTransaksiKas({
+      nomor_transaksi: `TRX-${Date.now().toString().slice(-6)}`,
+      tanggal: new Date().toISOString().split('T')[0],
+      waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+      tipe: 'KELUAR',
+      kategori: 'PENGELUARAN_OPERASIONAL',
+      kategori_label: `${itemForAcc.divisi} - ${itemForAcc.judul}`,
+      nama_pihak: itemForAcc.pemohon,
+      nominal: itemForAcc.nominal,
+      metode: metodeAcc,
+      rekening_id: metodeAcc === 'TRANSFER' ? rekeningIdAcc : undefined,
+      rekening_nama: metodeAcc === 'TRANSFER' ? `${rek?.nama_bank} - ${rek?.nomor_rekening}` : undefined,
+      keterangan: `Pencairan Pengajuan ${itemForAcc.nomor}: ${itemForAcc.judul}`,
+      petugas: 'Bagian Keuangan',
+    });
+
+    setModalAccPencairan(false);
+    setItemForAcc(null);
+    setNotif(`✓ Pengeluaran "${itemForAcc.judul}" sebesar Rp ${itemForAcc.nominal.toLocaleString('id-ID')} disetujui & dicatat keluar via ${labelMetode}!`);
     setTimeout(() => setNotif(''), 6000);
   };
 
@@ -89,14 +145,36 @@ export default function PengeluaranApprovalPage() {
     e.preventDefault();
     setModalInputManual(false);
 
+    const rek = rekeningList.find(r => r.id === formDataManual.rekeningId);
+    const labelMetode = formDataManual.metode === 'CASH'
+      ? 'Tunai Kasir (Cash)'
+      : `Transfer ${rek?.nama_bank || 'Bank'}`;
+
     saveSharedPengajuan({
       divisi: 'Mudir KBM',
       pemohon: formDataManual.penerima || 'Bagian Keuangan',
       judul: `[Input Manual Keuangan] ${formDataManual.kategori}`,
       nominal: Number(formDataManual.nominal),
       status: 'DISETUJUI',
-      level_approval: 'Input Langsung Kasir Keuangan (Sah)',
+      level_approval: `Kasir Keuangan (Saluran: ${labelMetode})`,
       deskripsi: formDataManual.keterangan || formDataManual.kategori,
+    });
+
+    // Simpan ke Unified Ledger Kasir (Single Source of Truth)
+    saveSharedTransaksiKas({
+      nomor_transaksi: `TRX-${Date.now().toString().slice(-6)}`,
+      tanggal: new Date().toISOString().split('T')[0],
+      waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+      tipe: 'KELUAR',
+      kategori: 'PENGELUARAN_OPERASIONAL',
+      kategori_label: formDataManual.kategori,
+      nama_pihak: formDataManual.penerima || 'Vendor / Pihak Ketiga',
+      nominal: Number(formDataManual.nominal),
+      metode: formDataManual.metode,
+      rekening_id: formDataManual.metode === 'TRANSFER' ? formDataManual.rekeningId : undefined,
+      rekening_nama: formDataManual.metode === 'TRANSFER' ? `${rek?.nama_bank} - ${rek?.nomor_rekening}` : undefined,
+      keterangan: formDataManual.keterangan || `Beban Operasional: ${formDataManual.kategori}`,
+      petugas: 'Bagian Keuangan',
     });
 
     try {
@@ -114,10 +192,18 @@ export default function PengeluaranApprovalPage() {
       console.warn('Supabase expense manual sync notice:', err);
     }
 
-    setNotif(`✓ Pengeluaran manual kategori "${formDataManual.kategori}" sebesar Rp ${Number(formDataManual.nominal).toLocaleString('id-ID')} berhasil dicatat ke buku kas!`);
-    setFormDataManual({ penerima: '', kategori: 'Listrik & Air PLN', nominal: 1250000, keterangan: '' });
+    setNotif(`✓ Pengeluaran manual "${formDataManual.kategori}" sebesar Rp ${Number(formDataManual.nominal).toLocaleString('id-ID')} via ${labelMetode} berhasil dibukukan!`);
+    setFormDataManual({ 
+      penerima: '', 
+      kategori: 'Listrik & Air PLN', 
+      nominal: 1250000, 
+      metode: 'CASH', 
+      rekeningId: rekeningList[0]?.id || '', 
+      keterangan: '' 
+    });
     setTimeout(() => setNotif(''), 6000);
   };
+
 
   return (
     <div className="space-y-6">
@@ -293,16 +379,16 @@ export default function PengeluaranApprovalPage() {
                         <div className="flex items-center justify-center space-x-1.5">
                           {canDirectAcc ? (
                             <button
-                              onClick={() => handleAccKeuangan(item.id, item.nominal, item.divisi)}
+                              onClick={() => handleBukaAcc(item)}
                               className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-xs transition text-[11px] flex items-center space-x-1"
-                              title="Setujui langsung (Sesuai batas threshold)"
+                              title="Setujui & Pilih Saluran Pencairan (Cash / Transfer)"
                             >
                               <Check className="w-3 h-3" />
-                              <span>ACC Langsung</span>
+                              <span>ACC &amp; Cairkan</span>
                             </button>
                           ) : (
                             <button
-                              onClick={() => handleAccKeuangan(item.id, item.nominal, item.divisi)}
+                              onClick={() => handleBukaAcc(item)}
                               className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg shadow-xs transition text-[11px] flex items-center space-x-1"
                               title="Nominal besar (> threshold), teruskan ke Yayasan"
                             >
@@ -328,14 +414,14 @@ export default function PengeluaranApprovalPage() {
         </div>
       </div>
 
-      {/* Modal Input Pengeluaran Manual oleh Keuangan */}
+      {/* Modal 1: Input Pengeluaran Manual oleh Keuangan (Pemisahan Cash vs Transfer Bank) */}
       {modalInputManual && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h3 className="font-bold text-slate-900 text-base">Input Manual Pengeluaran Kasir</h3>
-                <p className="text-xs text-slate-500">Pencatatan langsung beban operasional & utilitas pondok</p>
+                <p className="text-xs text-slate-500">Pencatatan langsung beban operasional &amp; utilitas pondok</p>
               </div>
               <button onClick={() => setModalInputManual(false)} className="text-slate-400 hover:text-slate-600 text-lg font-bold">
                 ✕
@@ -385,6 +471,59 @@ export default function PengeluaranApprovalPage() {
                 />
               </div>
 
+              {/* SALURAN PENGELUARAN: CASH VS TRANSFER */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-1.5">
+                  Saluran Sumber Dana (Wajib Dipilih Tanpa Tertukar):
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormDataManual({ ...formDataManual, metode: 'CASH' })}
+                    className={`p-3 rounded-xl border text-left flex flex-col justify-between transition ${
+                      formDataManual.metode === 'CASH'
+                        ? 'border-emerald-500 bg-emerald-50/70 text-emerald-900 ring-2 ring-emerald-500'
+                        : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+                    }`}
+                  >
+                    <span className="font-bold text-xs">💵 Kas Tunai (Cash)</span>
+                    <span className="text-[10px] text-slate-500 mt-1">Dibayar dari kas kecil / petty cash</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormDataManual({ ...formDataManual, metode: 'TRANSFER' })}
+                    className={`p-3 rounded-xl border text-left flex flex-col justify-between transition ${
+                      formDataManual.metode === 'TRANSFER'
+                        ? 'border-blue-500 bg-blue-50/70 text-blue-900 ring-2 ring-blue-500'
+                        : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+                    }`}
+                  >
+                    <span className="font-bold text-xs">🏦 Transfer Bank</span>
+                    <span className="text-[10px] text-slate-500 mt-1">Dibayar via m-Banking/giro bank</span>
+                  </button>
+                </div>
+              </div>
+
+              {formDataManual.metode === 'TRANSFER' && (
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Rekening Bank Sumber Pembayaran:
+                  </label>
+                  <select
+                    value={formDataManual.rekeningId}
+                    onChange={(e) => setFormDataManual({ ...formDataManual, rekeningId: e.target.value })}
+                    className="w-full p-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  >
+                    {rekeningList.map((rek) => (
+                      <option key={rek.id} value={rek.id}>
+                        {rek.nama_bank} - {rek.nomor_rekening} ({rek.fungsi_label || rek.pengelola})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">Catatan / Bukti Nota Fisik</label>
                 <textarea
@@ -409,6 +548,108 @@ export default function PengeluaranApprovalPage() {
                   className="flex-1 py-2.5 font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md transition"
                 >
                   Simpan Pengeluaran Kas
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal 2: ACC & Konfirmasi Pencairan Dana Pengajuan */}
+      {modalAccPencairan && itemForAcc && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="font-bold text-slate-900 text-base">Persetujuan &amp; Pencairan Dana</h3>
+                <p className="text-xs text-slate-500">Pengajuan: <strong>{itemForAcc.nomor}</strong></p>
+              </div>
+              <button onClick={() => setModalAccPencairan(false)} className="text-slate-400 hover:text-slate-600 text-lg font-bold">
+                ✕
+              </button>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Divisi Pemohon:</span>
+                <span className="font-bold text-slate-800">{itemForAcc.divisi} ({itemForAcc.pemohon})</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Judul Kebutuhan:</span>
+                <span className="font-semibold text-slate-800">{itemForAcc.judul}</span>
+              </div>
+              <div className="flex justify-between pt-1 border-t border-slate-200">
+                <span className="text-slate-600 font-bold">Nominal Pencairan:</span>
+                <span className="font-bold font-mono text-emerald-700 text-sm">Rp {itemForAcc.nominal.toLocaleString('id-ID')}</span>
+              </div>
+            </div>
+
+            <form onSubmit={handleKonfirmasiPencairanAcc} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1.5">
+                  Saluran Sumber Dana Pencairan:
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setMetodeAcc('CASH')}
+                    className={`p-3 rounded-xl border text-left flex flex-col justify-between transition ${
+                      metodeAcc === 'CASH'
+                        ? 'border-emerald-500 bg-emerald-50/70 text-emerald-900 ring-2 ring-emerald-500'
+                        : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+                    }`}
+                  >
+                    <span className="font-bold text-xs">💵 Kas Tunai (Cash)</span>
+                    <span className="text-[10px] text-slate-500 mt-1">Dicairkan tunai dari brankas kasir</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setMetodeAcc('TRANSFER')}
+                    className={`p-3 rounded-xl border text-left flex flex-col justify-between transition ${
+                      metodeAcc === 'TRANSFER'
+                        ? 'border-blue-500 bg-blue-50/70 text-blue-900 ring-2 ring-blue-500'
+                        : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+                    }`}
+                  >
+                    <span className="font-bold text-xs">🏦 Transfer Bank</span>
+                    <span className="text-[10px] text-slate-500 mt-1">Ditransfer via rekening resmi bank</span>
+                  </button>
+                </div>
+              </div>
+
+              {metodeAcc === 'TRANSFER' && (
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Rekening Bank Sumber Pembayaran:
+                  </label>
+                  <select
+                    value={rekeningIdAcc}
+                    onChange={(e) => setRekeningIdAcc(e.target.value)}
+                    className="w-full p-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  >
+                    {rekeningList.map((rek) => (
+                      <option key={rek.id} value={rek.id}>
+                        {rek.nama_bank} - {rek.nomor_rekening} ({rek.fungsi_label || rek.pengelola})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setModalAccPencairan(false)}
+                  className="flex-1 py-2.5 font-semibold text-slate-600 border border-slate-300 rounded-xl hover:bg-slate-50"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md transition"
+                >
+                  Konfirmasi Pencairan Dana
                 </button>
               </div>
             </form>

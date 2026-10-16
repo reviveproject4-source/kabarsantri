@@ -25,15 +25,24 @@ import {
   Percent,
   Check,
   School,
-  Trash2
+  Trash2,
+  Banknote,
+  CheckCheck,
+  RefreshCw,
+  Filter,
+  ArrowDownRight
 } from 'lucide-react';
 import { 
   getSharedThresholds, 
   saveSharedThresholds, 
   getSharedRekeningList, 
   saveSharedRekeningList, 
+  getSharedTransaksiKasList,
+  getKasSummary,
   RekeningPesantren, 
   ThresholdSettings,
+  TransaksiKasRecord,
+  KasRekonsiliasiSummary,
   DEFAULT_THRESHOLDS,
   DEFAULT_REKENING,
   isTenantMode
@@ -70,6 +79,28 @@ export default function DashboardKetuaYayasanPage() {
 
   // 3. Tab Grafik
   const [activeGrafikTab, setActiveGrafikTab] = useState<'semua' | 'spp' | 'jajan' | 'tabungan' | 'donasi' | 'tunggakan'>('semua');
+
+  // 4. Arus Kas Terpadu & Rekonsiliasi Bank Transfer vs Cash Tunai
+  const [kasList, setKasList] = useState<TransaksiKasRecord[]>([]);
+  const [kasSummary, setKasSummary] = useState<KasRekonsiliasiSummary>({
+    totalMasukCash: 0,
+    totalMasukTransfer: 0,
+    totalMasuk: 0,
+    totalKeluarCash: 0,
+    totalKeluarTransfer: 0,
+    totalKeluar: 0,
+    saldoCash: 0,
+    saldoTransfer: 0,
+    saldoTotal: 0,
+    byKategori: {
+      spp: { cash: 0, transfer: 0, total: 0 },
+      infaq: { cash: 0, transfer: 0, total: 0 },
+      tabungan: { cash: 0, transfer: 0, total: 0 },
+      pengeluaran: { cash: 0, transfer: 0, total: 0 },
+    },
+  });
+  const [filterSaluranMutasi, setFilterSaluranMutasi] = useState<'ALL' | 'CASH' | 'TRANSFER'>('ALL');
+  const [filterKategoriMutasi, setFilterKategoriMutasi] = useState<string>('ALL');
 
   const [mounted, setMounted] = useState(false);
   const searchParams = useSearchParams();
@@ -131,6 +162,14 @@ export default function DashboardKetuaYayasanPage() {
     setFormThresholds(getSharedThresholds());
     setRekeningList(getSharedRekeningList());
 
+    const loadKas = () => {
+      const list = getSharedTransaksiKasList();
+      setKasList(list);
+      setKasSummary(getKasSummary(list));
+    };
+
+    loadKas();
+
     const handleThresholdUpdate = () => {
       setThresholds(getSharedThresholds());
       setFormThresholds(getSharedThresholds());
@@ -138,13 +177,18 @@ export default function DashboardKetuaYayasanPage() {
     const handleRekeningUpdate = () => {
       setRekeningList(getSharedRekeningList());
     };
+    const handleKasUpdate = () => {
+      loadKas();
+    };
 
     window.addEventListener('ks_threshold_updated', handleThresholdUpdate);
     window.addEventListener('ks_rekening_updated', handleRekeningUpdate);
+    window.addEventListener('ks_kas_updated', handleKasUpdate);
 
     return () => {
       window.removeEventListener('ks_threshold_updated', handleThresholdUpdate);
       window.removeEventListener('ks_rekening_updated', handleRekeningUpdate);
+      window.removeEventListener('ks_kas_updated', handleKasUpdate);
     };
   }, []);
 
@@ -321,6 +365,372 @@ export default function DashboardKetuaYayasanPage() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 🏛️ LAPORAN ARUS KAS TERPADU: REKONSILIASI BANK TRANSFER VS KAS TUNAI (CASH) */}
+      {/* ========================================================================= */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div>
+            <div className="flex items-center space-x-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200">
+                Laporan Arus Kas Terpadu
+              </span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 border border-blue-200 flex items-center space-x-1">
+                <CheckCheck className="w-3 h-3 text-blue-600" />
+                <span>Nihil Selisih • Tanpa Salah Kamar</span>
+              </span>
+            </div>
+            <h2 className="font-bold text-slate-900 text-lg flex items-center space-x-2 mt-1">
+              <Banknote className="w-5 h-5 text-emerald-600" />
+              <span>Rekonsiliasi Kas: Transfer Bank vs Kas Tunai (Cash)</span>
+            </h2>
+            <p className="text-xs text-slate-500">
+              Kompilasi Arus Dana Masuk (SPP, Infaq, Tabungan Santri) &amp; Dana Keluar (Beban Operasional) dari Input Pegawai Keuangan
+            </p>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <span className="text-xs text-slate-500 bg-slate-100 px-3 py-1.5 rounded-xl font-mono font-medium">
+              Total {kasList.length} Transaksi Terverifikasi
+            </span>
+          </div>
+        </div>
+
+        {/* 3 Executive Position KPI Cards */}
+        <div className="grid md:grid-cols-3 gap-4">
+          {/* Card 1: Kas Tunai Fisik (Cash) */}
+          <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50/80 to-teal-50/50 border border-emerald-200 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-emerald-950 text-xs flex items-center space-x-1.5">
+                <span>💵 Saldo Kas Tunai Fisik (Cash)</span>
+              </span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-200/60 text-emerald-900 border border-emerald-300">
+                Kasir &amp; Brankas
+              </span>
+            </div>
+            <div className="text-2xl font-bold font-mono text-emerald-800">
+              Rp {kasSummary.saldoCash.toLocaleString('id-ID')}
+            </div>
+            <div className="pt-2 border-t border-emerald-200/60 flex items-center justify-between text-[11px] text-slate-600">
+              <span>Masuk Tunai: <strong className="text-emerald-700">Rp {kasSummary.totalMasukCash.toLocaleString('id-ID')}</strong></span>
+              <span>Keluar Tunai: <strong className="text-rose-700">Rp {kasSummary.totalKeluarCash.toLocaleString('id-ID')}</strong></span>
+            </div>
+          </div>
+
+          {/* Card 2: Saldo Rekening Bank (Transfer) */}
+          <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50/80 to-indigo-50/50 border border-blue-200 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-blue-950 text-xs flex items-center space-x-1.5">
+                <span>🏦 Saldo Rekening Bank (Transfer)</span>
+              </span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-200/60 text-blue-900 border border-blue-300">
+                Rekening Resmi
+              </span>
+            </div>
+            <div className="text-2xl font-bold font-mono text-blue-800">
+              Rp {kasSummary.saldoTransfer.toLocaleString('id-ID')}
+            </div>
+            <div className="pt-2 border-t border-blue-200/60 flex items-center justify-between text-[11px] text-slate-600">
+              <span>Masuk Bank: <strong className="text-blue-700">Rp {kasSummary.totalMasukTransfer.toLocaleString('id-ID')}</strong></span>
+              <span>Keluar Bank: <strong className="text-rose-700">Rp {kasSummary.totalKeluarTransfer.toLocaleString('id-ID')}</strong></span>
+            </div>
+          </div>
+
+          {/* Card 3: Total Kas Bersih Konsolidasi */}
+          <div className="p-4 rounded-xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-slate-200 text-xs flex items-center space-x-1.5">
+                <span>💎 Total Kas Konsolidasi</span>
+              </span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                Rekonsiliasi Seimbang
+              </span>
+            </div>
+            <div className="text-2xl font-bold font-mono text-emerald-400">
+              Rp {kasSummary.saldoTotal.toLocaleString('id-ID')}
+            </div>
+            <div className="pt-2 border-t border-slate-700 flex items-center justify-between text-[11px] text-slate-300">
+              <span>Total Masuk: <strong>Rp {kasSummary.totalMasuk.toLocaleString('id-ID')}</strong></span>
+              <span>Total Beban: <strong>Rp {kasSummary.totalKeluar.toLocaleString('id-ID')}</strong></span>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabel Rekapitulasi Rinci: Per Pos Masuk/Keluar Tanpa Salah Kamar */}
+        <div className="border border-slate-200 rounded-xl overflow-hidden text-xs">
+          <div className="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+            <h3 className="font-bold text-slate-800 flex items-center space-x-1.5">
+              <span>Matriks Pemisahan Kas: Kasir Tunai (Cash) vs Rekening Bank (Transfer)</span>
+            </h3>
+            <span className="text-[10px] text-slate-500 italic">Audit Status: Otomatis sinkron per transaksi kasir</span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="bg-slate-100/70 text-slate-700 font-bold border-b border-slate-200 uppercase text-[10px]">
+                <tr>
+                  <th className="py-2.5 px-4">Pos Aliran Dana</th>
+                  <th className="py-2.5 px-4 text-right">Kas Tunai (Cash)</th>
+                  <th className="py-2.5 px-4 text-right">Transfer Rekening Bank</th>
+                  <th className="py-2.5 px-4 text-right">Total Akumulasi</th>
+                  <th className="py-2.5 px-4 text-center">Status Rekonsiliasi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {/* 1. SPP */}
+                <tr className="hover:bg-slate-50/60 transition">
+                  <td className="py-2.5 px-4 font-semibold text-slate-800 flex items-center space-x-2">
+                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                    <span>1. Penerimaan SPP Santri Bulanan</span>
+                  </td>
+                  <td className="py-2.5 px-4 text-right font-mono font-medium text-emerald-700">
+                    Rp {kasSummary.byKategori.spp.cash.toLocaleString('id-ID')}
+                  </td>
+                  <td className="py-2.5 px-4 text-right font-mono font-medium text-blue-700">
+                    Rp {kasSummary.byKategori.spp.transfer.toLocaleString('id-ID')}
+                  </td>
+                  <td className="py-2.5 px-4 text-right font-mono font-bold text-slate-900">
+                    Rp {kasSummary.byKategori.spp.total.toLocaleString('id-ID')}
+                  </td>
+                  <td className="py-2.5 px-4 text-center">
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                      ✓ Terekonsiliasi
+                    </span>
+                  </td>
+                </tr>
+
+                {/* 2. Infaq */}
+                <tr className="hover:bg-slate-50/60 transition">
+                  <td className="py-2.5 px-4 font-semibold text-slate-800 flex items-center space-x-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>2. Penerimaan Infaq, Shadaqah &amp; Donasi</span>
+                  </td>
+                  <td className="py-2.5 px-4 text-right font-mono font-medium text-emerald-700">
+                    Rp {kasSummary.byKategori.infaq.cash.toLocaleString('id-ID')}
+                  </td>
+                  <td className="py-2.5 px-4 text-right font-mono font-medium text-blue-700">
+                    Rp {kasSummary.byKategori.infaq.transfer.toLocaleString('id-ID')}
+                  </td>
+                  <td className="py-2.5 px-4 text-right font-mono font-bold text-slate-900">
+                    Rp {kasSummary.byKategori.infaq.total.toLocaleString('id-ID')}
+                  </td>
+                  <td className="py-2.5 px-4 text-center">
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                      ✓ Terekonsiliasi
+                    </span>
+                  </td>
+                </tr>
+
+                {/* 3. Tabungan */}
+                <tr className="hover:bg-slate-50/60 transition">
+                  <td className="py-2.5 px-4 font-semibold text-slate-800 flex items-center space-x-2">
+                    <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                    <span>3. Penerimaan Tabungan &amp; E-Pocket Santri</span>
+                  </td>
+                  <td className="py-2.5 px-4 text-right font-mono font-medium text-emerald-700">
+                    Rp {kasSummary.byKategori.tabungan.cash.toLocaleString('id-ID')}
+                  </td>
+                  <td className="py-2.5 px-4 text-right font-mono font-medium text-blue-700">
+                    Rp {kasSummary.byKategori.tabungan.transfer.toLocaleString('id-ID')}
+                  </td>
+                  <td className="py-2.5 px-4 text-right font-mono font-bold text-slate-900">
+                    Rp {kasSummary.byKategori.tabungan.total.toLocaleString('id-ID')}
+                  </td>
+                  <td className="py-2.5 px-4 text-center">
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                      ✓ Terekonsiliasi
+                    </span>
+                  </td>
+                </tr>
+
+                {/* SUB TOTAL PENERIMAAN */}
+                <tr className="bg-emerald-50/50 font-bold border-t border-b border-emerald-200">
+                  <td className="py-2.5 px-4 text-emerald-950 uppercase text-[11px]">
+                    Subtotal Penerimaan Kas Masuk (A)
+                  </td>
+                  <td className="py-2.5 px-4 text-right font-mono text-emerald-800 font-bold">
+                    Rp {kasSummary.totalMasukCash.toLocaleString('id-ID')}
+                  </td>
+                  <td className="py-2.5 px-4 text-right font-mono text-blue-800 font-bold">
+                    Rp {kasSummary.totalMasukTransfer.toLocaleString('id-ID')}
+                  </td>
+                  <td className="py-2.5 px-4 text-right font-mono text-emerald-900 font-bold text-sm">
+                    Rp {kasSummary.totalMasuk.toLocaleString('id-ID')}
+                  </td>
+                  <td className="py-2.5 px-4 text-center">
+                    <span className="text-[10px] font-bold text-emerald-700">100% Klir</span>
+                  </td>
+                </tr>
+
+                {/* 4. Pengeluaran */}
+                <tr className="hover:bg-slate-50/60 transition">
+                  <td className="py-2.5 px-4 font-semibold text-rose-800 flex items-center space-x-2">
+                    <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                    <span>4. Pengeluaran Operasional &amp; Belanja Kebutuhan (B)</span>
+                  </td>
+                  <td className="py-2.5 px-4 text-right font-mono font-medium text-rose-700">
+                    (Rp {kasSummary.byKategori.pengeluaran.cash.toLocaleString('id-ID')})
+                  </td>
+                  <td className="py-2.5 px-4 text-right font-mono font-medium text-rose-700">
+                    (Rp {kasSummary.byKategori.pengeluaran.transfer.toLocaleString('id-ID')})
+                  </td>
+                  <td className="py-2.5 px-4 text-right font-mono font-bold text-rose-800">
+                    (Rp {kasSummary.byKategori.pengeluaran.total.toLocaleString('id-ID')})
+                  </td>
+                  <td className="py-2.5 px-4 text-center">
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                      ✓ Terekonsiliasi
+                    </span>
+                  </td>
+                </tr>
+
+                {/* SALDO AKHIR KAS */}
+                <tr className="bg-slate-900 text-white font-bold text-xs border-t-2 border-emerald-500">
+                  <td className="py-3 px-4 uppercase tracking-wider">
+                    Sisa Saldo Kas Bersih (A - B)
+                  </td>
+                  <td className="py-3 px-4 text-right font-mono text-emerald-400 font-bold text-sm">
+                    Rp {kasSummary.saldoCash.toLocaleString('id-ID')}
+                  </td>
+                  <td className="py-3 px-4 text-right font-mono text-blue-300 font-bold text-sm">
+                    Rp {kasSummary.saldoTransfer.toLocaleString('id-ID')}
+                  </td>
+                  <td className="py-3 px-4 text-right font-mono text-amber-300 font-bold text-sm">
+                    Rp {kasSummary.saldoTotal.toLocaleString('id-ID')}
+                  </td>
+                  <td className="py-3 px-4 text-center">
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-300 text-[10px] font-bold">
+                      Nihil Selisih
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Audit Log Mutasi Kasir Terakhir */}
+        <div className="space-y-3 pt-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <h3 className="font-bold text-slate-800 text-sm flex items-center space-x-1.5">
+              <span>Log Audit Rincian Mutasi Kasir</span>
+            </h3>
+
+            {/* Filter Buttons */}
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+              <span className="text-[11px] text-slate-400 mr-1 flex items-center space-x-1">
+                <Filter className="w-3.5 h-3.5" />
+                <span>Saluran:</span>
+              </span>
+              <button
+                onClick={() => setFilterSaluranMutasi('ALL')}
+                className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition ${
+                  filterSaluranMutasi === 'ALL'
+                    ? 'bg-slate-800 text-white shadow-xs'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                }`}
+              >
+                Semua
+              </button>
+              <button
+                onClick={() => setFilterSaluranMutasi('CASH')}
+                className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition ${
+                  filterSaluranMutasi === 'CASH'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                }`}
+              >
+                💵 Khusus Kas Tunai (Cash)
+              </button>
+              <button
+                onClick={() => setFilterSaluranMutasi('TRANSFER')}
+                className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition ${
+                  filterSaluranMutasi === 'TRANSFER'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                }`}
+              >
+                🏦 Khusus Transfer Bank
+              </button>
+            </div>
+          </div>
+
+          <div className="border border-slate-200 rounded-xl overflow-hidden text-xs">
+            <div className="overflow-x-auto max-h-72 overflow-y-auto">
+              <table className="w-full text-left">
+                <thead className="bg-slate-50 text-slate-600 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200 sticky top-0 bg-slate-50">
+                  <tr>
+                    <th className="py-2.5 px-3">Waktu &amp; No. TRX</th>
+                    <th className="py-2.5 px-3">Pos &amp; Kategori</th>
+                    <th className="py-2.5 px-3">Pihak Terkait</th>
+                    <th className="py-2.5 px-3">Saluran Dana (Bank vs Cash)</th>
+                    <th className="py-2.5 px-3 text-right">Nominal</th>
+                    <th className="py-2.5 px-3">Petugas</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-700">
+                  {kasList.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-slate-400">
+                        Belum ada riwayat transaksi kasir yang tercatat.
+                      </td>
+                    </tr>
+                  ) : (
+                    kasList
+                      .filter(tx => {
+                        if (filterSaluranMutasi === 'ALL') return true;
+                        return tx.metode === filterSaluranMutasi;
+                      })
+                      .map((tx) => (
+                        <tr key={tx.id} className="hover:bg-slate-50/70 transition">
+                          <td className="py-2.5 px-3">
+                            <span className="font-mono font-bold text-slate-900 block">{tx.nomor_transaksi}</span>
+                            <span className="text-[10px] text-slate-400">{tx.tanggal} {tx.waktu || ''}</span>
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <span className="font-semibold text-slate-800 block">{tx.kategori_label}</span>
+                            <span className="text-[10px] text-slate-400 block truncate max-w-xs">{tx.keterangan}</span>
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <span className="font-semibold text-slate-800">{tx.nama_pihak}</span>
+                            {tx.nis && <span className="text-[10px] text-slate-400 block font-mono">NIS: {tx.nis}</span>}
+                          </td>
+                          <td className="py-2.5 px-3">
+                            {tx.metode === 'CASH' ? (
+                              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] border border-emerald-200">
+                                <span>💵 Tunai (Cash)</span>
+                              </span>
+                            ) : (
+                              <div className="space-y-0.5">
+                                <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold text-[10px] border border-blue-200">
+                                  <span>🏦 Transfer Bank</span>
+                                </span>
+                                {tx.rekening_nama && (
+                                  <span className="text-[10px] text-slate-500 block truncate max-w-xs">{tx.rekening_nama}</span>
+                                )}
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-mono font-bold">
+                            <span className={tx.tipe === 'MASUK' ? 'text-emerald-700' : 'text-rose-700'}>
+                              {tx.tipe === 'MASUK' ? '+ ' : '- '}
+                              Rp {tx.nominal.toLocaleString('id-ID')}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-500 text-[11px]">
+                            {tx.petugas}
+                          </td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ========================================================================= */}

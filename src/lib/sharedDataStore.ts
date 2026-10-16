@@ -2418,3 +2418,467 @@ export function saveWaliCustomPin(nis: string, newPin: string): void {
   } catch {}
 }
 
+// ============================================================================
+// 12. UNIFIED ARUS KAS & LEDGER (PEMISAHAN TEGAS CASH VS TRANSFER BANK)
+// Kategori Masuk: SPP, INFAQ, TABUNGAN (Uang Jajan)
+// Kategori Keluar: PENGELUARAN_OPERASIONAL (Rumah Tangga & KBM)
+// ============================================================================
+
+export interface TransaksiKasRecord {
+  id: string;
+  nomor_transaksi: string;
+  tanggal: string; // YYYY-MM-DD
+  waktu?: string; // HH:MM
+  tipe: 'MASUK' | 'KELUAR';
+  kategori: 'SPP' | 'INFAQ' | 'TABUNGAN' | 'PENGELUARAN_OPERASIONAL';
+  kategori_label: string;
+  nama_pihak: string; // Santri, Donatur, atau Vendor/Penerima
+  nis?: string;
+  nominal: number;
+  metode: 'CASH' | 'TRANSFER'; // IMMUTABLE: Pembeda tegas Kas Tunai (Cash) vs Rekening Bank
+  rekening_id?: string;
+  rekening_nama?: string;
+  keterangan: string;
+  petugas: string;
+  created_at: string;
+}
+
+export const DEFAULT_TRANSAKSI_KAS: TransaksiKasRecord[] = [
+  // --- SPP (Transfer & Cash) ---
+  {
+    id: 'trx-spp-1',
+    nomor_transaksi: 'TRX-202610-SPP01',
+    tanggal: '2026-10-02',
+    waktu: '09:15',
+    tipe: 'MASUK',
+    kategori: 'SPP',
+    kategori_label: 'SPP Santri Bulanan',
+    nama_pihak: 'Muhammad Al-Fatih',
+    nis: '202601001',
+    nominal: 500000,
+    metode: 'TRANSFER',
+    rekening_id: 'rek-1',
+    rekening_nama: 'Bank Syariah Indonesia (BSI) - 7142098811',
+    keterangan: 'SPP Bulan Oktober 2026 via BSI Virtual Account',
+    petugas: 'Staf Keuangan',
+    created_at: '2026-10-02T09:15:00Z',
+  },
+  {
+    id: 'trx-spp-2',
+    nomor_transaksi: 'TRX-202610-SPP02',
+    tanggal: '2026-10-01',
+    waktu: '14:02',
+    tipe: 'MASUK',
+    kategori: 'SPP',
+    kategori_label: 'SPP Santri Bulanan',
+    nama_pihak: 'Fathimah Az-Zahra',
+    nis: '202602004',
+    nominal: 600000,
+    metode: 'TRANSFER',
+    rekening_id: 'rek-1',
+    rekening_nama: 'Bank Syariah Indonesia (BSI) - 7142098811',
+    keterangan: 'SPP Bulan Oktober 2026 via Transfer BSI',
+    petugas: 'Staf Keuangan',
+    created_at: '2026-10-01T14:02:00Z',
+  },
+  {
+    id: 'trx-spp-3',
+    nomor_transaksi: 'TRX-202610-SPP03',
+    tanggal: '2026-10-03',
+    waktu: '11:20',
+    tipe: 'MASUK',
+    kategori: 'SPP',
+    kategori_label: 'SPP Santri Bulanan',
+    nama_pihak: 'Bilal Habasyi',
+    nis: '202601018',
+    nominal: 250000,
+    metode: 'CASH',
+    keterangan: 'Pembayaran sebagian SPP tunai langsung di kasir pondok',
+    petugas: 'Staf Keuangan',
+    created_at: '2026-10-03T11:20:00Z',
+  },
+  {
+    id: 'trx-spp-4',
+    nomor_transaksi: 'TRX-202610-SPP04',
+    tanggal: '2026-10-04',
+    waktu: '10:05',
+    tipe: 'MASUK',
+    kategori: 'SPP',
+    kategori_label: 'SPP Santri Bulanan',
+    nama_pihak: 'Salman Al-Farisi',
+    nis: '202601025',
+    nominal: 500000,
+    metode: 'CASH',
+    keterangan: 'Pelunasan SPP tunai di loket bendahara pesantren',
+    petugas: 'Staf Keuangan',
+    created_at: '2026-10-04T10:05:00Z',
+  },
+
+  // --- INFAQ / DONASI (Transfer & Cash) ---
+  {
+    id: 'trx-inf-1',
+    nomor_transaksi: 'TRX-202610-INF01',
+    tanggal: '2026-10-02',
+    waktu: '13:40',
+    tipe: 'MASUK',
+    kategori: 'INFAQ',
+    kategori_label: 'Infaq & Shadaqah Pembangunan',
+    nama_pihak: 'H. Syamsul Bahri',
+    nominal: 5000000,
+    metode: 'TRANSFER',
+    rekening_id: 'rek-3',
+    rekening_nama: 'Bank Mandiri Syariah / BSI Infaq - 8899002233',
+    keterangan: 'Infaq donasi pembangunan asrama tahfidz baru',
+    petugas: 'Bendahara Yayasan',
+    created_at: '2026-10-02T13:40:00Z',
+  },
+  {
+    id: 'trx-inf-2',
+    nomor_transaksi: 'TRX-202610-INF02',
+    tanggal: '2026-10-03',
+    waktu: '16:00',
+    tipe: 'MASUK',
+    kategori: 'INFAQ',
+    kategori_label: 'Infaq Pengembangan Pendidikan',
+    nama_pihak: 'Hamba Allah (Alumni)',
+    nominal: 2500000,
+    metode: 'TRANSFER',
+    rekening_id: 'rek-3',
+    rekening_nama: 'Bank Mandiri Syariah / BSI Infaq - 8899002233',
+    keterangan: 'Donasi buku perpustakaan & operasional KBM',
+    petugas: 'Bendahara Yayasan',
+    created_at: '2026-10-03T16:00:00Z',
+  },
+  {
+    id: 'trx-inf-3',
+    nomor_transaksi: 'TRX-202610-INF03',
+    tanggal: '2026-10-03',
+    waktu: '12:30',
+    tipe: 'MASUK',
+    kategori: 'INFAQ',
+    kategori_label: 'Infaq Jumat Masjid Pesantren',
+    nama_pihak: 'Jamaah Shalat Jumat',
+    nominal: 1850000,
+    metode: 'CASH',
+    keterangan: 'Penghitungan fisik tromol/kotak infaq shalat Jumat',
+    petugas: 'Staf Keuangan',
+    created_at: '2026-10-03T12:30:00Z',
+  },
+  {
+    id: 'trx-inf-4',
+    nomor_transaksi: 'TRX-202610-INF04',
+    tanggal: '2026-10-04',
+    waktu: '09:00',
+    tipe: 'MASUK',
+    kategori: 'INFAQ',
+    kategori_label: 'Sedekah Makan Santri',
+    nama_pihak: 'Ibu Hj. Aminah',
+    nominal: 1000000,
+    metode: 'CASH',
+    keterangan: 'Titipan sedekah makan siang santri penghafal Al-Qur\'an',
+    petugas: 'Staf Keuangan',
+    created_at: '2026-10-04T09:00:00Z',
+  },
+
+  // --- TABUNGAN SANTRI (Transfer & Cash) ---
+  {
+    id: 'trx-tab-1',
+    nomor_transaksi: 'TRX-202610-TAB01',
+    tanggal: '2026-10-01',
+    waktu: '08:30',
+    tipe: 'MASUK',
+    kategori: 'TABUNGAN',
+    kategori_label: 'Top-Up Tabungan Santri',
+    nama_pihak: 'Muhammad Al-Fatih',
+    nis: '202601001',
+    nominal: 200000,
+    metode: 'TRANSFER',
+    rekening_id: 'rek-2',
+    rekening_nama: 'Bank Muamalat - 1098445521',
+    keterangan: 'Top-up saldo e-Pocket via transfer m-Banking wali',
+    petugas: 'Bagian Kesantrian',
+    created_at: '2026-10-01T08:30:00Z',
+  },
+  {
+    id: 'trx-tab-2',
+    nomor_transaksi: 'TRX-202610-TAB02',
+    tanggal: '2026-10-02',
+    waktu: '10:15',
+    tipe: 'MASUK',
+    kategori: 'TABUNGAN',
+    kategori_label: 'Top-Up Tabungan Santri',
+    nama_pihak: 'Fathimah Az-Zahra',
+    nis: '202602004',
+    nominal: 300000,
+    metode: 'TRANSFER',
+    rekening_id: 'rek-2',
+    rekening_nama: 'Bank Muamalat - 1098445521',
+    keterangan: 'Top-up saldo tabungan santri transfer rekening',
+    petugas: 'Bagian Kesantrian',
+    created_at: '2026-10-02T10:15:00Z',
+  },
+  {
+    id: 'trx-tab-3',
+    nomor_transaksi: 'TRX-202610-TAB03',
+    tanggal: '2026-10-03',
+    waktu: '15:20',
+    tipe: 'MASUK',
+    kategori: 'TABUNGAN',
+    kategori_label: 'Setor Tunai Tabungan Santri',
+    nama_pihak: 'Bilal Habasyi',
+    nis: '202601018',
+    nominal: 50000,
+    metode: 'CASH',
+    keterangan: 'Setoran uang saku titipan orang tua tunai ke kasir pondok',
+    petugas: 'Bagian Kesantrian',
+    created_at: '2026-10-03T15:20:00Z',
+  },
+  {
+    id: 'trx-tab-4',
+    nomor_transaksi: 'TRX-202610-TAB04',
+    tanggal: '2026-10-04',
+    waktu: '11:45',
+    tipe: 'MASUK',
+    kategori: 'TABUNGAN',
+    kategori_label: 'Setor Tunai Tabungan Santri',
+    nama_pihak: 'Fatih Al-Ayyubi',
+    nis: '202601021',
+    nominal: 100000,
+    metode: 'CASH',
+    keterangan: 'Setor tunai tabungan mingguan santri di loket kantor',
+    petugas: 'Bagian Kesantrian',
+    created_at: '2026-10-04T11:45:00Z',
+  },
+
+  // --- PENGELUARAN OPERASIONAL (Transfer & Cash) ---
+  {
+    id: 'trx-kel-1',
+    nomor_transaksi: 'TRX-202610-EXP01',
+    tanggal: '2026-10-03',
+    waktu: '14:00',
+    tipe: 'KELUAR',
+    kategori: 'PENGELUARAN_OPERASIONAL',
+    kategori_label: 'Belanja Pokok Dapur (Beras)',
+    nama_pihak: 'Toko Beras Barokah Jaya',
+    nominal: 7200000,
+    metode: 'TRANSFER',
+    rekening_id: 'rek-1',
+    rekening_nama: 'Bank Syariah Indonesia (BSI) - 7142098811',
+    keterangan: 'Pembelian 10 Karung Beras Pandan Wangi Bulanan Santri',
+    petugas: 'Bagian Keuangan',
+    created_at: '2026-10-03T14:00:00Z',
+  },
+  {
+    id: 'trx-kel-2',
+    nomor_transaksi: 'TRX-202610-EXP02',
+    tanggal: '2026-10-03',
+    waktu: '15:30',
+    tipe: 'KELUAR',
+    kategori: 'PENGELUARAN_OPERASIONAL',
+    kategori_label: 'Buku & Modul KBM Mudir',
+    nama_pihak: 'Penerbit CV Pustaka Mulia',
+    nominal: 2800000,
+    metode: 'TRANSFER',
+    rekening_id: 'rek-1',
+    rekening_nama: 'Bank Syariah Indonesia (BSI) - 7142098811',
+    keterangan: 'Pengadaan Buku Pelajaran Bahasa Arab & Kertas Ujian Semester Ganjil',
+    petugas: 'Bagian Keuangan',
+    created_at: '2026-10-03T15:30:00Z',
+  },
+  {
+    id: 'trx-kel-3',
+    nomor_transaksi: 'TRX-202610-EXP03',
+    tanggal: '2026-10-04',
+    waktu: '07:30',
+    tipe: 'KELUAR',
+    kategori: 'PENGELUARAN_OPERASIONAL',
+    kategori_label: 'Belanja Sayur & Bumbu Dapur',
+    nama_pihak: 'Pasar Tradisional / Pak Maryono',
+    nominal: 750000,
+    metode: 'CASH',
+    keterangan: 'Belanja sayur segar, minyak & bumbu dapur pekanan santri',
+    petugas: 'Bagian Keuangan',
+    created_at: '2026-10-04T07:30:00Z',
+  },
+  {
+    id: 'trx-kel-4',
+    nomor_transaksi: 'TRX-202610-EXP04',
+    tanggal: '2026-10-02',
+    waktu: '16:00',
+    tipe: 'KELUAR',
+    kategori: 'PENGELUARAN_OPERASIONAL',
+    kategori_label: 'Logistik Keamanan & Patroli',
+    nama_pihak: 'Toko Elektronik Sentosa',
+    nominal: 850000,
+    metode: 'CASH',
+    keterangan: 'Pengadaan Handy Talkie (HT) & Lampu Senter Patroli Satpam',
+    petugas: 'Bagian Keuangan',
+    created_at: '2026-10-02T16:00:00Z',
+  },
+  {
+    id: 'trx-kel-5',
+    nomor_transaksi: 'TRX-202610-EXP05',
+    tanggal: '2026-10-04',
+    waktu: '13:00',
+    tipe: 'KELUAR',
+    kategori: 'PENGELUARAN_OPERASIONAL',
+    kategori_label: 'Token Listrik Darurat Asrama',
+    nama_pihak: 'Loket PLN / Kasir Mandiri',
+    nominal: 200000,
+    metode: 'CASH',
+    keterangan: 'Pembelian token darurat gardu asrama santri putra',
+    petugas: 'Bagian Keuangan',
+    created_at: '2026-10-04T13:00:00Z',
+  },
+];
+
+export function getSharedTransaksiKasList(): TransaksiKasRecord[] {
+  if (isTenantMode()) {
+    if (typeof window === 'undefined') return [];
+    try {
+      const raw = localStorage.getItem('ks_tenant_transaksi_kas_v1');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  if (typeof window === 'undefined') return DEFAULT_TRANSAKSI_KAS;
+  try {
+    const raw = localStorage.getItem('ks_transaksi_kas_v2');
+    if (!raw) {
+      localStorage.setItem('ks_transaksi_kas_v2', JSON.stringify(DEFAULT_TRANSAKSI_KAS));
+      return DEFAULT_TRANSAKSI_KAS;
+    }
+    return JSON.parse(raw);
+  } catch {
+    return DEFAULT_TRANSAKSI_KAS;
+  }
+}
+
+export function saveSharedTransaksiKas(
+  transaksi: Omit<TransaksiKasRecord, 'id' | 'created_at'>
+): TransaksiKasRecord {
+  const current = getSharedTransaksiKasList();
+  const newRecord: TransaksiKasRecord = {
+    ...transaksi,
+    id: `trx-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    created_at: new Date().toISOString(),
+  };
+
+  const updated = [newRecord, ...current];
+  if (typeof window !== 'undefined') {
+    if (isTenantMode()) {
+      localStorage.setItem('ks_tenant_transaksi_kas_v1', JSON.stringify(updated));
+    } else {
+      localStorage.setItem('ks_transaksi_kas_v2', JSON.stringify(updated));
+    }
+    window.dispatchEvent(new CustomEvent('ks_kas_updated', { detail: newRecord }));
+  }
+  return newRecord;
+}
+
+export function deleteSharedTransaksiKas(id: string): void {
+  const current = getSharedTransaksiKasList();
+  const updated = current.filter(t => t.id !== id);
+  if (typeof window !== 'undefined') {
+    if (isTenantMode()) {
+      localStorage.setItem('ks_tenant_transaksi_kas_v1', JSON.stringify(updated));
+    } else {
+      localStorage.setItem('ks_transaksi_kas_v2', JSON.stringify(updated));
+    }
+    window.dispatchEvent(new CustomEvent('ks_kas_updated'));
+  }
+}
+
+export interface KasRekonsiliasiSummary {
+  totalMasukCash: number;
+  totalMasukTransfer: number;
+  totalMasuk: number;
+  totalKeluarCash: number;
+  totalKeluarTransfer: number;
+  totalKeluar: number;
+  saldoCash: number;
+  saldoTransfer: number;
+  saldoTotal: number;
+  byKategori: {
+    spp: { cash: number; transfer: number; total: number };
+    infaq: { cash: number; transfer: number; total: number };
+    tabungan: { cash: number; transfer: number; total: number };
+    pengeluaran: { cash: number; transfer: number; total: number };
+  };
+}
+
+export function getKasSummary(records?: TransaksiKasRecord[]): KasRekonsiliasiSummary {
+  const list = records || getSharedTransaksiKasList();
+
+  const summary: KasRekonsiliasiSummary = {
+    totalMasukCash: 0,
+    totalMasukTransfer: 0,
+    totalMasuk: 0,
+    totalKeluarCash: 0,
+    totalKeluarTransfer: 0,
+    totalKeluar: 0,
+    saldoCash: 0,
+    saldoTransfer: 0,
+    saldoTotal: 0,
+    byKategori: {
+      spp: { cash: 0, transfer: 0, total: 0 },
+      infaq: { cash: 0, transfer: 0, total: 0 },
+      tabungan: { cash: 0, transfer: 0, total: 0 },
+      pengeluaran: { cash: 0, transfer: 0, total: 0 },
+    },
+  };
+
+  list.forEach(tx => {
+    const isMasuk = tx.tipe === 'MASUK';
+    const isCash = tx.metode === 'CASH';
+    const nominal = Number(tx.nominal) || 0;
+
+    if (isMasuk) {
+      if (isCash) {
+        summary.totalMasukCash += nominal;
+      } else {
+        summary.totalMasukTransfer += nominal;
+      }
+      summary.totalMasuk += nominal;
+
+      if (tx.kategori === 'SPP') {
+        if (isCash) summary.byKategori.spp.cash += nominal;
+        else summary.byKategori.spp.transfer += nominal;
+        summary.byKategori.spp.total += nominal;
+      } else if (tx.kategori === 'INFAQ') {
+        if (isCash) summary.byKategori.infaq.cash += nominal;
+        else summary.byKategori.infaq.transfer += nominal;
+        summary.byKategori.infaq.total += nominal;
+      } else if (tx.kategori === 'TABUNGAN') {
+        if (isCash) summary.byKategori.tabungan.cash += nominal;
+        else summary.byKategori.tabungan.transfer += nominal;
+        summary.byKategori.tabungan.total += nominal;
+      }
+    } else {
+      // KELUAR
+      if (isCash) {
+        summary.totalKeluarCash += nominal;
+      } else {
+        summary.totalKeluarTransfer += nominal;
+      }
+      summary.totalKeluar += nominal;
+
+      if (tx.kategori === 'PENGELUARAN_OPERASIONAL') {
+        if (isCash) summary.byKategori.pengeluaran.cash += nominal;
+        else summary.byKategori.pengeluaran.transfer += nominal;
+        summary.byKategori.pengeluaran.total += nominal;
+      }
+    }
+  });
+
+  // Saldo Akhir Kas = Total Penerimaan - Total Pengeluaran
+  summary.saldoCash = summary.totalMasukCash - summary.totalKeluarCash;
+  summary.saldoTransfer = summary.totalMasukTransfer - summary.totalKeluarTransfer;
+  summary.saldoTotal = summary.saldoCash + summary.saldoTransfer;
+
+  return summary;
+}
+
+

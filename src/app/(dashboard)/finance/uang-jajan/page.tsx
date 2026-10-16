@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Wallet, 
@@ -12,14 +12,26 @@ import {
   ShieldCheck, 
   CheckCircle2, 
   ShoppingBag,
-  CreditCard
+  CreditCard,
+  Landmark,
+  DollarSign,
+  X
 } from 'lucide-react';
+import { 
+  getSharedRekeningList, 
+  saveSharedTransaksiKas, 
+  RekeningPesantren 
+} from '@/lib/sharedDataStore';
 
 export default function UangJajanSantriPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [modalTopUp, setModalTopUp] = useState(false);
   const [selectedSantri, setSelectedSantri] = useState<any>(null);
   const [nominalTopUp, setNominalTopUp] = useState(50000);
+  const [metodeTopUp, setMetodeTopUp] = useState<'CASH' | 'TRANSFER'>('CASH');
+  const [rekeningId, setRekeningId] = useState('');
+  const [catatanTopUp, setCatatanTopUp] = useState('');
+  const [rekeningList, setRekeningList] = useState<RekeningPesantren[]>([]);
   const [notif, setNotif] = useState('');
 
   const [wallets, setWallets] = useState([
@@ -75,31 +87,74 @@ export default function UangJajanSantriPage() {
     },
   ]);
 
+  useEffect(() => {
+    const list = getSharedRekeningList();
+    setRekeningList(list);
+    // Prioritaskan rekening fungsi kantin_tabungan jika ada
+    const tabBank = list.find(r => r.fungsi === 'kantin_tabungan') || list[0];
+    if (tabBank) {
+      setRekeningId(tabBank.id);
+    }
+  }, []);
+
+  const handleBukaTopUp = (w: any) => {
+    setSelectedSantri(w);
+    setNominalTopUp(50000);
+    setMetodeTopUp('CASH');
+    setCatatanTopUp('');
+    setModalTopUp(true);
+  };
+
   const handleTopUpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSantri) return;
 
+    const nominal = Number(nominalTopUp);
+    const rek = rekeningList.find(r => r.id === rekeningId);
+    const labelMetode = metodeTopUp === 'CASH'
+      ? 'Tunai Kasir (Cash)'
+      : `Transfer ${rek?.nama_bank || 'Bank'}`;
+
+    // 1. Update saldo lokal
     setWallets(wallets.map(w => {
       if (w.id === selectedSantri.id) {
-        return { ...w, saldo: w.saldo + Number(nominalTopUp) };
+        return { ...w, saldo: w.saldo + nominal };
       }
       return w;
     }));
+
+    // 2. Simpan ke Unified Kas Ledger
+    saveSharedTransaksiKas({
+      nomor_transaksi: `TRX-${Date.now().toString().slice(-6)}`,
+      tanggal: new Date().toISOString().split('T')[0],
+      waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+      tipe: 'MASUK',
+      kategori: 'TABUNGAN',
+      kategori_label: 'Top-Up Tabungan Santri',
+      nama_pihak: selectedSantri.santri,
+      nis: selectedSantri.nis,
+      nominal: nominal,
+      metode: metodeTopUp,
+      rekening_id: metodeTopUp === 'TRANSFER' ? rekeningId : undefined,
+      rekening_nama: metodeTopUp === 'TRANSFER' ? `${rek?.nama_bank} - ${rek?.nomor_rekening}` : undefined,
+      keterangan: catatanTopUp || `Top-up Tabungan/Uang Jajan an. ${selectedSantri.santri}`,
+      petugas: 'Bagian Kesantrian / Kasir',
+    });
 
     try {
       const { supabase } = await import('@/lib/supabaseClient');
       await supabase.from('dompet_santri_v2').insert({
         santri_id: selectedSantri.id,
         jenis_transaksi: 'topup',
-        nominal: Number(nominalTopUp),
-        keterangan: 'Top-up Kasir Koperasi Santri',
+        nominal: nominal,
+        keterangan: `Top-up Saldo via ${labelMetode}`,
       });
     } catch {
       // fallback
     }
 
     setModalTopUp(false);
-    setNotif(`Top-up saldo e-Pocket ananda ${selectedSantri.santri} sebesar Rp ${Number(nominalTopUp).toLocaleString('id-ID')} berhasil dicatat!`);
+    setNotif(`✓ Top-up saldo Tabungan ${selectedSantri.santri} sebesar Rp ${nominal.toLocaleString('id-ID')} via ${labelMetode} berhasil dibukukan!`);
     setTimeout(() => setNotif(''), 6000);
   };
 
@@ -108,6 +163,7 @@ export default function UangJajanSantriPage() {
   );
 
   const totalSaldoBeredar = wallets.reduce((acc, curr) => acc + curr.saldo, 0);
+
 
   return (
     <div className="space-y-6">
@@ -215,13 +271,11 @@ export default function UangJajanSantriPage() {
                   </td>
                   <td className="py-3.5 px-4 text-right">
                     <button
-                      onClick={() => {
-                        setSelectedSantri(w);
-                        setModalTopUp(true);
-                      }}
-                      className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold rounded-lg border border-emerald-200 transition"
+                      onClick={() => handleBukaTopUp(w)}
+                      className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold rounded-lg border border-emerald-200 transition flex items-center space-x-1 ml-auto"
                     >
-                      + Top-Up Tunai
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>+ Top-Up Saldo</span>
                     </button>
                   </td>
                 </tr>
@@ -231,18 +285,23 @@ export default function UangJajanSantriPage() {
         </div>
       </div>
 
-      {/* Modal Top Up Tunai */}
+      {/* Modal Top Up Saldo (Pemisahan Cash vs Transfer Bank) */}
       {modalTopUp && selectedSantri && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-xl border border-slate-200">
-            <div className="border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-800 text-base">Top-Up Saldo E-Pocket Tunai</h3>
-              <p className="text-xs text-slate-500">Santri: <strong>{selectedSantri.santri}</strong> ({selectedSantri.nis})</p>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl border border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div>
+                <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base">Top-Up Saldo Tabungan Santri</h3>
+                <p className="text-xs text-slate-500">Santri: <strong>{selectedSantri.santri}</strong> ({selectedSantri.nis})</p>
+              </div>
+              <button onClick={() => setModalTopUp(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
             <form onSubmit={handleTopUpSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Nominal Top-Up (Rp):</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nominal Top-Up (Rp):</label>
                 <input
                   type="number"
                   required
@@ -250,7 +309,71 @@ export default function UangJajanSantriPage() {
                   step={5000}
                   value={nominalTopUp}
                   onChange={(e) => setNominalTopUp(Number(e.target.value))}
-                  className="w-full p-2.5 border border-slate-300 rounded-lg font-mono font-bold text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full p-2.5 border border-slate-300 dark:border-slate-700 dark:bg-slate-800 rounded-xl font-mono font-bold text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              {/* SALURAN PENERIMAAN: CASH VS TRANSFER */}
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Saluran Pembayaran (Wajib Dipilih Tanpa Tertukar):
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setMetodeTopUp('CASH')}
+                    className={`p-3 rounded-xl border text-left flex flex-col justify-between transition ${
+                      metodeTopUp === 'CASH'
+                        ? 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500'
+                        : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600'
+                    }`}
+                  >
+                    <span className="font-bold text-xs">💵 Tunai (Cash)</span>
+                    <span className="text-[10px] text-slate-500 mt-1">Uang fisik diserahkan ke kasir kantin/pondok</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setMetodeTopUp('TRANSFER')}
+                    className={`p-3 rounded-xl border text-left flex flex-col justify-between transition ${
+                      metodeTopUp === 'TRANSFER'
+                        ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200 ring-2 ring-blue-500'
+                        : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600'
+                    }`}
+                  >
+                    <span className="font-bold text-xs">🏦 Transfer Bank</span>
+                    <span className="text-[10px] text-slate-500 mt-1">Transfer m-Banking orang tua ke rekening</span>
+                  </button>
+                </div>
+              </div>
+
+              {metodeTopUp === 'TRANSFER' && (
+                <div>
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Rekening Bank Tujuan:
+                  </label>
+                  <select
+                    value={rekeningId}
+                    onChange={(e) => setRekeningId(e.target.value)}
+                    className="w-full p-2.5 border border-slate-300 dark:border-slate-700 dark:bg-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  >
+                    {rekeningList.map((rek) => (
+                      <option key={rek.id} value={rek.id}>
+                        {rek.nama_bank} - {rek.nomor_rekening} ({rek.fungsi_label || rek.pengelola})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Catatan / Keterangan:</label>
+                <input
+                  type="text"
+                  value={catatanTopUp}
+                  onChange={(e) => setCatatanTopUp(e.target.value)}
+                  placeholder="Contoh: Titipan uang saku bulanan dari orang tua..."
+                  className="w-full p-2.5 border border-slate-300 dark:border-slate-700 dark:bg-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
 
@@ -258,15 +381,15 @@ export default function UangJajanSantriPage() {
                 <button
                   type="button"
                   onClick={() => setModalTopUp(false)}
-                  className="flex-1 py-2 border border-slate-300 rounded-xl text-slate-600 font-semibold hover:bg-slate-50"
+                  className="flex-1 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow"
+                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md transition"
                 >
-                  Simpan Top-Up
+                  Simpan Top-Up Tabungan
                 </button>
               </div>
             </form>
