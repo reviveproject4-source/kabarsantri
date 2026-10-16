@@ -566,7 +566,7 @@ export default function KepegawaianPage() {
       noteDefault = 'Aset fasilitas, kunci, dan inventaris diserahkan tanpa kekurangan.';
     } else if (door === 'FINANCE') {
       officerName = ['keuangan', 'kepala_keuangan'].includes(activeActor.role_slug) ? activeActor.name : 'Ust. Ahmad Dahlan, S.E. (Bendahara)';
-      noteDefault = 'Bebas tunggakan kasbon dan pertanggungjawaban kasir selesai.';
+      noteDefault = 'Bebas tunggakan pinjaman dan pertanggungjawaban kasir selesai.';
     } else if (door === 'IT') {
       officerName = 'Tim IT Pesantren';
       noteDefault = 'Kredensial dan akun login backoffice dinonaktifkan.';
@@ -1002,7 +1002,7 @@ export default function KepegawaianPage() {
                             )}
                             {emp.kasbon !== undefined && emp.kasbon > 0 && (
                               <span className="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-medium">
-                                Kasbon: Rp {(emp.kasbon / 1000).toLocaleString('id-ID')}rb
+                                Pinjaman: Rp {(emp.kasbon / 1000).toLocaleString('id-ID')}rb
                               </span>
                             )}
                           </div>
@@ -1591,7 +1591,7 @@ export default function KepegawaianPage() {
                       <span className="font-bold text-slate-800">2. Pintu Keuangan</span>
                       {off.clearance_finance_completed ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Clock className="w-4 h-4 text-slate-400" />}
                     </div>
-                    <p className="text-[11px] text-slate-600 mb-2">{off.clearance_finance_notes || 'Bebas kasbon & kas operasional'}</p>
+                    <p className="text-[11px] text-slate-600 mb-2">{off.clearance_finance_notes || 'Bebas pinjaman & kas operasional'}</p>
                     {!off.clearance_finance_completed ? (
                       <button
                         onClick={() => handleSignDoor(off.id, 'FINANCE')}
@@ -1810,7 +1810,7 @@ export default function KepegawaianPage() {
                         {contractAuth.contract.allowances.map(a => `${a.title} (Rp ${a.amount.toLocaleString('id-ID')})`).join(', ')}
                       </div>
                       <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl flex justify-between items-center">
-                        <span className="text-amber-900 font-medium">Sisa Kasbon / Pinjaman Pegawai:</span>
+                        <span className="text-amber-900 font-medium">Sisa Pinjaman Pegawai:</span>
                         <span className="font-bold text-amber-800 text-sm font-mono">
                           Rp {sisaKasbon.toLocaleString('id-ID')}
                         </span>
@@ -1824,7 +1824,7 @@ export default function KepegawaianPage() {
                           }}
                           className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition shadow-xs cursor-pointer"
                         >
-                          <Pencil className="w-3 h-3" /> Ubah Gaji, Kasbon &amp; Tunjangan
+                          <Pencil className="w-3 h-3" /> Ubah Gaji, Pinjaman &amp; Tunjangan
                         </button>
                       </div>
                     </div>
@@ -2070,13 +2070,13 @@ export default function KepegawaianPage() {
                 <div>
                   <label className="text-amber-900 font-bold flex items-center gap-1 text-xs">
                     <DollarSign className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Kasbon / Sisa Pinjaman Pegawai (Rp)</span>
+                    <span>Sisa Pinjaman Pegawai (Rp)</span>
                   </label>
                   <input
                     type="number"
                     min="0"
                     step="50000"
-                    placeholder="0 jika tidak ada sisa kasbon"
+                    placeholder="0 jika tidak ada pinjaman"
                     value={formEmp.kasbon}
                     onChange={e => setFormEmp({ ...formEmp, kasbon: Number(e.target.value) })}
                     className="w-full bg-white border border-amber-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold text-xs focus:ring-2 focus:ring-amber-500"
@@ -2340,13 +2340,13 @@ export default function KepegawaianPage() {
                 <div>
                   <label className="text-amber-900 font-bold flex items-center gap-1 text-xs">
                     <DollarSign className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Kasbon / Sisa Pinjaman Pegawai (Rp)</span>
+                    <span>Sisa Pinjaman Pegawai (Rp)</span>
                   </label>
                   <input
                     type="number"
                     min="0"
                     step="50000"
-                    placeholder="0 jika tidak ada sisa kasbon"
+                    placeholder="0 jika tidak ada pinjaman"
                     value={formEditEmp.kasbon}
                     onChange={e => setFormEditEmp({ ...formEditEmp, kasbon: Number(e.target.value) })}
                     className="w-full bg-white border border-amber-300 rounded-xl p-2.5 text-slate-800 mt-1 font-mono font-bold text-xs focus:ring-2 focus:ring-amber-500"

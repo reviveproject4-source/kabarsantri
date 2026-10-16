@@ -24,6 +24,7 @@ import {
   addSharedTahfidzSetoran,
   getSharedSantriList,
   getSharedMasterKelas,
+  saveTenantSantri,
   isTenantMode
 } from '@/lib/sharedDataStore';
 import { getActiveActor, MASTER_PILLAR_ACTORS, ActiveActor } from '@/lib/sessionStore';
@@ -72,8 +73,11 @@ export default function TahfidzManagementPage() {
   // Form State Input Setoran Guru:
   // Step 1: Pilih Kelas Dulu
   const [selectedKelasId, setSelectedKelasId] = useState('k-7a');
-  // Step 2: Pilih Santri (Filtered by Kelas)
+  // Step 2: Pilih Santri (Filtered by Kelas) atau Input Mandiri
   const [selectedSantriNis, setSelectedSantriNis] = useState('');
+  const [isManualSantri, setIsManualSantri] = useState(false);
+  const [manualSantriNama, setManualSantriNama] = useState('');
+  const [manualSantriNis, setManualSantriNis] = useState('');
   // Step 3: Tipe Hafalan
   const [tipeHafalan, setTipeHafalan] = useState<'quran' | 'hadis' | 'kitab' | 'custom_yayasan'>('quran');
   const [selectedMateriId, setSelectedMateriId] = useState('');
@@ -167,9 +171,25 @@ export default function TahfidzManagementPage() {
     const selectedKelasObj = kelasSource.find(k => k.id === selectedKelasId);
     const selectedMateriObj = kategoriList.find(k => k.id === selectedMateriId) || availableMateri[0];
 
-    const santriNama = selectedSantriObj ? selectedSantriObj.nama : 'Santri';
+    const santriNama = isManualSantri
+      ? (manualSantriNama.trim() || 'Santri Halaqah')
+      : (selectedSantriObj ? selectedSantriObj.nama : 'Santri');
+    const santriNis = isManualSantri
+      ? (manualSantriNis.trim() || `STR-${Date.now().toString().slice(-6)}`)
+      : (selectedSantriNis || (selectedSantriObj?.nis || ''));
     const kelasNama = selectedKelasObj ? selectedKelasObj.nama_kelas : 'Kelas';
     const materiNama = selectedMateriObj ? selectedMateriObj.nama_materi : 'Materi Hafalan';
+
+    // Jika guru menginput nama santri mandiri, otomatis daftarkan ke master santri kelas agar tersimpan
+    if (isManualSantri && manualSantriNama.trim()) {
+      saveTenantSantri({
+        nis: santriNis,
+        nama: santriNama,
+        kelas_id: selectedKelasId,
+        kelas: kelasNama,
+        gender: (selectedKelasObj?.gender || 'ikhwan') as 'ikhwan' | 'akhwat'
+      });
+    }
 
     const finalHalaman = (halamanSelesai && halamanSelesai !== halamanMulai)
       ? `Hal. ${halamanMulai} - ${halamanSelesai}`
@@ -186,7 +206,7 @@ export default function TahfidzManagementPage() {
     const newRecord: SetoranRecord = {
       id: `st-${Date.now()}`,
       santri: santriNama,
-      nis: selectedSantriNis,
+      nis: santriNis,
       kelas_id: selectedKelasId,
       kelas_nama: kelasNama,
       gender: selectedKelasObj?.gender || (selectedSantriObj?.gender || 'ikhwan'),
@@ -211,6 +231,9 @@ export default function TahfidzManagementPage() {
 
     setSetoranList([newRecord, ...setoranList]);
     addSharedTahfidzSetoran(newRecord as any);
+    setManualSantriNama('');
+    setManualSantriNis('');
+    setIsManualSantri(false);
 
     try {
       const { supabase } = await import('@/lib/supabaseClient');
@@ -565,27 +588,91 @@ export default function TahfidzManagementPage() {
                 </select>
               </div>
 
-              {/* STEP 2: PILIH SANTRI (TERFILTER SESUAI KELAS) */}
+              {/* STEP 2: PILIH SANTRI DARI MASTER ATAU INPUT MANDIRI */}
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  2. Pilih Santri di Kelas Tersebut
-                </label>
-                {availableSantri.length > 0 ? (
-                  <select
-                    value={selectedSantriNis}
-                    onChange={(e) => setSelectedSantriNis(e.target.value)}
-                    required
-                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none font-semibold text-slate-800"
-                  >
-                    {availableSantri.map((s) => (
-                      <option key={s.nis} value={s.nis}>
-                        {s.nama} (NIS: {s.nis})
-                      </option>
-                    ))}
-                  </select>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="font-semibold text-slate-700">
+                    2. Identitas Santri *
+                  </label>
+                  <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                    <button
+                      type="button"
+                      onClick={() => setIsManualSantri(false)}
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition ${
+                        !isManualSantri
+                          ? 'bg-emerald-600 text-white shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      Pilih dari Master Santri
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsManualSantri(true)}
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition ${
+                        isManualSantri
+                          ? 'bg-emerald-600 text-white shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      Input Nama Mandiri
+                    </button>
+                  </div>
+                </div>
+
+                {!isManualSantri ? (
+                  availableSantri.length > 0 ? (
+                    <select
+                      value={selectedSantriNis}
+                      onChange={(e) => setSelectedSantriNis(e.target.value)}
+                      required={!isManualSantri}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none font-semibold text-slate-800"
+                    >
+                      {availableSantri.map((s) => (
+                        <option key={s.nis} value={s.nis}>
+                          {s.nama} (NIS: {s.nis})
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-[11px] space-y-1.5">
+                      <p className="font-medium">Belum ada santri terdaftar pada rombel kelas ini di data master Yayasan.</p>
+                      <button
+                        type="button"
+                        onClick={() => setIsManualSantri(true)}
+                        className="text-xs text-emerald-700 font-bold hover:underline block"
+                      >
+                        + Klik di sini untuk ketik nama santri secara mandiri
+                      </button>
+                    </div>
+                  )
                 ) : (
-                  <div className="p-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-[11px]">
-                    Belum ada santri terdaftar pada kelas ini.
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 bg-slate-50 border border-emerald-300 rounded-xl">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                        Nama Lengkap Santri *
+                      </label>
+                      <input
+                        type="text"
+                        required={isManualSantri}
+                        placeholder="Contoh: Ahmad Zaki Mubarak"
+                        value={manualSantriNama}
+                        onChange={(e) => setManualSantriNama(e.target.value)}
+                        className="w-full p-2 bg-white border border-slate-300 rounded-lg font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                        NIS / No. Induk (Opsional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Otomatis jika kosong"
+                        value={manualSantriNis}
+                        onChange={(e) => setManualSantriNis(e.target.value)}
+                        className="w-full p-2 bg-white border border-slate-300 rounded-lg font-mono text-slate-800 focus:ring-2 focus:ring-emerald-500 text-xs"
+                      />
+                    </div>
                   </div>
                 )}
               </div>
