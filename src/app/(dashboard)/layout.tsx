@@ -226,6 +226,7 @@ export default function DashboardLayout({
         { href: '/akademik/tahfidz', label: 'Setoran Tahfidz Al-Qur\'an', icon: Award },
         { href: '/santri/list', label: 'Direktori Santri & Rombel', icon: Users },
         ...(tenantPackageInfo.isFeatureUnlocked('kbm') ? [{ href: '/akademik/nilai', label: 'Ruang Guru (KBM & Nilai)', icon: BookOpen }] : []),
+        ...(tenantPackageInfo.isFeatureUnlocked('e_raport') ? [{ href: '/akademik/raport', label: 'Cetak Raport Digital Santri', icon: Award }] : []),
         ...(tenantPackageInfo.isFeatureUnlocked('adab') ? [
           { href: '/akademik/perizinan', label: 'Perizinan Santri', icon: Clock },
           { href: '/akademik/disiplin', label: 'Kedisiplinan & Pelanggaran', icon: ShieldCheck }

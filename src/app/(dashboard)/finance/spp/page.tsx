@@ -14,10 +14,13 @@ import {
   Landmark,
   DollarSign,
   ArrowRight,
+  Bell,
   X
 } from 'lucide-react';
 import PrintableKuitansi, { KuitansiData } from '@/components/finance/PrintableKuitansi';
 import { openWhatsAppQuickModal } from '@/components/common/WhatsAppQuickModal';
+import { useActiveTenant } from '@/lib/sessionStore';
+import { isWhatsAppFeatureEnabled } from '@/lib/yayasanRegistrationStore';
 import { 
   isTenantMode, 
   getSharedRekeningList, 
@@ -85,6 +88,8 @@ const DEMO_TAGIHAN_LIST = [
 ];
 
 export default function SPPBillingPage() {
+  const activeTenant = useActiveTenant();
+  const isWaActive = isWhatsAppFeatureEnabled(activeTenant?.id);
   const [selectedBulan, setSelectedBulan] = useState('10');
   const [notif, setNotif] = useState('');
   const [selectedKuitansi, setSelectedKuitansi] = useState<KuitansiData | null>(null);
@@ -534,35 +539,38 @@ export default function SPPBillingPage() {
                               kasir_nama: 'Staf Bendahara SPP'
                             })}
                             className="px-2.5 py-1.5 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 text-blue-800 dark:text-blue-200 border border-blue-300 dark:border-blue-800 font-bold rounded-lg text-xs flex items-center space-x-1 shadow-xs transition"
-                            title="Cetak Kuitansi Resmi atau Kirim Kartu Bayaran ke WhatsApp Wali Murid (In-Page)"
+                            title="Cetak Kuitansi Resmi Pembayaran SPP"
                           >
-                            <MessageCircle className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                            <span>Kuitansi &amp; WA</span>
+                            <Printer className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                            <span>Kuitansi</span>
                           </button>
                         ) : (
                           <div className="flex items-center space-x-1">
-                            <button
-                              onClick={() => {
-                                const sisa = tagihan.nominal - (tagihan.terbayar || 0);
-                                openWhatsAppQuickModal({
-                                  phone: tagihan.wali_phone || '081234567890',
-                                  recipientName: tagihan.wali || ('Wali ' + tagihan.santri),
-                                  templateKey: 'spp_tagihan',
-                                  params: {
-                                    santriNama: tagihan.santri,
-                                    nis: tagihan.nis,
-                                    kelas: tagihan.unit,
-                                    periode: `SPP Bulan ${selectedBulan}/2026`,
-                                    nominal: sisa > 0 ? sisa : tagihan.nominal,
-                                  }
-                                });
-                              }}
-                              className="px-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold rounded-lg text-xs flex items-center space-x-1 shadow-xs transition cursor-pointer"
-                              title="Kirim Pesan Tagihan ke WhatsApp Wali Santri"
-                            >
-                              <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
-                              <span>Tagih WA</span>
-                            </button>
+                            {isWaActive && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const sisa = tagihan.nominal - (tagihan.terbayar || 0);
+                                  openWhatsAppQuickModal({
+                                    phone: tagihan.wali_phone || '081234567890',
+                                    recipientName: tagihan.wali || ('Wali ' + tagihan.santri),
+                                    templateKey: 'spp_tagihan',
+                                    params: {
+                                      santriNama: tagihan.santri,
+                                      nis: tagihan.nis,
+                                      kelas: tagihan.unit,
+                                      periode: `SPP Bulan ${selectedBulan}/2026`,
+                                      nominal: sisa > 0 ? sisa : tagihan.nominal,
+                                    }
+                                  });
+                                }}
+                                className="px-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold rounded-lg text-xs flex items-center space-x-1 shadow-xs transition cursor-pointer"
+                                title="Kirim Pengingat SPP ke WhatsApp Wali Santri yang Menunggak"
+                              >
+                                <Bell className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>Pengingat SPP</span>
+                              </button>
+                            )}
                             <button
                               onClick={() => handleBukaValidasi(tagihan)}
                               className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-xs text-xs transition flex items-center space-x-1"

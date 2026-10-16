@@ -20,6 +20,8 @@ export interface YayasanFeature {
 export const AVAILABLE_YAYASAN_FEATURES: YayasanFeature[] = [
   { id: 'tahfidz', name: 'Tahfidz Al-Qur\'an & Hadis', desc: 'Setoran juz, mutaba\'ah, kelancaran & makhraj', category: 'Akademik' },
   { id: 'spp', name: 'Keuangan & SPP Digital', desc: 'Tagihan SPP, validasi transfer, kas pengeluaran & threshold', category: 'Keuangan' },
+  { id: 'e_raport', name: 'E-Raport Digital Santri', desc: 'Cetak raport semesteran resmi A4/PDF, penilaian akademik & adab (Add-on Mandiri)', category: 'Akademik' },
+  { id: 'wa_gateway', name: 'WhatsApp Notifikasi & Pengingat SPP', desc: 'Fitur WA Cepat & pengingat tagihan SPP ke wali santri (Add-on Berbayar / Non-Free)', category: 'Integrasi' },
   { id: 'wali', name: 'Portal Transparansi Wali', desc: 'Akses wali murid via NIS+PIN pantau mutaba\'ah & izin', category: 'Kemitraan' },
   { id: 'kepegawaian', name: 'Kepegawaian & SDM (HRD)', desc: 'Direktori pegawai, perizinan cuti & struktur pimpinan', category: 'Tata Kelola' },
   { id: 'kbm', name: 'Penilaian KBM & Kurikulum', desc: 'Jadwal belajar, penilaian nilai KBM & ruang guru', category: 'Akademik' },
@@ -597,8 +599,18 @@ export function getActiveTenantPackageAndFeatures(tenantId?: string): {
   const features = reg?.features || ['tahfidz', 'spp', 'wali', 'kepegawaian'];
 
   const isFeatureUnlocked = (featureKey: string): boolean => {
-    if (isEnterprise) return true;
     const key = (featureKey || '').toLowerCase();
+
+    // 0. FITUR ADD-ON SPESIFIK: WA GATEWAY & E-RAPORT (Wajib Dicentang Manual oleh Super Admin)
+    // Fitur ini tidak diberikan untuk paket Free dan berdiri sendiri di Super Admin
+    if (['wa_gateway', 'whatsapp', 'wa'].includes(key)) {
+      return features.includes('wa_gateway') || features.includes('whatsapp');
+    }
+    if (['e_raport', 'raport', 'eraport'].includes(key)) {
+      return features.includes('e_raport') || features.includes('raport');
+    }
+
+    if (isEnterprise) return true;
     
     // 1. Fitur Standar Dasar Pesantren (Wajib selalu TERBUKA untuk semua yayasan & tenant)
     // Mencakup: Data Santri, Data Pegawai & Kehadiran, Kedisiplinan & Adab/Akhlak, Tahfidz, Dashboard & Pengaturan
@@ -620,7 +632,7 @@ export function getActiveTenantPackageAndFeatures(tenantId?: string): {
     }
 
     // 4. Modul Tambahan Lainnya (KBM, Sarpras, Presensi Standalone, Akuntansi)
-    if (['kbm', 'rapot', 'nilai'].includes(key) && features.includes('kbm')) return true;
+    if (['kbm', 'nilai'].includes(key) && features.includes('kbm')) return true;
     if (['wali', 'portal-wali'].includes(key) && features.includes('wali')) return true;
     if (['presensi', 'absen'].includes(key) && features.includes('presensi')) return true;
     if (['rumah_tangga', 'sarpras'].includes(key) && features.includes('rumah_tangga')) return true;
@@ -635,4 +647,20 @@ export function getActiveTenantPackageAndFeatures(tenantId?: string): {
     isEnterprise,
     isFeatureUnlocked
   };
+}
+
+/**
+ * Helper untuk mengecek apakah fitur WhatsApp Cepat / Pengingat SPP diaktifkan oleh Super Admin
+ */
+export function isWhatsAppFeatureEnabled(tenantId?: string): boolean {
+  const { isFeatureUnlocked } = getActiveTenantPackageAndFeatures(tenantId);
+  return isFeatureUnlocked('wa_gateway');
+}
+
+/**
+ * Helper untuk mengecek apakah fitur E-Raport Digital Santri diaktifkan oleh Super Admin
+ */
+export function isERaportFeatureEnabled(tenantId?: string): boolean {
+  const { isFeatureUnlocked } = getActiveTenantPackageAndFeatures(tenantId);
+  return isFeatureUnlocked('e_raport');
 }

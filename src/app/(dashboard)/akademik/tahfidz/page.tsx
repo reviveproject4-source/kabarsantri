@@ -11,10 +11,8 @@ import {
   Library, 
   Sparkles,
   Filter,
-  Users,
-  MessageCircle
+  Users
 } from 'lucide-react';
-import { openWhatsAppQuickModal } from '@/components/common/WhatsAppQuickModal';
 import { 
   MASTER_KELAS, 
   MASTER_SANTRI, 
@@ -535,33 +533,6 @@ export default function TahfidzManagementPage() {
                   <td className="p-3">
                     <div className="font-medium text-slate-800">{item.musyrif}</div>
                     <div className="text-[10px] text-slate-500">{item.tanggal}</div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        openWhatsAppQuickModal({
-                          phone: '081234567890',
-                          recipientName: `Wali ${item.santri}`,
-                          templateKey: 'tahfidz',
-                          params: {
-                            santriNama: item.santri,
-                            nis: item.nis,
-                            kelas: item.kelas_nama,
-                            materiHafalan: item.nama_materi,
-                            juz: item.juz || 30,
-                            halamanSurah: item.rincian_hafalan,
-                            nilaiKelancaran: item.kelancaran,
-                            statusLulus: item.is_lulus ? 'Mutqin / Lulus' : 'Perlu Mengulang',
-                            namaGuru: item.musyrif,
-                            catatanGuru: item.catatan,
-                          }
-                        });
-                      }}
-                      className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-md transition shadow-2xs cursor-pointer"
-                      title="Kirim Laporan Progres ke WhatsApp Wali Santri"
-                    >
-                      <MessageCircle className="w-3 h-3 text-emerald-600" />
-                      <span>Kirim WA</span>
-                    </button>
                   </td>
                 </tr>
               )))}

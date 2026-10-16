@@ -47,6 +47,7 @@ import {
 } from '@/lib/syncEngine';
 import { useThemeMode } from '@/lib/themeStore';
 import { getSharedSantriList } from '@/lib/sharedDataStore';
+import { isWhatsAppFeatureEnabled } from '@/lib/yayasanRegistrationStore';
 
 interface HeaderProps {
   onToggleMobileMenu?: () => void;
@@ -62,6 +63,7 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
   }, []);
   const isHydrated = mounted || modeMounted;
   const isTenantActive = isHydrated ? isTenant : false;
+  const isWaActive = isHydrated ? isWhatsAppFeatureEnabled(tenant.id) : false;
   const { theme, isDark, toggleTheme } = useThemeMode();
 
   const [activeRole, setActiveRole] = useState<string>('yayasan');
@@ -311,19 +313,21 @@ export default function Header({ onToggleMobileMenu }: HeaderProps) {
 
         {/* Right Controls: Role Switcher, Dark/Light Mode, & Actions */}
         <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
-          {/* TOMBOL WA CEPAT (1-KLIK BUKA LAYAR & TEMPLATE PESAN) */}
-          <button
-            onClick={() => {
-              if (typeof window !== 'undefined') {
-                window.dispatchEvent(new CustomEvent('ks_open_wa_quick', { detail: {} }));
-              }
-            }}
-            className="inline-flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition shadow-xs shrink-0 cursor-pointer"
-            title="Buka Layar WA Cepat: Pilih Template & Kirim Pesan Tanpa Simpan Nomor"
-          >
-            <MessageCircle className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">WA Cepat</span>
-          </button>
+          {/* TOMBOL WA CEPAT (Hanya Aktif Jika Dilisensikan / Dicentang Super Admin) */}
+          {isWaActive && (
+            <button
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('ks_open_wa_quick', { detail: {} }));
+                }
+              }}
+              className="inline-flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition shadow-xs shrink-0 cursor-pointer"
+              title="Buka Layar WA Cepat: Pilih Template & Kirim Pesan Tanpa Simpan Nomor"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">WA Cepat</span>
+            </button>
+          )}
 
           {/* User Profile Badge & Menu (Terkunci Sesuai Akun Login - Tidak Bisa Lintas Jabatan) */}
           <div className="relative">

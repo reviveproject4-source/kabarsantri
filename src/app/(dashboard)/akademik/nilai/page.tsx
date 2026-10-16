@@ -24,8 +24,11 @@ import {
   AlertTriangle,
   Calendar,
   Plus,
-  Printer
+  Printer,
+  Lock
 } from 'lucide-react';
+import { useActiveTenant } from '@/lib/sessionStore';
+import { isERaportFeatureEnabled } from '@/lib/yayasanRegistrationStore';
 import { 
   getSharedLearningSessions, 
   startLearningSession, 
@@ -42,7 +45,9 @@ import {
 import { getActiveActor, MASTER_PILLAR_ACTORS, ActiveActor } from '@/lib/sessionStore';
 
 export default function LearningSessionKBMPage() {
+  const tenant = useActiveTenant();
   const [mounted, setMounted] = useState(false);
+  const isRaportActive = mounted ? isERaportFeatureEnabled(tenant.id) : false;
   const [sessions, setSessions] = useState<LearningSession[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<string>('ls-1');
   const [genderFilter, setGenderFilter] = useState<'all' | 'ikhwan' | 'akhwat'>('all');
@@ -252,10 +257,18 @@ export default function LearningSessionKBMPage() {
           <div className="mt-3 flex items-center gap-2">
             <Link
               href="/akademik/raport"
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-400/40 rounded-xl text-xs font-bold transition shadow-xs"
+              className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs ${
+                isRaportActive
+                  ? 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-400/40'
+                  : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 border border-slate-700'
+              }`}
             >
-              <Printer className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Cetak Raport Digital Santri →</span>
+              {isRaportActive ? (
+                <Printer className="w-3.5 h-3.5 text-emerald-400" />
+              ) : (
+                <Lock className="w-3.5 h-3.5 text-amber-400" />
+              )}
+              <span>Cetak Raport Digital Santri {isRaportActive ? '→' : '(Lisensi Add-on)'}</span>
             </Link>
           </div>
         </div>

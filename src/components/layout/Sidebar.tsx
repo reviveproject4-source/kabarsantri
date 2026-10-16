@@ -97,8 +97,8 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
 
   // Helper untuk mengecek apakah suatu item menu terkunci
   const checkIsItemLocked = (item: NavItem): boolean => {
-    if (!isGratisPackage) return false;
     const key = (
+      item.href.includes('akademik/raport') ? 'e_raport' :
       item.productCode ||
       (item.href.includes('rumah-tangga') ? 'rumah_tangga' :
        item.href.includes('presensi') ? 'presensi' :
@@ -110,6 +110,10 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
        item.href.includes('wali') ? 'wali' :
        'dashboard')
     );
+    if (key === 'e_raport') {
+      return !tenantPackageInfo.isFeatureUnlocked('e_raport');
+    }
+    if (!isGratisPackage) return false;
     return !tenantPackageInfo.isFeatureUnlocked(key);
   };
 

@@ -94,15 +94,15 @@ export default function WhatsAppQuickModal() {
 Yth. Bapak/Ibu Wali dari ananda *${santri}*,
 Semoga Bapak/Ibu senantiasa dalam limpahan taufiq dan kesehatan dari Allah SWT.
 
-Kami dari Bagian Keuangan *${pesantrenName}* menginformasikan tagihan SPP / Pendidikan:
+Kami dari Bagian Keuangan *${pesantrenName}* bermaksud menyampaikan pengingat administrasi iuran pendidikan / SPP santri:
 ━━━━━━━━━━━━━━━━━━━━
 • *Nama Santri:* ${santri}${p.nis ? ` (NIS: ${p.nis})` : ''}
 • *Kelas / Rombel:* ${p.kelas || 'Madrasah Pondok'}
-• *Periode Tagihan:* ${p.periode || 'Bulan Berjalan'}
-• *Nominal Tagihan:* Rp ${nominalStr}
+• *Periode:* ${p.periode || 'Bulan Berjalan'}
+• *Kewajiban SPP:* Rp ${nominalStr}
 • *Rekening Resmi:* ${p.rekeningTujuan || 'Bank Syariah Indonesia (BSI) - Rekening Resmi Yayasan'}
 ━━━━━━━━━━━━━━━━━━━━
-Pembayaran dapat dilakukan melalui transfer bank atau setor tunai di loket kasir kantor pesantren. Mohon konfirmasi bukti transfer melalui portal resmi wali santri.
+Pembayaran dapat dilakukan melalui transfer rekening di atas atau setor tunai di kantor pesantren. Jika Bapak/Ibu telah menunaikan pembayaran, mohon konfirmasikan bukti transfer atau abaikan pesan pengingat ini.
 
 Jazakumullahu khairan katsiran atas perhatian dan kerjasamanya.
 Wassalamu'alaikum Warahmatullahi Wabarakatuh.
@@ -316,7 +316,7 @@ _Sekretariat Pimpinan ${pesantrenName}_`;
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
               {[
-                { key: 'spp_tagihan', label: 'Tagihan SPP', icon: Receipt },
+                { key: 'spp_tagihan', label: 'Pengingat SPP', icon: Receipt },
                 { key: 'kuitansi', label: 'Kuitansi Lunas', icon: ShieldAlert },
                 { key: 'tahfidz', label: 'Progres Tahfidz', icon: BookOpen },
                 { key: 'izin', label: 'Izin Santri', icon: FileText },
@@ -402,7 +402,7 @@ _Sekretariat Pimpinan ${pesantrenName}_`;
               className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer flex-1 sm:flex-initial"
             >
               <Send className="w-3.5 h-3.5" />
-              <span>Buka &amp; Kirim di WhatsApp</span>
+              <span>Kirim WA</span>
               <ExternalLink className="w-3 h-3 opacity-80" />
             </button>
           </div>

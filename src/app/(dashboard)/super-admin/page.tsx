@@ -1089,6 +1089,7 @@ Official WA: 0812 1556 6630`;
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {AVAILABLE_YAYASAN_FEATURES.map((feat) => {
                         const checked = currentSelectedFeatures.includes(feat.id);
+                        const isAddonNonFree = feat.id === 'wa_gateway' || feat.id === 'e_raport';
                         return (
                           <div
                             key={feat.id}
@@ -1101,13 +1102,20 @@ Official WA: 0812 1556 6630`;
                               }
                             `}
                           >
-                            <div className="flex items-center justify-between">
-                              <span className="font-bold text-white text-xs">{feat.name}</span>
+                            <div className="flex items-center justify-between gap-1">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="font-bold text-white text-xs truncate">{feat.name}</span>
+                                {isAddonNonFree && (
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold shrink-0">
+                                    Non-Free Addon
+                                  </span>
+                                )}
+                              </div>
                               <input
                                 type="checkbox"
                                 checked={checked}
                                 onChange={() => {}}
-                                className="rounded text-rose-500 focus:ring-rose-500"
+                                className="rounded text-rose-500 focus:ring-rose-500 shrink-0"
                               />
                             </div>
                             <p className="text-[11px] text-slate-400 leading-relaxed">
