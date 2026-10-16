@@ -2847,29 +2847,27 @@ export function getKasSummary(records?: TransaksiKasRecord[]): KasRekonsiliasiSu
         if (isCash) summary.byKategori.spp.cash += nominal;
         else summary.byKategori.spp.transfer += nominal;
         summary.byKategori.spp.total += nominal;
-      } else if (tx.kategori === 'INFAQ') {
-        if (isCash) summary.byKategori.infaq.cash += nominal;
-        else summary.byKategori.infaq.transfer += nominal;
-        summary.byKategori.infaq.total += nominal;
       } else if (tx.kategori === 'TABUNGAN') {
         if (isCash) summary.byKategori.tabungan.cash += nominal;
         else summary.byKategori.tabungan.transfer += nominal;
         summary.byKategori.tabungan.total += nominal;
+      } else {
+        // INFAQ / Donasi / Penerimaan lain: dipastikan tercatat di pos Infaq & Sosial agar tidak tercecer
+        if (isCash) summary.byKategori.infaq.cash += nominal;
+        else summary.byKategori.infaq.transfer += nominal;
+        summary.byKategori.infaq.total += nominal;
       }
     } else {
-      // KELUAR
+      // KELUAR (Pengeluaran Operasional / Belanja Dapur / Gaji / dll)
       if (isCash) {
         summary.totalKeluarCash += nominal;
+        summary.byKategori.pengeluaran.cash += nominal;
       } else {
         summary.totalKeluarTransfer += nominal;
+        summary.byKategori.pengeluaran.transfer += nominal;
       }
       summary.totalKeluar += nominal;
-
-      if (tx.kategori === 'PENGELUARAN_OPERASIONAL') {
-        if (isCash) summary.byKategori.pengeluaran.cash += nominal;
-        else summary.byKategori.pengeluaran.transfer += nominal;
-        summary.byKategori.pengeluaran.total += nominal;
-      }
+      summary.byKategori.pengeluaran.total += nominal;
     }
   });
 

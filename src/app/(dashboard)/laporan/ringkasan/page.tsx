@@ -15,7 +15,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { isTenantMode, getSharedSantriList } from '@/lib/sharedDataStore';
+import { isTenantMode, getSharedSantriList, getKasSummary, KasRekonsiliasiSummary } from '@/lib/sharedDataStore';
 import { getEmployees } from '@/lib/kepegawaianStore';
 import { useActiveTenant, useAppMode } from '@/lib/sessionStore';
 
@@ -29,6 +29,7 @@ export default function LaporanRingkasanEksekutifPage() {
   const isTenant = isTenantParam || (mounted ? (modeIsTenant || (typeof window !== 'undefined' && isTenantMode())) : false);
   const [santriCount, setSantriCount] = useState(0);
   const [employeeCount, setEmployeeCount] = useState(0);
+  const [kasSummary, setKasSummary] = useState<KasRekonsiliasiSummary | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -36,6 +37,7 @@ export default function LaporanRingkasanEksekutifPage() {
     if (isLive) {
       setSantriCount(getSharedSantriList(true).length);
       setEmployeeCount(getEmployees().length);
+      setKasSummary(getKasSummary());
     }
   }, [modeIsTenant, isTenantParam]);
 
@@ -100,20 +102,28 @@ export default function LaporanRingkasanEksekutifPage() {
         <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
           <span className="text-slate-500 dark:text-slate-400 font-medium">SPP Terbayar (Bulan Berjalan)</span>
           <h3 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-            {isTenant ? 'Rp 0' : 'Rp 154.200.000'}
+            {isTenant 
+              ? (kasSummary ? `Rp ${kasSummary.byKategori.spp.total.toLocaleString('id-ID')}` : 'Rp 0') 
+              : 'Rp 154.200.000'}
           </h3>
           <p className="text-[11px] text-slate-400">
-            {isTenant ? '0 Transaksi tagihan SPP' : 'Tingkat Penagihan: 89.2%'}
+            {isTenant 
+              ? `Kasir: Rp ${(kasSummary?.byKategori.spp.cash || 0).toLocaleString('id-ID')} • Bank: Rp ${(kasSummary?.byKategori.spp.transfer || 0).toLocaleString('id-ID')}`
+              : 'Tingkat Penagihan: 89.2%'}
           </p>
         </div>
 
         <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
           <span className="text-slate-500 dark:text-slate-400 font-medium">Saldo Tabungan Wadiah</span>
           <h3 className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-            {isTenant ? 'Rp 0' : 'Rp 48.950.000'}
+            {isTenant 
+              ? (kasSummary ? `Rp ${kasSummary.byKategori.tabungan.total.toLocaleString('id-ID')}` : 'Rp 0') 
+              : 'Rp 48.950.000'}
           </h3>
           <p className="text-[11px] text-slate-400">
-            {isTenant ? '0 Rekening wadiah santri' : 'Dana Amanah Titipan Santri'}
+            {isTenant 
+              ? `Tunai: Rp ${(kasSummary?.byKategori.tabungan.cash || 0).toLocaleString('id-ID')} • Transfer: Rp ${(kasSummary?.byKategori.tabungan.transfer || 0).toLocaleString('id-ID')}`
+              : 'Dana Amanah Titipan Santri'}
           </p>
         </div>
       </div>

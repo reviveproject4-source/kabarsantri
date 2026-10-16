@@ -233,7 +233,7 @@ export interface OffboardingClearance {
   clearance_rt_notes?: string;
   clearance_rt_date?: string;
 
-  // Pintu 2: Keuangan (Bebas Kasbon, Pinjaman Koperasi, Pertanggungjawaban Petty Cash)
+  // Pintu 2: Keuangan (Bebas Pinjaman Pegawai, Pinjaman Koperasi, Pertanggungjawaban Petty Cash)
   clearance_finance_completed: boolean;
   clearance_finance_officer?: string;
   clearance_finance_notes?: string;

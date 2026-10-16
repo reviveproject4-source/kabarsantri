@@ -16,7 +16,7 @@ import {
   Printer
 } from 'lucide-react';
 import PrintableKuitansi from '@/components/finance/PrintableKuitansi';
-import { isTenantMode } from '@/lib/sharedDataStore';
+import { isTenantMode, saveSharedTransaksiKas } from '@/lib/sharedDataStore';
 
 const DEMO_TRANSAKSI_LIST = [
   {
@@ -145,8 +145,31 @@ export default function ValidasiKeuanganPage() {
         })
         .eq('id', id);
 
-      // 2. Jika VALID: Catat otomatis ke wa_outbox_queue untuk notifikasi WhatsApp Wali
+      // 2. Jika VALID: Catat otomatis ke wa_outbox_queue untuk notifikasi WhatsApp Wali & Kas Ledger
       if (aksi === 'valid' && targetTrx) {
+        // Catat ke pembukuan kas resmi agar langsung terekonsiliasi di Dashboard Yayasan
+        const jenisLower = targetTrx.jenis.toLowerCase();
+        const kategoriMapped: 'SPP' | 'INFAQ' | 'TABUNGAN' = 
+          jenisLower.includes('spp') ? 'SPP' :
+          jenisLower.includes('uang jajan') || jenisLower.includes('tabungan') ? 'TABUNGAN' :
+          'INFAQ';
+
+        saveSharedTransaksiKas({
+          nomor_transaksi: kuitansiNo,
+          tanggal: new Date().toISOString().split('T')[0],
+          waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+          tipe: 'MASUK',
+          kategori: kategoriMapped,
+          kategori_label: targetTrx.jenis,
+          nama_pihak: targetTrx.santri,
+          nis: targetTrx.nis,
+          nominal: targetTrx.nominal,
+          metode: 'TRANSFER',
+          rekening_nama: targetTrx.bank_tujuan,
+          keterangan: `Validasi Transfer ${targetTrx.jenis} an. ${targetTrx.santri} (${targetTrx.nomor_invoice})`,
+          petugas: 'Bagian Keuangan (Validasi)',
+        });
+
         await supabase.from('wa_outbox_queue').insert({
           phone_destination: '6281234567890',
           recipient_name: targetTrx.wali,

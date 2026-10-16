@@ -122,7 +122,7 @@ export const SIX_GOVERNANCE_PILLARS: GovernancePillar[] = [
     key_responsibilities: [
       'Mengelola buku besar, arus kas, dan eksekusi pembayaran terverifikasi',
       'Mengelola data payroll, slip gaji, dan nominal kompensasi rahasia',
-      'Verifikasi bebas kasbon pada tahap offboarding'
+      'Verifikasi bebas pinjaman pegawai pada tahap offboarding'
     ],
     strict_prohibitions: [
       'DILARANG bertindak sebagai atasan operasional unit non-keuangan',

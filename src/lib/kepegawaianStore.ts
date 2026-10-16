@@ -173,7 +173,7 @@ export const DEFAULT_EMPLOYEES: Employee[] = [
     job_description: [
       'Mengelola kas operasional dan rekening bank yayasan',
       'Melakukan verifikasi bukti pembayaran dan eksekusi transfer dana',
-      'Memproses pencairan gaji (payroll) dan verifikasi bebas kasbon offboarding'
+      'Memproses pencairan gaji (payroll) dan verifikasi bebas pinjaman offboarding'
     ],
     user_account_id: 'usr-keu-01',
     user_account_active: true,
@@ -806,7 +806,7 @@ export const DEFAULT_OFFBOARDINGS: OffboardingClearance[] = [
     clearance_rt_date: '2026-09-10T10:00:00Z',
     clearance_finance_completed: true,
     clearance_finance_officer: 'Ust. Ahmad Dahlan, S.E.',
-    clearance_finance_notes: 'Bebas kasbon, simpanan koperasi telah dikembalikan.',
+    clearance_finance_notes: 'Bebas pinjaman, simpanan koperasi telah dikembalikan.',
     clearance_finance_date: '2026-09-12T11:00:00Z',
     clearance_hrd_completed: true,
     clearance_hrd_officer: 'Ust. Ir. Faisal Rahman, M.M.',
@@ -1541,7 +1541,7 @@ export function initiateOffboarding(data: {
 /**
  * Menandatangani salah satu pintu clearance:
  * 1. RT (Aset & Fasilitas)
- * 2. Keuangan (Kasbon & Kasir)
+ * 2. Keuangan (Pinjaman & Kasir)
  * 3. HRD (Exit Interview)
  * 4. IT (Pencabutan Akses)
  */

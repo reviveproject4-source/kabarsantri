@@ -94,8 +94,12 @@ export default function PortalWaliSantriPage() {
     bank: 'Bank Syariah Indonesia (BSI)',
   });
 
+  const [allSetorans, setAllSetorans] = useState<any[]>([]);
+
   useEffect(() => {
     setMounted(true);
+    setAllSetorans(getSharedTahfidzSetoran());
+
     if (isTenantMode()) {
       const list = getSharedSantriList();
       setRealSantriList(list);
@@ -112,12 +116,19 @@ export default function PortalWaliSantriPage() {
         }
       }
     };
+    const handleTahfidzUpdate = () => {
+      setAllSetorans(getSharedTahfidzSetoran());
+    };
+
     window.addEventListener('ks_tenant_santri_updated', handleUpdate);
-    return () => window.removeEventListener('ks_tenant_santri_updated', handleUpdate);
+    window.addEventListener('ks_tahfidz_setoran_updated', handleTahfidzUpdate);
+    return () => {
+      window.removeEventListener('ks_tenant_santri_updated', handleUpdate);
+      window.removeEventListener('ks_tahfidz_setoran_updated', handleTahfidzUpdate);
+    };
   }, []);
 
   const isTenantActive = mounted ? (isTenant || isTenantMode()) : false;
-  const allSetorans = mounted ? getSharedTahfidzSetoran() : [];
 
   const childrenData = isTenantActive
     ? realSantriList.map((s, idx) => {
