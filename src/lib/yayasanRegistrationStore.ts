@@ -70,7 +70,7 @@ const DEFAULT_REGISTRATIONS: YayasanRegistration[] = [
     paket_pilihan: 'Gratis',
     catatan: 'Tenant live resmi teraktivasi (Paket Free + Keuangan & Kepegawaian).',
     status: 'active',
-    features: ['tahfidz', 'spp', 'wali', 'kepegawaian'],
+    features: ['tahfidz', 'spp', 'wali', 'kepegawaian', 'e_raport', 'wa_gateway'],
     created_at: '2026-10-12 02:01',
     activated_tenant_id: 'tenant-al-kausar-9033',
     admin_email: 'admin@al-kausar.kabarsantri.id',
@@ -596,7 +596,7 @@ export function getActiveTenantPackageAndFeatures(tenantId?: string): {
 
   const paket: PaketType = reg?.paket_pilihan || 'Gratis';
   const isEnterprise = paket === 'Enterprise';
-  const features = reg?.features || ['tahfidz', 'spp', 'wali', 'kepegawaian'];
+  const features = reg?.features || ['tahfidz', 'spp', 'wali', 'kepegawaian', 'e_raport', 'wa_gateway'];
 
   const isFeatureUnlocked = (featureKey: string): boolean => {
     const key = (featureKey || '').toLowerCase();
