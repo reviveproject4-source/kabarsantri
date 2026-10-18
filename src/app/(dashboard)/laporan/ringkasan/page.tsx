@@ -135,7 +135,7 @@ export default function LaporanRingkasanEksekutifPage() {
             title="Download Spreadsheet Excel / CSV Laporan Eksekutif"
           >
             <Download className="w-4 h-4" />
-            <span>Export Excel</span>
+            <span>Export</span>
           </button>
         </div>
       </div>

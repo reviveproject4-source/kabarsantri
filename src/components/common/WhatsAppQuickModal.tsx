@@ -435,7 +435,7 @@ _Sekretariat Pimpinan ${pesantrenName}_`;
               title="Langsung berpindah ke layar chat nomor tujuan WhatsApp dengan teks terformat"
             >
               <Send className="w-3.5 h-3.5" />
-              <span>Buka Layar Chat WA &amp; Kirim</span>
+              <span>Kirim</span>
               <ExternalLink className="w-3 h-3 opacity-80" />
             </button>
           </div>
