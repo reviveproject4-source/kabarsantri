@@ -30,6 +30,7 @@ export default function LaporanRingkasanEksekutifPage() {
   const [santriCount, setSantriCount] = useState(0);
   const [employeeCount, setEmployeeCount] = useState(0);
   const [kasSummary, setKasSummary] = useState<KasRekonsiliasiSummary | null>(null);
+  const [exportToast, setExportToast] = useState('');
 
   useEffect(() => {
     setMounted(true);
@@ -41,8 +42,68 @@ export default function LaporanRingkasanEksekutifPage() {
     }
   }, [modeIsTenant, isTenantParam]);
 
+  const handleExportExcel = () => {
+    const orgName = tenant.name || 'Pondok Pesantren KabarSantri';
+    const dateStr = new Date().toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+    const nowIso = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+
+    // Format CSV UTF-8 dengan BOM agar terbaca otomatis rapi di MS Excel
+    let csvContent = '\uFEFF';
+    csvContent += `LAPORAN RINGKASAN EKSEKUTIF PESANTREN\n`;
+    csvContent += `Nama Lembaga;${orgName}\n`;
+    csvContent += `Tanggal Cetak;${dateStr}\n`;
+    csvContent += `Mode Data;${isTenant ? 'Tenant Live Pesantren' : 'Simulasi Pesantren'}\n\n`;
+
+    csvContent += `1. DATA POKOK SANTRI & ASATIDZ\n`;
+    csvContent += `Indikator;Jumlah;Keterangan\n`;
+    csvContent += `Total Santri Aktif;${isTenant ? santriCount : 324};${isTenant ? 'Santri Terdaftar' : 'MTs: 180, MA: 144'}\n`;
+    csvContent += `Total Asatidz & SDM;${isTenant ? employeeCount : 42};${isTenant ? 'Pegawai Terdata' : 'Guru KBM: 28, Musyrif: 14'}\n\n`;
+
+    csvContent += `2. POSISI KAS & REKONSILIASI KEUANGAN\n`;
+    csvContent += `Pos Anggaran / Kas;Tunai Fisik (Cash);Mutasi Bank (Transfer);Total Konsolidasi\n`;
+    if (kasSummary) {
+      csvContent += `Penerimaan SPP;Rp ${kasSummary.byKategori.spp.cash.toLocaleString('id-ID')};Rp ${kasSummary.byKategori.spp.transfer.toLocaleString('id-ID')};Rp ${kasSummary.byKategori.spp.total.toLocaleString('id-ID')}\n`;
+      csvContent += `Penerimaan Infaq & Donasi;Rp ${kasSummary.byKategori.infaq.cash.toLocaleString('id-ID')};Rp ${kasSummary.byKategori.infaq.transfer.toLocaleString('id-ID')};Rp ${kasSummary.byKategori.infaq.total.toLocaleString('id-ID')}\n`;
+      csvContent += `Tabungan Santri;Rp ${kasSummary.byKategori.tabungan.cash.toLocaleString('id-ID')};Rp ${kasSummary.byKategori.tabungan.transfer.toLocaleString('id-ID')};Rp ${kasSummary.byKategori.tabungan.total.toLocaleString('id-ID')}\n`;
+      csvContent += `Total Penerimaan Kas;Rp ${kasSummary.totalMasukCash.toLocaleString('id-ID')};Rp ${kasSummary.totalMasukTransfer.toLocaleString('id-ID')};Rp ${kasSummary.totalMasuk.toLocaleString('id-ID')}\n`;
+      csvContent += `Pengeluaran Operasional;Rp ${kasSummary.totalKeluarCash.toLocaleString('id-ID')};Rp ${kasSummary.totalKeluarTransfer.toLocaleString('id-ID')};Rp ${kasSummary.totalKeluar.toLocaleString('id-ID')}\n`;
+      csvContent += `Saldo Kas Berjalan;Rp ${kasSummary.saldoCash.toLocaleString('id-ID')};Rp ${kasSummary.saldoTransfer.toLocaleString('id-ID')};Rp ${kasSummary.saldoTotal.toLocaleString('id-ID')}\n\n`;
+    } else {
+      csvContent += `Penerimaan SPP;Rp 24.200.000;Rp 130.000.000;Rp 154.200.000\n`;
+      csvContent += `Penerimaan Infaq;Rp 12.000.000;Rp 23.500.000;Rp 35.500.000\n`;
+      csvContent += `Pengeluaran Operasional;Rp 18.500.000;Rp 68.000.000;Rp 86.500.000\n`;
+      csvContent += `Saldo Kas Konsolidasi;Rp 17.700.000;Rp 85.500.000;Rp 103.200.000\n\n`;
+    }
+
+    csvContent += `Disahkan Oleh;Mudir & Dewan Yayasan ${orgName}\n`;
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Laporan_Eksekutif_${orgName.replace(/[^a-zA-Z0-9]/g, '_')}_${nowIso}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    setExportToast('✓ Laporan Ringkasan Eksekutif berhasil diexport ke Excel (.csv)!');
+    setTimeout(() => setExportToast(''), 4500);
+  };
+
   return (
     <div className="space-y-6">
+      {exportToast && (
+        <div className="p-3 bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-semibold rounded-xl flex items-center justify-between shadow-2xs animate-in fade-in">
+          <span>{exportToast}</span>
+          <button onClick={() => setExportToast('')} className="text-emerald-600 hover:text-emerald-900 font-bold ml-2">×</button>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
           <Link href={isTenant ? "/dashboard?mode=tenant" : "/dashboard"} className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">
@@ -63,16 +124,18 @@ export default function LaporanRingkasanEksekutifPage() {
         <div className="flex gap-2">
           <button 
             onClick={() => window.print()}
-            className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition inline-flex items-center space-x-1.5"
+            className="px-3.5 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition inline-flex items-center space-x-1.5 shadow-2xs cursor-pointer"
           >
             <Printer className="w-4 h-4" />
-            <span>Cetak Laporan</span>
+            <span>Cetak PDF</span>
           </button>
           <button 
-            className="px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg shadow-sm hover:bg-blue-700 transition inline-flex items-center space-x-1.5"
+            onClick={handleExportExcel}
+            className="px-3.5 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-lg shadow-sm hover:bg-emerald-700 transition inline-flex items-center space-x-1.5 cursor-pointer"
+            title="Download Spreadsheet Excel / CSV Laporan Eksekutif"
           >
             <Download className="w-4 h-4" />
-            <span>Export Excel / PDF</span>
+            <span>Export Excel</span>
           </button>
         </div>
       </div>

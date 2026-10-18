@@ -16,40 +16,22 @@ import {
   School,
   Building2,
   Lock,
-  FileText
+  FileText,
+  Send,
+  Sparkles
 } from 'lucide-react';
 import { 
   getSharedSantriList, 
   getSharedTahfidzSetoran, 
   MASTER_SANTRI, 
   MASTER_KELAS,
-  isTenantMode 
+  isTenantMode,
+  getSantriRaportMapelList,
+  MapelNilaiRaport
 } from '@/lib/sharedDataStore';
 import { useActiveTenant } from '@/lib/sessionStore';
-import { openWhatsAppQuickModal } from '@/components/common/WhatsAppQuickModal';
+import { openWhatsAppQuickModal, openDirectWhatsApp } from '@/components/common/WhatsAppQuickModal';
 import { isERaportFeatureEnabled, isWhatsAppFeatureEnabled } from '@/lib/yayasanRegistrationStore';
-
-interface MapelNilai {
-  nama: string;
-  kategori: 'Agama & Bahasa' | 'Umum & Sains';
-  kkm: number;
-  nilai: number;
-  grade: 'A' | 'B' | 'C' | 'D';
-  deskripsi: string;
-}
-
-const DEFAULT_MAPEL_LIST: MapelNilai[] = [
-  { nama: "Al-Qur'an & Tajwid", kategori: 'Agama & Bahasa', kkm: 75, nilai: 92, grade: 'A', deskripsi: 'Sangat menguasai makhorijul huruf dan kaidah mad.' },
-  { nama: 'Aqidah & Akhlaq', kategori: 'Agama & Bahasa', kkm: 75, nilai: 90, grade: 'A', deskripsi: 'Menunjukkan pemahaman rukun iman dan adab yang santun.' },
-  { nama: 'Fiqih Ibadah', kategori: 'Agama & Bahasa', kkm: 75, nilai: 88, grade: 'A', deskripsi: 'Praktik thaharah dan sholat fardhu sangat baik.' },
-  { nama: 'Bahasa Arab & Nahwu', kategori: 'Agama & Bahasa', kkm: 70, nilai: 85, grade: 'B', deskripsi: 'Mampu menyusun kalimat dasar dan kaidah isim-fiil.' },
-  { nama: 'Hadits Nabawi', kategori: 'Agama & Bahasa', kkm: 75, nilai: 89, grade: 'A', deskripsi: 'Hafal 20 Hadits Arbain Nawawiyah dengan maknanya.' },
-  { nama: 'Matematika', kategori: 'Umum & Sains', kkm: 70, nilai: 84, grade: 'B', deskripsi: 'Mampu menyelesaikan soal aljabar dan aritmatika.' },
-  { nama: 'Ilmu Pengetahuan Alam (IPA)', kategori: 'Umum & Sains', kkm: 70, nilai: 87, grade: 'A', deskripsi: 'Sangat baik dalam memahami sistem biologi dan tata surya.' },
-  { nama: 'Bahasa Indonesia', kategori: 'Umum & Sains', kkm: 75, nilai: 88, grade: 'A', deskripsi: 'Terampil menulis resensi buku dan berbicara di depan umum.' },
-  { nama: 'Bahasa Inggris', kategori: 'Umum & Sains', kkm: 70, nilai: 82, grade: 'B', deskripsi: 'Percakapan harian (daily conversation) berkembang baik.' },
-  { nama: 'Teknologi Informasi & Komputer', kategori: 'Umum & Sains', kkm: 70, nilai: 90, grade: 'A', deskripsi: 'Terampil mengoperasikan komputer dan aplikasi digital santri.' }
-];
 
 export default function CetakRaportSantriPage() {
   const tenant = useActiveTenant();
@@ -58,7 +40,8 @@ export default function CetakRaportSantriPage() {
   const [selectedNis, setSelectedNis] = useState<string>('');
   const [semester, setSemester] = useState<'Ganjil' | 'Genap'>('Ganjil');
   const [tahunAjaran, setTahunAjaran] = useState<string>('2025/2026');
-  const [tanggalCetak, setTanggalCetak] = useState<string>('16 Oktober 2026');
+  const [tanggalCetak, setTanggalCetak] = useState<string>('18 Oktober 2026');
+  const [mapelList, setMapelList] = useState<MapelNilaiRaport[]>([]);
 
   useEffect(() => {
     setMounted(true);
@@ -69,8 +52,25 @@ export default function CetakRaportSantriPage() {
     setSantriList(list);
     if (list.length > 0) {
       setSelectedNis(list[0].nis);
+      setMapelList(getSantriRaportMapelList(list[0].nis));
     }
   }, []);
+
+  useEffect(() => {
+    if (selectedNis) {
+      setMapelList(getSantriRaportMapelList(selectedNis));
+    }
+  }, [selectedNis]);
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      if (selectedNis) {
+        setMapelList(getSantriRaportMapelList(selectedNis));
+      }
+    };
+    window.addEventListener('ks_raport_grades_updated', handleUpdate);
+    return () => window.removeEventListener('ks_raport_grades_updated', handleUpdate);
+  }, [selectedNis]);
 
   const currentSantri = santriList.find(s => s.nis === selectedNis) || santriList[0] || {
     nis: '202601001',
@@ -87,10 +87,41 @@ export default function CetakRaportSantriPage() {
   );
 
   const latestSetoran = santriSetoran[0];
-  const totalRataRata = Math.round(DEFAULT_MAPEL_LIST.reduce((acc, m) => acc + m.nilai, 0) / DEFAULT_MAPEL_LIST.length);
+  const totalRataRata = mapelList.length > 0 
+    ? Math.round(mapelList.reduce((acc, m) => acc + m.nilai, 0) / mapelList.length) 
+    : 88;
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const generateWaRaportText = () => {
+    return `Assalamu'alaikum Warahmatullahi Wabarakatuh,
+
+Yth. Bapak/Ibu Wali dari ananda *${currentSantri.nama}*,
+Alhamdulillah, berikut adalah Ringkasan Nilai Raport Semester ${semester} T.A. ${tahunAjaran}:
+━━━━━━━━━━━━━━━━━━━━
+• *Nama Santri:* ${currentSantri.nama} (NIS: ${currentSantri.nis})
+• *Rombel / Kelas:* ${currentSantri.kelas || 'MTs Tahfidz'}
+• *Rata-Rata Nilai KBM:* ${totalRataRata} (${totalRataRata >= 90 ? 'Predikat A - Amat Baik' : 'Predikat B - Baik'})
+• *Capaian Tahfidz:* ${latestSetoran ? `Juz ${latestSetoran.juz || '30'} (${latestSetoran.rincian_hafalan || 'Selesai'})` : 'Juz 30 (Mutqin)'}
+• *Nilai Kelancaran:* ${latestSetoran ? latestSetoran.kelancaran : 90} / 100
+• *Kedisiplinan & Adab:* Sangat Baik (A)
+━━━━━━━━━━━━━━━━━━━━
+*Rincian Nilai KBM (Akumulasi Ulangan Harian, Sumatif & Proyek):*
+${mapelList.slice(0, 5).map(m => `• ${m.nama}: ${m.nilai} (${m.grade}) [UH: ${m.nilai_uh}, Sumatif: ${m.nilai_sumatif}, Proyek: ${m.nilai_proyek}]`).join('\n')}
+... serta ${mapelList.length - 5} mata pelajaran lainnya.
+━━━━━━━━━━━━━━━━━━━━
+Buku Raport digital fisik resmi telah disahkan oleh Mudir & Dewan Yayasan. Dokumen lengkap dapat dicek di Buku Pantau Portal Wali Santri.
+
+Jazakumullahu khairan katsiran.
+Wassalamu'alaikum Warahmatullahi Wabarakatuh.
+_Pimpinan & Dewan Yayasan ${tenant.name || 'Pesantren'}_`;
+  };
+
+  const handleSendWaCepatDirect = () => {
+    const text = generateWaRaportText();
+    openDirectWhatsApp(currentSantri.wali_kontak || '081234567890', text);
   };
 
   const handleSendWaRaport = () => {
@@ -98,23 +129,7 @@ export default function CetakRaportSantriPage() {
       phone: currentSantri.wali_kontak || '081234567890',
       recipientName: currentSantri.wali_nama || `Wali dari ${currentSantri.nama}`,
       templateKey: 'custom',
-      defaultMessage: `Assalamu'alaikum Warahmatullahi Wabarakatuh,
-
-Yth. Bapak/Ibu Wali dari ananda *${currentSantri.nama}*,
-Alhamdulillah, berikut adalah Ringkasan Nilai Raport Semester ${semester} T.A. ${tahunAjaran}:
-━━━━━━━━━━━━━━━━━━━━
-• *Nama Santri:* ${currentSantri.nama} (NIS: ${currentSantri.nis})
-• *Rombel / Kelas:* ${currentSantri.kelas || 'MTs Tahfidz'}
-• *Rata-Rata Nilai KBM:* ${totalRataRata} (Predikat A - Amat Baik)
-• *Capaian Tahfidz:* ${latestSetoran ? `Juz ${latestSetoran.juz || '30'} (${latestSetoran.rincian_hafalan || 'Selesai'})` : 'Juz 30 (Mutqin)'}
-• *Nilai Kelancaran:* ${latestSetoran ? latestSetoran.kelancaran : 90} / 100
-• *Kedisiplinan & Adab:* Sangat Baik (A)
-━━━━━━━━━━━━━━━━━━━━
-Buku Raport digital fisik resmi telah disahkan oleh Mudir Pesantren. Dokumen lengkap dapat dicek di Buku Pantau Portal Wali Santri.
-
-Jazakumullahu khairan katsiran.
-Wassalamu'alaikum Warahmatullahi Wabarakatuh.
-_Pimpinan ${tenant.name || 'Pesantren'}_`
+      defaultMessage: generateWaRaportText()
     });
   };
 
@@ -185,24 +200,34 @@ _Pimpinan ${tenant.name || 'Pesantren'}_`
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {isWhatsAppFeatureEnabled(tenant.id) && (
-              <button
-                onClick={handleSendWaRaport}
-                className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-2xs"
-                title="Kirim Ringkasan Raport ke WhatsApp Wali"
-              >
-                <MessageCircle className="w-4 h-4 text-emerald-600" />
-                <span>Kirim Ringkasan WA</span>
-              </button>
+              <>
+                <button
+                  onClick={handleSendWaCepatDirect}
+                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-sm"
+                  title="Langsung pindah ke layar WhatsApp nomor wali dengan data raport siap kirim"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Kirim WA Cepat</span>
+                </button>
+                <button
+                  onClick={handleSendWaRaport}
+                  className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-2xs"
+                  title="Buka Pratinjau & Edit Teks Ringkasan Raport"
+                >
+                  <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Edit Teks WA</span>
+                </button>
+              </>
             )}
 
             <button
               onClick={handlePrint}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-sm"
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-sm"
             >
               <Printer className="w-4 h-4" />
-              <span>Cetak / Simpan PDF</span>
+              <span>Cetak Dokumen Resmi</span>
             </button>
           </div>
         </div>
@@ -405,30 +430,42 @@ _Pimpinan ${tenant.name || 'Pesantren'}_`
           <table className="w-full text-left font-sans text-xs border border-slate-300">
             <thead className="bg-slate-100 text-slate-800 font-bold border-b border-slate-300 text-[11px]">
               <tr>
-                <th className="py-2 px-2.5 text-center border-r border-slate-300 w-10">No</th>
+                <th className="py-2 px-2 text-center border-r border-slate-300 w-8">No</th>
                 <th className="py-2 px-3 border-r border-slate-300">Mata Pelajaran</th>
-                <th className="py-2 px-2 text-center border-r border-slate-300 w-14">KKM</th>
-                <th className="py-2 px-2 text-center border-r border-slate-300 w-16">Nilai</th>
-                <th className="py-2 px-2 text-center border-r border-slate-300 w-14">Predikat</th>
+                <th className="py-2 px-1 text-center border-r border-slate-300 w-11">KKM</th>
+                <th className="py-2 px-1 text-center border-r border-slate-300 w-14 bg-amber-50/60 text-amber-900" title="Ulangan Harian & Kuis Formatif (Bobot 30%)">UH (30%)</th>
+                <th className="py-2 px-1 text-center border-r border-slate-300 w-16 bg-blue-50/60 text-blue-900" title="Tes Sumatif Tengah & Akhir Semester (Bobot 40%)">Sumatif (40%)</th>
+                <th className="py-2 px-1 text-center border-r border-slate-300 w-16 bg-purple-50/60 text-purple-900" title="Tugas Proyek & Praktik Portofolio (Bobot 30%)">Proyek (30%)</th>
+                <th className="py-2 px-1 text-center border-r border-slate-300 w-14 bg-emerald-50 text-emerald-950 font-black" title="Nilai Akhir Raport = (UH × 30%) + (Sumatif × 40%) + (Proyek × 30%)">Nilai Akhir</th>
+                <th className="py-2 px-1 text-center border-r border-slate-300 w-12">Predikat</th>
                 <th className="py-2 px-3">Capaian Kompetensi &amp; Deskripsi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
-              {DEFAULT_MAPEL_LIST.map((m, idx) => (
+              {mapelList.map((m, idx) => (
                 <tr key={idx} className="hover:bg-slate-50/50">
-                  <td className="py-1.5 px-2.5 text-center border-r border-slate-300 text-slate-500 font-mono">
+                  <td className="py-1.5 px-2 text-center border-r border-slate-300 text-slate-500 font-mono">
                     {idx + 1}
                   </td>
                   <td className="py-1.5 px-3 font-semibold text-slate-800 border-r border-slate-300">
                     {m.nama}
                   </td>
-                  <td className="py-1.5 px-2 text-center font-mono text-slate-600 border-r border-slate-300">
+                  <td className="py-1.5 px-1 text-center font-mono text-slate-600 border-r border-slate-300">
                     {m.kkm}
                   </td>
-                  <td className="py-1.5 px-2 text-center font-mono font-bold text-slate-900 border-r border-slate-300">
+                  <td className="py-1.5 px-1 text-center font-mono font-medium text-slate-700 border-r border-slate-300 bg-amber-50/20">
+                    {m.nilai_uh}
+                  </td>
+                  <td className="py-1.5 px-1 text-center font-mono font-medium text-slate-700 border-r border-slate-300 bg-blue-50/20">
+                    {m.nilai_sumatif}
+                  </td>
+                  <td className="py-1.5 px-1 text-center font-mono font-medium text-slate-700 border-r border-slate-300 bg-purple-50/20">
+                    {m.nilai_proyek}
+                  </td>
+                  <td className="py-1.5 px-1 text-center font-mono font-black text-slate-900 border-r border-slate-300 bg-emerald-50/30">
                     {m.nilai}
                   </td>
-                  <td className="py-1.5 px-2 text-center font-bold border-r border-slate-300">
+                  <td className="py-1.5 px-1 text-center font-bold border-r border-slate-300">
                     <span className={m.grade === 'A' ? 'text-emerald-800' : 'text-blue-800'}>
                       {m.grade}
                     </span>

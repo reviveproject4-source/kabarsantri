@@ -40,7 +40,10 @@ import {
   LearningSession,
   SantriPresensiSession,
   validateIslamicSegregation,
-  isTenantMode
+  isTenantMode,
+  updateSantriKbmComponent,
+  getSantriRaportMapelList,
+  MapelNilaiRaport
 } from '@/lib/sharedDataStore';
 import { getActiveActor, MASTER_PILLAR_ACTORS, ActiveActor } from '@/lib/sessionStore';
 
@@ -187,9 +190,19 @@ export default function LearningSessionKBMPage() {
       Number(assessmentForm.target_kkm),
       scoresPayload
     );
+
+    // Sinkronisasi Otomatis ke Komponen Raport Digital Santri (UH 30%, Sumatif 40%, Proyek 30%)
+    scoresPayload.forEach(p => {
+      let comp: 'uh' | 'sumatif' | 'proyek' = 'uh';
+      const t = (assessmentForm.tipe || '').toLowerCase();
+      if (t.includes('sumatif') || t.includes('uts') || t.includes('uas')) comp = 'sumatif';
+      else if (t.includes('proyek') || t.includes('project') || t.includes('praktik')) comp = 'proyek';
+      updateSantriKbmComponent(p.nis, currentSession.mata_pelajaran, comp, p.nilai);
+    });
+
     setSessions(updated);
     setActiveStep('summary');
-    setNotif('✓ Penilaian assessment terintegrasi berhasil diproses! Sistem otomatis mengidentifikasi status ACHIEVED / REMEDIAL_REQUIRED / ENRICHMENT_ELIGIBLE.');
+    setNotif('✓ Penilaian assessment terintegrasi berhasil diproses dan diakumulasikan ke Raport Digital Santri! Sistem otomatis memperbarui nilai akhir.');
     setTimeout(() => setNotif(''), 7000);
   };
 
@@ -762,16 +775,16 @@ export default function LearningSessionKBMPage() {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Tipe Assessment</label>
+                <label className="block font-semibold text-slate-700 mb-1">Tipe Aktivitas (Komponen Raport)</label>
                 <select
                   value={assessmentForm.tipe}
                   onChange={(e) => setAssessmentForm({ ...assessmentForm, tipe: e.target.value as any })}
-                  className="w-full p-2.5 border border-slate-300 rounded-xl bg-slate-50 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  className="w-full p-2.5 border border-slate-300 rounded-xl bg-slate-50 focus:ring-2 focus:ring-emerald-500 focus:outline-none font-semibold text-slate-800"
                 >
-                  <option value="Kuis Formatif">Kuis Formatif Harian</option>
-                  <option value="Tugas Harian">Tugas Terstruktur / PR</option>
-                  <option value="Praktik Muamalah">Penilaian Praktik / Unjuk Kerja</option>
-                  <option value="Ujian Sumatif">Ujian Sumatif Tengah/Akhir Semester</option>
+                  <option value="Tugas Harian">1. Ulangan Harian &amp; Kuis Formatif (Bobot 30%)</option>
+                  <option value="Ujian Sumatif">2. Tes Sumatif Tengah / Akhir Semester (Bobot 40%)</option>
+                  <option value="Praktik Muamalah">3. Tugas Proyek &amp; Praktik Portofolio (Bobot 30%)</option>
+                  <option value="Kuis Formatif">Latihan Pemahaman Rutin</option>
                 </select>
               </div>
 
@@ -1174,6 +1187,31 @@ export default function LearningSessionKBMPage() {
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* Banner Integrasi Raport Digital Santri */}
+          <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                <GraduationCap className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-bold text-xs sm:text-sm text-emerald-950">
+                  Nilai KBM Telah Diakumulasikan ke Raport Digital Santri
+                </h4>
+                <p className="text-[11px] text-emerald-800">
+                  Komponen Ulangan Harian (30%), Tes Sumatif (40%), dan Tugas Proyek (30%) otomatis tersinkronisasi ke dokumen raport resmi santri.
+                </p>
+              </div>
+            </div>
+
+            <Link
+              href="/akademik/raport"
+              className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition flex items-center space-x-1.5 shrink-0 shadow-sm"
+            >
+              <span>Buka Raport Digital Santri</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
       )}

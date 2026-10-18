@@ -30,7 +30,10 @@ import {
   CheckCheck,
   RefreshCw,
   Filter,
-  ArrowDownRight
+  ArrowDownRight,
+  GraduationCap,
+  Printer,
+  Send
 } from 'lucide-react';
 import { 
   getSharedThresholds, 
@@ -863,13 +866,23 @@ export default function DashboardKetuaYayasanPage() {
               Kompilasi Laporan Kepala Sekolah/Mudir: Rombongan Belajar, Disiplin KBM, &amp; Capaian Tahfidz Santri
             </p>
           </div>
-          <Link
-            href="/laporan/ringkasan"
-            className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center space-x-1.5 self-start sm:self-auto"
-          >
-            <FileText className="w-3.5 h-3.5 text-slate-500" />
-            <span>Buka Laporan Lengkap</span>
-          </Link>
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <Link
+              href="/akademik/raport"
+              className="px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold rounded-xl transition flex items-center space-x-1.5 shadow-2xs"
+              title="Akses Raport Digital Santri: Pilihan Cetak Dokumen atau Kirimkan via WhatsApp"
+            >
+              <GraduationCap className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Raport Santri (Cetak / WA)</span>
+            </Link>
+            <Link
+              href="/laporan/ringkasan"
+              className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center space-x-1.5"
+            >
+              <FileText className="w-3.5 h-3.5 text-slate-500" />
+              <span>Buka Laporan Lengkap</span>
+            </Link>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-4 gap-4 text-xs">

@@ -48,6 +48,32 @@ export interface WhatsAppQuickPayload {
     pesanKustom?: string;
   };
   defaultMessage?: string;
+  directLaunch?: boolean;
+}
+
+export function formatWhatsAppNumber(num: string): string {
+  let clean = (num || '').replace(/[^0-9]/g, '');
+  if (clean.startsWith('0')) {
+    clean = '62' + clean.slice(1);
+  } else if (clean.startsWith('8')) {
+    clean = '62' + clean;
+  }
+  return clean;
+}
+
+export function openDirectWhatsApp(phone: string, message: string): string {
+  const clean = formatWhatsAppNumber(phone);
+  if (!clean || clean.length < 9) {
+    if (typeof window !== 'undefined') {
+      alert('Silakan periksa nomor WhatsApp tujuan (minimal 9 digit).');
+    }
+    return '';
+  }
+  const waUrl = `https://wa.me/${clean}?text=${encodeURIComponent(message)}`;
+  if (typeof window !== 'undefined') {
+    window.open(waUrl, '_blank', 'noopener,noreferrer');
+  }
+  return waUrl;
 }
 
 export function openWhatsAppQuickModal(payload: WhatsAppQuickPayload) {
@@ -193,6 +219,12 @@ _Sekretariat Pimpinan ${pesantrenName}_`;
       setRecipientName(newName);
       setTemplateKey(newKey);
       setParams(newParams);
+
+      if (payload.directLaunch && newPhone) {
+        const textToSend = payload.defaultMessage || generateTemplateMessage(newKey, newParams, tenant.name || 'Pesantren', newName);
+        openDirectWhatsApp(newPhone, textToSend);
+        return;
+      }
 
       if (payload.defaultMessage) {
         setMessage(payload.defaultMessage);
@@ -400,9 +432,10 @@ _Sekretariat Pimpinan ${pesantrenName}_`;
               type="button"
               onClick={handleSendWa}
               className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer flex-1 sm:flex-initial"
+              title="Langsung berpindah ke layar chat nomor tujuan WhatsApp dengan teks terformat"
             >
               <Send className="w-3.5 h-3.5" />
-              <span>Kirim WA</span>
+              <span>Buka Layar Chat WA &amp; Kirim</span>
               <ExternalLink className="w-3 h-3 opacity-80" />
             </button>
           </div>

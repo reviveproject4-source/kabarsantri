@@ -16,11 +16,14 @@ import {
   QrCode,
   Upload,
   FileCheck2,
-  Printer
+  Printer,
+  GraduationCap,
+  Send
 } from 'lucide-react';
 import PrintableKuitansi from '@/components/finance/PrintableKuitansi';
 import { useActiveTenant, useAppMode } from '@/lib/sessionStore';
 import { getSharedSantriList, isTenantMode, getSharedTahfidzSetoran } from '@/lib/sharedDataStore';
+import { openDirectWhatsApp } from '@/components/common/WhatsAppQuickModal';
 
 const DEMO_CHILDREN = [
   {
@@ -459,6 +462,65 @@ export default function PortalWaliSantriPage() {
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>{currentChild.status_sholat}</span>
                 </p>
+              </div>
+            </div>
+
+            {/* 🎓 RAPORT DIGITAL & EVALUASI HASIL BELAJAR ANANDA */}
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <div className="flex items-center space-x-2">
+                  <div className="p-2 bg-emerald-50 rounded-xl text-emerald-700">
+                    <GraduationCap className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-800 text-sm">
+                      Buku Raport Digital &amp; Evaluasi Semesteran
+                    </h3>
+                    <p className="text-[11px] text-slate-500">
+                      Capaian KBM, Tahfidz Al-Qur'an, dan Karakter Adab Resmi Pesantren
+                    </p>
+                  </div>
+                </div>
+
+                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full self-start sm:self-auto">
+                  Semester Ganjil 2025/2026
+                </span>
+              </div>
+
+              <div className="p-3.5 bg-emerald-50/50 rounded-xl border border-emerald-100 text-xs space-y-2">
+                <div className="flex justify-between items-center text-slate-700">
+                  <span className="font-medium">Status Raport Resmi:</span>
+                  <span className="font-bold text-emerald-700">✓ Telah Disahkan Mudir Pesantren</span>
+                </div>
+                <div className="flex justify-between items-center text-slate-700">
+                  <span className="font-medium">Tahfidz Terakhir:</span>
+                  <span className="font-mono font-bold text-slate-900">{currentChild.tahfidz_terakhir || 'Juz 30 (Mutqin)'}</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                <Link
+                  href="/akademik/raport"
+                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1.5 shadow-sm"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>Lihat &amp; Cetak Raport Digital</span>
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const santriName = currentChild.nama;
+                    const nis = currentChild.nis;
+                    const phoneWali = (currentChild as any).wali_phone || '081234567890';
+                    const text = `Assalamu'alaikum Warahmatullahi Wabarakatuh,\n\nRingkasan Raport Digital Ananda *${santriName}* (NIS: ${nis}) telah dapat diakses di Portal Wali Santri.\nStatus: Disahkan oleh Mudir Pesantren.\n\nJazakumullahu khairan.`;
+                    openDirectWhatsApp(phoneWali, text);
+                  }}
+                  className="px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1.5"
+                >
+                  <Send className="w-4 h-4 text-emerald-600" />
+                  <span>Kirim Salinan via WhatsApp</span>
+                </button>
               </div>
             </div>
           </>

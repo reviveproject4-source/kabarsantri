@@ -2879,4 +2879,127 @@ export function getKasSummary(records?: TransaksiKasRecord[]): KasRekonsiliasiSu
   return summary;
 }
 
+// ==============================================================================
+// 📚 INTEGRASI PENILAIAN KBM KE RAPORT DIGITAL SANTRI (AKUMULASI AKTIVITAS)
+// ==============================================================================
+// Komponen Nilai Raport:
+// 1. Ulangan Harian (Formatif / Tugas Harian) - Bobot 30%
+// 2. Tes Sumatif (UTS / UAS / SAS) - Bobot 40%
+// 3. Tugas Proyek (Project-Based Learning / Praktik Mandiri) - Bobot 30%
+// Rumus Nilai Akhir: Math.round((UH * 0.3) + (Sumatif * 0.4) + (Proyek * 0.3))
+
+export interface MapelNilaiRaport {
+  nama: string;
+  kategori: 'Agama & Bahasa' | 'Umum & Sains';
+  kkm: number;
+  nilai_uh: number;      // Ulangan Harian (30%)
+  nilai_sumatif: number; // Tes Sumatif (40%)
+  nilai_proyek: number;  // Tugas Proyek (30%)
+  nilai: number;         // Nilai Akhir Raport Akumulasi
+  grade: 'A' | 'B' | 'C' | 'D';
+  deskripsi: string;
+}
+
+export function hitungPredikatNilai(nilai: number, kkm: number = 75): 'A' | 'B' | 'C' | 'D' {
+  if (nilai >= 90) return 'A';
+  if (nilai >= 80) return 'B';
+  if (nilai >= kkm) return 'C';
+  return 'D';
+}
+
+export function hitungAkumulasiNilaiRaport(uh: number, sumatif: number, proyek: number): number {
+  return Math.round((uh * 0.3) + (sumatif * 0.4) + (proyek * 0.3));
+}
+
+export const DEFAULT_RAPORT_MAPEL_LIST: MapelNilaiRaport[] = [
+  { nama: "Al-Qur'an & Tajwid", kategori: 'Agama & Bahasa', kkm: 75, nilai_uh: 90, nilai_sumatif: 94, nilai_proyek: 91, nilai: 92, grade: 'A', deskripsi: 'Sangat menguasai makhorijul huruf dan kaidah mad.' },
+  { nama: 'Aqidah & Akhlaq', kategori: 'Agama & Bahasa', kkm: 75, nilai_uh: 88, nilai_sumatif: 92, nilai_proyek: 90, nilai: 90, grade: 'A', deskripsi: 'Menunjukkan pemahaman rukun iman dan adab yang santun.' },
+  { nama: 'Fiqih Ibadah', kategori: 'Agama & Bahasa', kkm: 75, nilai_uh: 86, nilai_sumatif: 90, nilai_proyek: 88, nilai: 88, grade: 'A', deskripsi: 'Praktik thaharah dan sholat fardhu sangat baik.' },
+  { nama: 'Bahasa Arab & Nahwu', kategori: 'Agama & Bahasa', kkm: 70, nilai_uh: 82, nilai_sumatif: 87, nilai_proyek: 85, nilai: 85, grade: 'B', deskripsi: 'Mampu menyusun kalimat dasar dan kaidah isim-fiil.' },
+  { nama: 'Hadits Nabawi', kategori: 'Agama & Bahasa', kkm: 75, nilai_uh: 88, nilai_sumatif: 90, nilai_proyek: 89, nilai: 89, grade: 'A', deskripsi: 'Hafal 20 Hadits Arbain Nawawiyah dengan maknanya.' },
+  { nama: 'Matematika', kategori: 'Umum & Sains', kkm: 70, nilai_uh: 82, nilai_sumatif: 86, nilai_proyek: 83, nilai: 84, grade: 'B', deskripsi: 'Mampu menyelesaikan soal aljabar dan aritmatika.' },
+  { nama: 'Ilmu Pengetahuan Alam (IPA)', kategori: 'Umum & Sains', kkm: 70, nilai_uh: 85, nilai_sumatif: 89, nilai_proyek: 86, nilai: 87, grade: 'A', deskripsi: 'Sangat baik dalam memahami sistem biologi dan tata surya.' },
+  { nama: 'Bahasa Indonesia', kategori: 'Umum & Sains', kkm: 75, nilai_uh: 87, nilai_sumatif: 89, nilai_proyek: 88, nilai: 88, grade: 'A', deskripsi: 'Terampil menulis resensi buku dan berbicara di depan umum.' },
+  { nama: 'Bahasa Inggris', kategori: 'Umum & Sains', kkm: 70, nilai_uh: 80, nilai_sumatif: 84, nilai_proyek: 81, nilai: 82, grade: 'B', deskripsi: 'Percakapan harian (daily conversation) berkembang baik.' },
+  { nama: 'Teknologi Informasi & Komputer', kategori: 'Umum & Sains', kkm: 70, nilai_uh: 88, nilai_sumatif: 92, nilai_proyek: 90, nilai: 90, grade: 'A', deskripsi: 'Terampil mengoperasikan komputer dan aplikasi digital santri.' }
+];
+
+const STORAGE_KEY_RAPORT_GRADES = 'ks_raport_grades_v2';
+
+export function getSantriRaportMapelList(nis: string): MapelNilaiRaport[] {
+  if (typeof window === 'undefined') return DEFAULT_RAPORT_MAPEL_LIST;
+  try {
+    const raw = localStorage.getItem(`${STORAGE_KEY_RAPORT_GRADES}_${nis}`);
+    if (raw) {
+      const parsed: MapelNilaiRaport[] = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map(m => {
+          const uh = Number(m.nilai_uh ?? 85);
+          const sumatif = Number(m.nilai_sumatif ?? 85);
+          const proyek = Number(m.nilai_proyek ?? 85);
+          const kkm = Number(m.kkm ?? 75);
+          const nilai = hitungAkumulasiNilaiRaport(uh, sumatif, proyek);
+          const grade = hitungPredikatNilai(nilai, kkm);
+          return {
+            ...m,
+            nilai_uh: uh,
+            nilai_sumatif: sumatif,
+            nilai_proyek: proyek,
+            nilai,
+            grade
+          };
+        });
+      }
+    }
+  } catch {}
+  return DEFAULT_RAPORT_MAPEL_LIST;
+}
+
+export function saveSantriRaportMapelList(nis: string, mapels: MapelNilaiRaport[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    const processed = mapels.map(m => {
+      const uh = Number(m.nilai_uh ?? 85);
+      const sumatif = Number(m.nilai_sumatif ?? 85);
+      const proyek = Number(m.nilai_proyek ?? 85);
+      const kkm = Number(m.kkm ?? 75);
+      const nilai = hitungAkumulasiNilaiRaport(uh, sumatif, proyek);
+      const grade = hitungPredikatNilai(nilai, kkm);
+      return {
+        ...m,
+        nilai_uh: uh,
+        nilai_sumatif: sumatif,
+        nilai_proyek: proyek,
+        nilai,
+        grade
+      };
+    });
+    localStorage.setItem(`${STORAGE_KEY_RAPORT_GRADES}_${nis}`, JSON.stringify(processed));
+    window.dispatchEvent(new CustomEvent('ks_raport_grades_updated', { detail: { nis } }));
+  } catch {}
+}
+
+export function updateSantriKbmComponent(
+  nis: string,
+  mapelNama: string,
+  component: 'uh' | 'sumatif' | 'proyek',
+  score: number,
+  deskripsiBaru?: string
+) {
+  const currentList = getSantriRaportMapelList(nis);
+  const foundIndex = currentList.findIndex(m => m.nama.toLowerCase() === mapelNama.toLowerCase());
+  if (foundIndex >= 0) {
+    const item = { ...currentList[foundIndex] };
+    if (component === 'uh') item.nilai_uh = score;
+    else if (component === 'sumatif') item.nilai_sumatif = score;
+    else if (component === 'proyek') item.nilai_proyek = score;
+    if (deskripsiBaru) item.deskripsi = deskripsiBaru;
+    item.nilai = hitungAkumulasiNilaiRaport(item.nilai_uh, item.nilai_sumatif, item.nilai_proyek);
+    item.grade = hitungPredikatNilai(item.nilai, item.kkm);
+    currentList[foundIndex] = item;
+    saveSantriRaportMapelList(nis, currentList);
+  }
+}
+
+
 
