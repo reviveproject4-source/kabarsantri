@@ -15,6 +15,27 @@ const DATA_FILE = path.join(DATA_DIR, 'registrations.json');
 // In-memory store fallback
 let memoryStore: any[] = [
   {
+    id: 'reg-498363',
+    nama_yayasan: 'Yayasan Al Kausar',
+    nama_pimpinan: 'Ust. Raynd',
+    no_whatsapp: '081280320505',
+    email: 'admin@al-kausar.kabarsantri.id',
+    kota: 'Cibuntu',
+    estimasi_santri: '< 50 Santri',
+    paket_pilihan: 'Gratis',
+    catatan: 'Tenant live resmi teraktivasi (Pusat Kendali Seluruh Fitur Terbuka).',
+    status: 'active',
+    features: [
+      'dashboard', 'tahfidz', 'kbm', 'e_raport', 'presensi', 'adab', 
+      'kesiswaan', 'perizinan', 'kepegawaian', 'spp', 'rumah_tangga', 
+      'wali', 'laporan', 'wa_gateway', 'akuntansi'
+    ],
+    created_at: '2026-10-12 02:01',
+    activated_tenant_id: 'tenant-al-kausar-9033',
+    admin_email: 'admin@al-kausar.kabarsantri.id',
+    admin_temp_password: 'Raynd6304!',
+  },
+  {
     id: 'reg-001',
     nama_yayasan: 'Yayasan Pondok Pesantren Bina Insan Qurani',
     nama_pimpinan: 'KH. Dr. Muhammad Syamsul Ma\'arif',

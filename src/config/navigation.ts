@@ -238,16 +238,12 @@ export function getFilteredNavigation(
       }
 
       // 2. Product entitlement check
-      // Standar Pesantren: Hafalan (Tahfidz), HRD (Data Pegawai), dan Adab (Disiplin) selalu aktif
-      const baselineProducts = ['hafalan', 'hrd', 'adab'];
-      if (tenantId && item.productCode && !baselineProducts.includes(item.productCode) && !hasProduct(tenantId, item.productCode)) {
-        return false;
-      }
+      // Seluruh fitur dashboard tenant ditampilkan selaras dengan Pusat Kendali Super Admin.
+      // Status aktif vs terkunci dikendalikan langsung oleh Super Admin via checkIsItemLocked di Sidebar.
       return true;
     })
     .map(item => {
       if (!item.children) return item;
-      const baselineProducts = ['hafalan', 'hrd', 'adab'];
       const filteredChildren = item.children.filter(child => {
         // Child super admin check
         if (child.superAdminOnly && (isTenantActive || tenantId || (activeRole && activeRole !== 'super_admin'))) {
@@ -255,10 +251,6 @@ export function getFilteredNavigation(
         }
         // Child feature flag
         if (child.featureFlag && !isFeatureActive(child.featureFlag, customFlags)) {
-          return false;
-        }
-        // Child product entitlement
-        if (tenantId && child.productCode && !baselineProducts.includes(child.productCode) && !hasProduct(tenantId, child.productCode)) {
           return false;
         }
         return true;

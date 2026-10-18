@@ -43,6 +43,9 @@ import {
   submitYayasanRegistration, 
   YayasanRegistration, 
   AVAILABLE_YAYASAN_FEATURES, 
+  ALL_YAYASAN_FEATURE_IDS,
+  unlockAllFeaturesForTenant,
+  unlockAllFeaturesForAllTenants,
   PaketType, 
   syncRegistrationsFromServer 
 } from '@/lib/yayasanRegistrationStore';
@@ -368,6 +371,22 @@ Official WA: 0812 1556 6630`;
     await updateYayasanFeatures(selectedModuleRegId, currentSelectedFeatures);
     loadData();
     showNotification(`Modul "${target.nama_yayasan}" berhasil disimpan.`);
+  };
+
+  // 5b. Buka Semua Fitur Cepat untuk Satu Yayasan
+  const handleBukaSemuaFiturTenant = async (reg: YayasanRegistration) => {
+    await unlockAllFeaturesForTenant(reg.id);
+    loadData();
+    showNotification(`Seluruh 15 modul untuk "${reg.nama_yayasan}" berhasil dibuka.`);
+  };
+
+  // 5c. Buka Semua Fitur Cepat untuk Seluruh Tenant Platform
+  const handleBukaSemuaFiturSeluruhTenant = async () => {
+    if (confirm('Buka seluruh 15 modul untuk SEMUA yayasan/tenant di platform?')) {
+      await unlockAllFeaturesForAllTenants();
+      loadData();
+      showNotification('Seluruh 15 modul telah dibuka untuk SEMUA tenant platform.');
+    }
   };
 
   // 6. Ubah Paket (Gratis ↔ Enterprise)
@@ -934,7 +953,29 @@ Official WA: 0812 1556 6630`;
                           {reg.admin_email && <span>Login Admin: <strong className="text-amber-300 font-mono">{reg.admin_email}</strong></span>}
                         </div>
 
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2 flex-wrap gap-y-1.5">
+                          {/* Tombol Cepat Buka Seluruh Fitur */}
+                          <button
+                            onClick={() => handleBukaSemuaFiturTenant(reg)}
+                            className="px-2.5 py-1.5 bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/80 font-bold rounded-xl text-xs transition flex items-center space-x-1"
+                            title="Buka seluruh 15 fitur untuk yayasan ini"
+                          >
+                            <span>🔓 Buka Semua Fitur</span>
+                          </button>
+
+                          {/* Tombol Masuk ke Pusat Kendali Modul */}
+                          <button
+                            onClick={() => {
+                              setSelectedModuleRegId(reg.id);
+                              setActiveMenu('modules');
+                            }}
+                            className="px-2.5 py-1.5 bg-[#142347] hover:bg-[#1a2f60] text-blue-300 border border-[#21345e] font-semibold rounded-xl text-xs transition flex items-center space-x-1"
+                            title="Atur hak akses modul secara terpusat"
+                          >
+                            <Layers className="w-3.5 h-3.5" />
+                            <span>Pusat Kendali ({reg.features?.length || 0}/15)</span>
+                          </button>
+
                           {reg.status === 'pending' && (
                             <button
                               onClick={() => handleAktivasi(reg)}
@@ -1054,70 +1095,144 @@ Official WA: 0812 1556 6630`;
           )}
 
           {/* ===================================================================== */}
-          {/* 4. VIEW MODULES (KUSTOMISASI FITUR PER YAYASAN)                       */}
+          {/* 4. VIEW MODULES (PUSAT KENDALI MODUL & FITUR PER YAYASAN)             */}
           {/* ===================================================================== */}
           {activeMenu === 'modules' && (
             <div className="space-y-5 animate-in fade-in duration-200">
-              <div>
-                <h3 className="text-xl font-bold text-white tracking-tight">
-                  Kustomisasi Modul &amp; Fitur
-                </h3>
-                <p className="text-xs text-slate-400">
-                  Centang modul aktif sesuai kebutuhan masing-masing yayasan/pesantren.
-                </p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="inline-flex items-center space-x-1.5 px-3 py-0.5 rounded-full bg-rose-500/10 text-rose-400 text-[11px] font-bold border border-rose-500/20 mb-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-rose-400" />
+                    <span>Pusat Kendali Terpusat Tenant</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-white tracking-tight">
+                    Pusat Kendali Modul &amp; Fitur Tenant ({AVAILABLE_YAYASAN_FEATURES.length} Modul)
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Super Admin mengendalikan seluruh fitur yang aktif pada dashboard yayasan/tenant secara terpusat &amp; real-time.
+                  </p>
+                </div>
+
+                <button
+                  onClick={handleBukaSemuaFiturSeluruhTenant}
+                  className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow transition shrink-0"
+                  title="Buka seluruh 15 fitur untuk SEMUA tenant di platform"
+                >
+                  <Zap className="w-4 h-4" />
+                  <span>Buka Semua Fitur Seluruh Tenant</span>
+                </button>
               </div>
 
-              {/* Selector Yayasan */}
+              {/* Selector Yayasan & Quick Actions */}
               <div className="bg-[#0f1a35] border border-[#1e2c4d] rounded-2xl p-4 sm:p-5 space-y-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-300">Pilih Yayasan / Pesantren:</label>
-                  <select
-                    value={selectedModuleRegId}
-                    onChange={(e) => setSelectedModuleRegId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-[#091122] border border-[#1e2c4d] rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-rose-500"
-                  >
-                    {registrations.map((reg) => (
-                      <option key={reg.id} value={reg.id}>
-                        {reg.nama_yayasan} ({reg.kota}) - Paket {reg.paket_pilihan}
-                      </option>
-                    ))}
-                  </select>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#19243e]">
+                  <div className="space-y-1 flex-1 max-w-md">
+                    <label className="text-xs font-bold text-slate-300">Pilih Yayasan / Pesantren Binaan:</label>
+                    <select
+                      value={selectedModuleRegId}
+                      onChange={(e) => setSelectedModuleRegId(e.target.value)}
+                      className="w-full px-3.5 py-2 bg-[#091122] border border-[#1e2c4d] rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-rose-500 font-medium"
+                    >
+                      {registrations.map((reg) => (
+                        <option key={reg.id} value={reg.id}>
+                          {reg.nama_yayasan} ({reg.kota}) - Paket {reg.paket_pilihan} ({reg.features?.length || 0} Fitur Aktif)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {selectedYayasanForModule && (
+                    <div className="flex items-center space-x-2 text-xs">
+                      <span className="text-slate-400">Status Modul:</span>
+                      <span className={`px-2.5 py-1 rounded-lg font-bold text-xs border ${
+                        currentSelectedFeatures.length === AVAILABLE_YAYASAN_FEATURES.length
+                          ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800'
+                          : 'bg-amber-950/80 text-amber-300 border border-amber-800'
+                      }`}>
+                        {currentSelectedFeatures.length} / {AVAILABLE_YAYASAN_FEATURES.length} Fitur Terbuka
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {selectedYayasanForModule && (
-                  <div className="space-y-4 pt-2">
+                  <div className="space-y-4 pt-1">
+                    {/* Toolbar Cepat: Buka Semua, Kunci Semua, Reset */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-[#091122] border border-[#1e2c4d] rounded-xl text-xs">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setCurrentSelectedFeatures([...ALL_YAYASAN_FEATURE_IDS])}
+                          className="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold rounded-lg transition flex items-center space-x-1"
+                        >
+                          <span>🔓 Buka Semua Fitur (Centang 15 Modul)</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCurrentSelectedFeatures(['dashboard', 'pengaturan'])}
+                          className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition"
+                        >
+                          <span>🔒 Kunci Semua Fitur</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (selectedYayasanForModule.paket_pilihan === 'Enterprise') {
+                              setCurrentSelectedFeatures([...ALL_YAYASAN_FEATURE_IDS]);
+                            } else {
+                              setCurrentSelectedFeatures(['dashboard', 'tahfidz', 'kesiswaan', 'adab', 'wali', 'pengaturan']);
+                            }
+                          }}
+                          className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition"
+                        >
+                          <span>📦 Reset ke Paket {selectedYayasanForModule.paket_pilihan}</span>
+                        </button>
+                      </div>
+
+                      <div className="text-[11px] text-slate-400">
+                        Klik kartu untuk centang / batalkan modul
+                      </div>
+                    </div>
+
+                    {/* Grid 15 Modul Pesantren */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {AVAILABLE_YAYASAN_FEATURES.map((feat) => {
                         const checked = currentSelectedFeatures.includes(feat.id);
-                        const isAddonNonFree = feat.id === 'wa_gateway' || feat.id === 'e_raport';
                         return (
                           <div
                             key={feat.id}
                             onClick={() => handleToggleFeature(feat.id)}
                             className={`
-                              p-3.5 rounded-xl border cursor-pointer transition text-xs space-y-1.5 select-none
+                              p-3.5 rounded-xl border cursor-pointer transition text-xs space-y-2 select-none relative
                               ${checked 
-                                ? 'bg-rose-500/10 border-rose-500/80 text-white' 
-                                : 'bg-[#091122] border-[#1e2c4d] text-slate-400 hover:border-slate-500'
+                                ? 'bg-rose-500/10 border-rose-500/80 text-white shadow-sm ring-1 ring-rose-500/30' 
+                                : 'bg-[#091122] border-[#1e2c4d] text-slate-400 hover:border-slate-500 opacity-75'
                               }
                             `}
                           >
-                            <div className="flex items-center justify-between gap-1">
+                            <div className="flex items-center justify-between gap-1.5">
                               <div className="flex items-center gap-1.5 min-w-0">
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 ${
+                                  checked ? 'bg-rose-500 text-white' : 'bg-slate-800 text-slate-400'
+                                }`}>
+                                  {feat.category}
+                                </span>
                                 <span className="font-bold text-white text-xs truncate">{feat.name}</span>
-                                {isAddonNonFree && (
-                                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold shrink-0">
-                                    Non-Free Addon
-                                  </span>
-                                )}
                               </div>
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={() => {}}
-                                className="rounded text-rose-500 focus:ring-rose-500 shrink-0"
-                              />
+
+                              <div className="flex items-center space-x-1.5 shrink-0">
+                                <span className={`text-[10px] font-bold ${checked ? 'text-emerald-400' : 'text-slate-500'}`}>
+                                  {checked ? 'Aktif' : 'Terkunci'}
+                                </span>
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() => {}}
+                                  className="rounded text-rose-500 focus:ring-rose-500 shrink-0 w-4 h-4 cursor-pointer"
+                                />
+                              </div>
                             </div>
+
                             <p className="text-[11px] text-slate-400 leading-relaxed">
                               {feat.desc}
                             </p>
@@ -1126,13 +1241,34 @@ Official WA: 0812 1556 6630`;
                       })}
                     </div>
 
-                    <div className="pt-2 flex justify-end">
-                      <button
-                        onClick={handleSimpanModul}
-                        className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition"
-                      >
-                        Simpan Pengaturan Modul untuk {selectedYayasanForModule.nama_yayasan}
-                      </button>
+                    {/* Bottom Sticky Action Bar */}
+                    <div className="pt-3 border-t border-[#19243e] flex flex-col sm:flex-row items-center justify-between gap-3">
+                      <div className="text-xs text-slate-400 flex items-center space-x-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span>
+                          Perubahan modul akan langsung tercermin pada dashboard Yayasan <strong>{selectedYayasanForModule.nama_yayasan}</strong>.
+                        </span>
+                      </div>
+
+                      <div className="flex items-center space-x-2 w-full sm:w-auto">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCurrentSelectedFeatures([...ALL_YAYASAN_FEATURE_IDS]);
+                            handleSimpanModul();
+                          }}
+                          className="flex-1 sm:flex-none px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow transition"
+                        >
+                          🔓 Buka Semua &amp; Simpan
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSimpanModul}
+                          className="flex-1 sm:flex-none px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition"
+                        >
+                          Simpan Pengaturan Modul ({currentSelectedFeatures.length}/15)
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

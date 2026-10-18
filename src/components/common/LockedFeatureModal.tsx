@@ -33,27 +33,24 @@ export default function LockedFeatureModal({
 
         <div>
           <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold uppercase tracking-wider">
-            Paket Gratis (Free Tier)
+            Kendali Fitur Super Admin
           </span>
           <h3 className="text-lg font-bold text-slate-900 mt-2">
-            Fitur Belum Diaktifkan
+            Modul Belum Diaktifkan
           </h3>
           <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-            Pada <strong>Paket Gratis</strong>, hanya fitur <strong>Laporan Hafalan Santri</strong> (dibatasi kuota 50 santri) yang dapat diakses. Fitur <em>{featureTitle}</em> terkunci.
+            Modul <strong>{featureTitle}</strong> saat ini belum diaktifkan oleh <strong>Super Admin Platform</strong> untuk yayasan Anda. Seluruh hak akses fitur dikendalikan secara terpusat dari Konsol Super Admin.
           </p>
         </div>
 
         <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-700 text-left space-y-1.5">
           <div className="font-semibold text-slate-800 flex items-center space-x-1.5">
             <Sparkles className="w-4 h-4 text-emerald-600" />
-            <span>Manfaat Paket Premium:</span>
+            <span>Pusat Kendali Lisensi Pesantren:</span>
           </div>
-          <ul className="text-[11px] text-slate-600 space-y-1 list-disc pl-4">
-            <li>Santri tak terbatas (unlimited kuota)</li>
-            <li>Validasi SPP, Tabungan, Donasi & E-Pocket</li>
-            <li>Presensi Guru & Santri + QR Gate Pass Satpam</li>
-            <li>Portal Wali Santri PWA & WhatsApp Notifikasi</li>
-          </ul>
+          <p className="text-[11px] text-slate-600 leading-relaxed">
+            Super Admin dapat mengaktifkan modul ini kapan saja melalui <strong>Konsol Super Admin → Kustomisasi Modul &amp; Fitur</strong>.
+          </p>
         </div>
 
         <div className="flex gap-2 pt-2">
@@ -63,14 +60,16 @@ export default function LockedFeatureModal({
           >
             Tutup
           </button>
-          <Link
-            href="/dashboard/yayasan"
+          <a
+            href="https://wa.me/6281215566630?text=Assalamu'alaikum%20Super%20Admin%20KabarSantri,%20kami%20dari%20yayasan%20ingin%20mengajukan%20aktivasi%20fitur."
+            target="_blank"
+            rel="noopener noreferrer"
             onClick={onClose}
             className="flex-1 py-2.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow transition inline-flex items-center justify-center space-x-1"
           >
-            <span>Aktifkan Premium</span>
+            <span>Hubungi Super Admin</span>
             <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+          </a>
         </div>
       </div>
     </div>

@@ -95,25 +95,25 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
   const tenantPackageInfo = getActiveTenantPackageAndFeatures(tenant.id);
   const isGratisPackage = tenantPackageInfo.paket === 'Gratis';
 
-  // Helper untuk mengecek apakah suatu item menu terkunci
+  // Helper untuk mengecek apakah suatu item menu terkunci (dikendalikan penuh Super Admin)
   const checkIsItemLocked = (item: NavItem): boolean => {
+    const href = item.href || '';
     const key = (
-      item.href.includes('akademik/raport') ? 'e_raport' :
-      item.productCode ||
-      (item.href.includes('rumah-tangga') ? 'rumah_tangga' :
-       item.href.includes('presensi') ? 'presensi' :
-       item.href.includes('akademik/nilai') ? 'kbm' :
-       item.href.includes('akademik/disiplin') || item.href.includes('perizinan') ? 'adab' :
-       item.href.includes('kepegawaian') ? 'kepegawaian' :
-       item.href.includes('finance') ? 'spp' :
-       item.href.includes('tahfidz') ? 'tahfidz' :
-       item.href.includes('wali') ? 'wali' :
-       'dashboard')
+      href.includes('akademik/raport') ? 'e_raport' :
+      href.includes('akademik/nilai') ? 'kbm' :
+      href.includes('tahfidz') ? 'tahfidz' :
+      href.includes('presensi') ? 'presensi' :
+      href.includes('akademik/disiplin') ? 'adab' :
+      href.includes('perizinan') ? 'perizinan' :
+      href.includes('santri') || href.includes('wali/list') ? 'kesiswaan' :
+      href.includes('kepegawaian') ? 'kepegawaian' :
+      href.includes('finance') ? 'spp' :
+      href.includes('rumah-tangga') ? 'rumah_tangga' :
+      href.includes('portal-wali') ? 'wali' :
+      href.includes('laporan') ? 'laporan' :
+      href.includes('pengaturan') ? 'pengaturan' :
+      (item.productCode as string) || 'dashboard'
     );
-    if (key === 'e_raport') {
-      return !tenantPackageInfo.isFeatureUnlocked('e_raport');
-    }
-    if (!isGratisPackage) return false;
     return !tenantPackageInfo.isFeatureUnlocked(key);
   };
 

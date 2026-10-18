@@ -11,8 +11,21 @@
     "catatan": "",
     "status": "active",
     "features": [
+      "dashboard",
       "tahfidz",
-      "wali"
+      "kbm",
+      "e_raport",
+      "presensi",
+      "adab",
+      "kesiswaan",
+      "perizinan",
+      "kepegawaian",
+      "spp",
+      "rumah_tangga",
+      "wali",
+      "laporan",
+      "wa_gateway",
+      "akuntansi"
     ],
     "created_at": "2026-10-12T02:01:40.251Z",
     "activated_tenant_id": "tenant-al-kausar-9033",

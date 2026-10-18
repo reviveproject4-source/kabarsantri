@@ -12,6 +12,7 @@
  */
 
 import { ProductCode, MODULAR_PRODUCT_CATALOG, getProductCodeByRoute } from './productCatalog';
+import { getActiveTenantPackageAndFeatures } from './yayasanRegistrationStore';
 
 export const FREE_PACKAGE_MAX_ACTIVE_STUDENTS = 50;
 
@@ -96,17 +97,31 @@ function saveEntitlements(list: TenantEntitlement[]): void {
 
 /**
  * 1. CHECK IF TENANT HAS PRODUCT (hasProduct)
+ * Terpusat: Super Admin mengendalikan status aktif produk via yayasanRegistrationStore
  */
 export function hasProduct(tenantId: string, productCode: ProductCode): boolean {
+  // 1. Cek langsung dari Pusat Kendali Fitur Super Admin
+  const { isFeatureUnlocked } = getActiveTenantPackageAndFeatures(tenantId);
+  const featureMap: Record<ProductCode, string> = {
+    hafalan: 'tahfidz',
+    presensi: 'presensi',
+    rapot: 'kbm',
+    adab: 'adab',
+    izin: 'perizinan',
+    hrd: 'kepegawaian',
+    finance: 'spp',
+    rumah_tangga: 'rumah_tangga',
+  };
+  const mappedKey = featureMap[productCode] || productCode;
+  if (isFeatureUnlocked(mappedKey)) {
+    return true;
+  }
+
+  // 2. Fallback cek internal entitlement
   const all = loadEntitlements();
   const match = all.find(e => e.tenant_id === tenantId && e.product_code === productCode);
   if (!match) {
-    // Default fallback: if tenant is Free Zakat, only hafalan & presensi are active
-    const isZakatTenant = tenantId === 'tenant-rabu-001' || tenantId.includes('zakat') || tenantId.includes('free');
-    if (isZakatTenant) {
-      return productCode === 'hafalan' || productCode === 'presensi';
-    }
-    return true; // Default for demo/unconfigured
+    return true; // Default fallback: buka semua fitur jika belum dikonfigurasi khusus
   }
   return match.status === 'ACTIVE';
 }

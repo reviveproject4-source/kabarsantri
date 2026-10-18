@@ -18,18 +18,24 @@ export interface YayasanFeature {
 }
 
 export const AVAILABLE_YAYASAN_FEATURES: YayasanFeature[] = [
-  { id: 'tahfidz', name: 'Tahfidz Al-Qur\'an & Hadis', desc: 'Setoran juz, mutaba\'ah, kelancaran & makhraj', category: 'Akademik' },
-  { id: 'spp', name: 'Keuangan & SPP Digital', desc: 'Tagihan SPP, validasi transfer, kas pengeluaran & threshold', category: 'Keuangan' },
-  { id: 'e_raport', name: 'E-Raport Digital Santri', desc: 'Cetak raport semesteran resmi A4/PDF, penilaian akademik & adab (Add-on Mandiri)', category: 'Akademik' },
-  { id: 'wa_gateway', name: 'WhatsApp Notifikasi & Pengingat SPP', desc: 'Fitur WA Cepat & pengingat tagihan SPP ke wali santri (Add-on Berbayar / Non-Free)', category: 'Integrasi' },
-  { id: 'wali', name: 'Portal Transparansi Wali', desc: 'Akses wali murid via NIS+PIN pantau mutaba\'ah & izin', category: 'Kemitraan' },
-  { id: 'kepegawaian', name: 'Kepegawaian & SDM (HRD)', desc: 'Direktori pegawai, perizinan cuti & struktur pimpinan', category: 'Tata Kelola' },
-  { id: 'kbm', name: 'Penilaian KBM & Kurikulum', desc: 'Jadwal belajar, penilaian nilai KBM & ruang guru', category: 'Akademik' },
-  { id: 'presensi', name: 'Presensi Mandiri GPS', desc: 'Presensi guru KBM, staf asrama & pos gerbang', category: 'Operasional' },
-  { id: 'rumah_tangga', name: 'Rumah Tangga & Sarpras', desc: 'Pengajuan belanja dapur, laundry, & poskestren', category: 'Fasilitas' },
-  { id: 'adab', name: 'Kedisiplinan, Adab & Izin', desc: 'Catatan kedisiplinan, reward prestasi & perizinan santri', category: 'Kesantrian' },
-  { id: 'akuntansi', name: 'Akuntansi & Buku Besar', desc: 'Double-entry general ledger & laporan konsolidasi', category: 'Keuangan' },
+  { id: 'dashboard', name: 'Dashboard & Halaman Utama', desc: 'Dashboard Utama, Dashboard Yayasan, Kebijakan Pimpinan & Mudir', category: 'Pusat Kendali' },
+  { id: 'tahfidz', name: 'Tahfidz Al-Qur\'an & Mutaba\'ah', desc: 'Setoran hafalan juz, target capaian, kelancaran, tajwid & makhraj', category: 'Akademik' },
+  { id: 'kbm', name: 'Penilaian Pelajaran KBM', desc: 'Jurnal belajar guru, ulangan harian (30%), sumatif (40%), proyek (30%)', category: 'Akademik' },
+  { id: 'e_raport', name: 'E-Raport Digital Santri', desc: 'Akumulasi nilai otomatis, cetak raport resmi A4/PDF & salinan WA', category: 'Akademik' },
+  { id: 'presensi', name: 'Absensi & Presensi GPS', desc: 'Presensi santri harian/sholat & presensi mandiri GPS guru/staf', category: 'Operasional' },
+  { id: 'adab', name: 'Kedisiplinan & Karakter Santri', desc: 'Poin adab/akhlak, reward santri berprestasi & pelanggaran tarbawi', category: 'Kesantrian' },
+  { id: 'kesiswaan', name: 'Kesiswaan & Data Induk Santri', desc: 'Buku induk santri, tambah santri baru, rombel kamar & kelas', category: 'Kesantrian' },
+  { id: 'perizinan', name: 'Perizinan Santri & Asrama', desc: 'Pengajuan izin keluar/pulang santri, persetujuan pembina asrama', category: 'Kesantrian' },
+  { id: 'kepegawaian', name: 'Kepegawaian & SDM (HRD)', desc: 'Direktori asatidz/pegawai, permohonan cuti, evaluasi & struktur', category: 'Tata Kelola' },
+  { id: 'spp', name: 'Keuangan & SPP Digital', desc: 'Tagihan SPP, validasi bukti transfer, kas pengeluaran & uang saku', category: 'Keuangan' },
+  { id: 'rumah_tangga', name: 'Sarana & Prasarana (Sarpras)', desc: 'Inventaris asrama, gudang logistik & pengajuan belanja fasilitas', category: 'Fasilitas' },
+  { id: 'wali', name: 'Portal Transparansi Wali', desc: 'Akses wali murid via NIS/PIN pantau mutaba\'ah, SPP & tabungan', category: 'Kemitraan' },
+  { id: 'laporan', name: 'Laporan Konsolidasi & Eksekutif', desc: 'Ringkasan eksekutif perkembangan pesantren & tombol Export Excel', category: 'Tata Kelola' },
+  { id: 'wa_gateway', name: 'WhatsApp Gateway & Notifikasi Cepat', desc: 'Kirim link raport cepat, kuitansi sah & pengingat SPP langsung', category: 'Integrasi' },
+  { id: 'akuntansi', name: 'Akuntansi & Buku Besar', desc: 'Double-entry general ledger, jurnal umum & neraca konsolidasi', category: 'Keuangan' },
 ];
+
+export const ALL_YAYASAN_FEATURE_IDS: string[] = AVAILABLE_YAYASAN_FEATURES.map(f => f.id);
 
 export interface YayasanRegistration {
   id: string;
@@ -68,9 +74,9 @@ const DEFAULT_REGISTRATIONS: YayasanRegistration[] = [
     kota: 'Cibuntu',
     estimasi_santri: '< 50 Santri',
     paket_pilihan: 'Gratis',
-    catatan: 'Tenant live resmi teraktivasi (Paket Free + Keuangan & Kepegawaian).',
+    catatan: 'Tenant live resmi teraktivasi (Pusat Kendali Seluruh Fitur Terbuka Penuh).',
     status: 'active',
-    features: ['tahfidz', 'spp', 'wali', 'kepegawaian', 'e_raport', 'wa_gateway'],
+    features: [...ALL_YAYASAN_FEATURE_IDS],
     created_at: '2026-10-12 02:01',
     activated_tenant_id: 'tenant-al-kausar-9033',
     admin_email: 'admin@al-kausar.kabarsantri.id',
@@ -87,7 +93,7 @@ const DEFAULT_REGISTRATIONS: YayasanRegistration[] = [
     paket_pilihan: 'Enterprise',
     catatan: 'Prioritas aktivasi modul SPP online dan mutaba\'ah tahfidz asrama.',
     status: 'pending',
-    features: ['tahfidz', 'spp', 'presensi', 'wali', 'rumah_tangga', 'akuntansi'],
+    features: [...ALL_YAYASAN_FEATURE_IDS],
     created_at: '2026-10-10 14:30',
   },
   {
@@ -101,7 +107,7 @@ const DEFAULT_REGISTRATIONS: YayasanRegistration[] = [
     paket_pilihan: 'Gratis',
     catatan: 'Pesantren baru rintisan, fokus 30 juz dan adab santri.',
     status: 'active',
-    features: ['tahfidz', 'wali'],
+    features: [...ALL_YAYASAN_FEATURE_IDS],
     created_at: '2026-10-09 09:15',
     activated_tenant_id: 'tenant-darul-hikmah-001',
     admin_email: 'admin@darulhikmah.kabarsantri.id',
@@ -146,6 +152,15 @@ export function getYayasanRegistrations(): YayasanRegistration[] {
     } catch {}
 
     const list = Array.from(map.values());
+
+    // Pastikan tenant aktif Al Kausar (reg-498363) memiliki seluruh fitur terbuka secara default
+    list.forEach(item => {
+      if (item.id === 'reg-498363') {
+        if (!item.features || item.features.length < 10) {
+          item.features = [...ALL_YAYASAN_FEATURE_IDS];
+        }
+      }
+    });
 
     // Urutkan: Yayasan yang statusnya pending atau baru mendaftar tampil di PALING ATAS!
     list.sort((a, b) => {
@@ -596,47 +611,64 @@ export function getActiveTenantPackageAndFeatures(tenantId?: string): {
 
   const paket: PaketType = reg?.paket_pilihan || 'Gratis';
   const isEnterprise = paket === 'Enterprise';
-  const features = reg?.features || ['tahfidz', 'spp', 'wali', 'kepegawaian', 'e_raport', 'wa_gateway'];
+  const features = (reg?.features && reg.features.length > 0)
+    ? reg.features
+    : ALL_YAYASAN_FEATURE_IDS;
 
   const isFeatureUnlocked = (featureKey: string): boolean => {
-    const key = (featureKey || '').toLowerCase();
+    const key = (featureKey || '').toLowerCase().trim();
 
-    // 0. FITUR ADD-ON SPESIFIK: WA GATEWAY & E-RAPORT (Wajib Dicentang Manual oleh Super Admin)
-    // Fitur ini tidak diberikan untuk paket Free dan berdiri sendiri di Super Admin
+    // 0. Dashboard & Halaman Utama selalu aktif
+    if (['dashboard', 'yayasan', 'pengaturan', 'overview'].includes(key)) {
+      return true;
+    }
+
+    // 1. Cek langsung kecocokan di list features yang dikendalikan Super Admin
+    if (features.includes(key)) return true;
+
+    // 2. Mapping alias untuk kompatibilitas route / sub-modul
     if (['wa_gateway', 'whatsapp', 'wa'].includes(key)) {
       return features.includes('wa_gateway') || features.includes('whatsapp');
     }
     if (['e_raport', 'raport', 'eraport'].includes(key)) {
       return features.includes('e_raport') || features.includes('raport');
     }
-
-    if (isEnterprise) return true;
-    
-    // 1. Fitur Standar Dasar Pesantren (Wajib selalu TERBUKA untuk semua yayasan & tenant)
-    // Mencakup: Data Santri, Data Pegawai & Kehadiran, Kedisiplinan & Adab/Akhlak, Tahfidz, Dashboard & Pengaturan
-    const standardBaselineFeatures = [
-      'dashboard', 'yayasan', 'pengaturan', 'laporan', 'ringkasan', 'overview',
-      'santri', 'kesiswaan', 'siswa',
-      'hrd', 'kepegawaian', 'pegawai',
-      'adab', 'disiplin', 'akhlak', 'reward', 'pelanggaran',
-      'hafalan', 'tahfidz'
-    ];
-    if (standardBaselineFeatures.includes(key)) return true;
-
-    // 2. Fitur Tambahan yang Diaktifkan / di-ACC Super Admin
-    if (features.includes(key)) return true;
-
-    // 3. Modul Keuangan & SPP (Terbuka penuh jika Super Admin mengaktifkan 'spp' atau 'keuangan')
     if (['finance', 'spp', 'keuangan', 'uang-jajan'].includes(key)) {
       return features.includes('spp') || features.includes('keuangan') || features.includes('finance');
     }
-
-    // 4. Modul Tambahan Lainnya (KBM, Sarpras, Presensi Standalone, Akuntansi)
-    if (['kbm', 'nilai'].includes(key) && features.includes('kbm')) return true;
-    if (['wali', 'portal-wali'].includes(key) && features.includes('wali')) return true;
-    if (['presensi', 'absen'].includes(key) && features.includes('presensi')) return true;
-    if (['rumah_tangga', 'sarpras'].includes(key) && features.includes('rumah_tangga')) return true;
-    if (['akuntansi'].includes(key) && features.includes('akuntansi')) return true;
+    if (['kbm', 'nilai', 'rapot'].includes(key)) {
+      return features.includes('kbm') || features.includes('rapot');
+    }
+    if (['wali', 'portal-wali'].includes(key)) {
+      return features.includes('wali');
+    }
+    if (['presensi', 'absen'].includes(key)) {
+      return features.includes('presensi');
+    }
+    if (['rumah_tangga', 'sarpras', 'fasilitas'].includes(key)) {
+      return features.includes('rumah_tangga');
+    }
+    if (['adab', 'disiplin', 'reward', 'pelanggaran'].includes(key)) {
+      return features.includes('adab');
+    }
+    if (['kesiswaan', 'santri', 'siswa'].includes(key)) {
+      return features.includes('kesiswaan') || features.includes('santri');
+    }
+    if (['perizinan', 'izin'].includes(key)) {
+      return features.includes('perizinan') || features.includes('izin') || features.includes('adab');
+    }
+    if (['laporan', 'ringkasan'].includes(key)) {
+      return features.includes('laporan') || features.includes('ringkasan');
+    }
+    if (['kepegawaian', 'hrd', 'pegawai'].includes(key)) {
+      return features.includes('kepegawaian') || features.includes('hrd');
+    }
+    if (['hafalan', 'tahfidz'].includes(key)) {
+      return features.includes('tahfidz') || features.includes('hafalan');
+    }
+    if (['akuntansi'].includes(key)) {
+      return features.includes('akuntansi');
+    }
     
     return false;
   };
@@ -647,6 +679,43 @@ export function getActiveTenantPackageAndFeatures(tenantId?: string): {
     isEnterprise,
     isFeatureUnlocked
   };
+}
+
+/**
+ * Super Admin: Buka Semua Fitur untuk Satu Yayasan
+ */
+export async function unlockAllFeaturesForTenant(regId: string): Promise<boolean> {
+  return updateYayasanFeatures(regId, [...ALL_YAYASAN_FEATURE_IDS]);
+}
+
+/**
+ * Super Admin: Buka Semua Fitur untuk Seluruh Yayasan / Tenant di Platform
+ */
+export async function unlockAllFeaturesForAllTenants(): Promise<boolean> {
+  const current = getYayasanRegistrations();
+  const updated = current.map(r => ({ ...r, features: [...ALL_YAYASAN_FEATURE_IDS] }));
+  saveYayasanRegistrations(updated);
+
+  if (typeof window !== 'undefined') {
+    try {
+      window.dispatchEvent(new CustomEvent('ks_features_updated'));
+      window.dispatchEvent(new CustomEvent('ks_entitlements_updated'));
+      localStorage.setItem('ks_features_timestamp', Date.now().toString());
+    } catch {}
+  }
+
+  // Sync ke API
+  try {
+    for (const r of updated) {
+      fetch('/api/registrations', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: r.id, features: r.features }),
+      }).catch(() => {});
+    }
+  } catch {}
+
+  return true;
 }
 
 /**
