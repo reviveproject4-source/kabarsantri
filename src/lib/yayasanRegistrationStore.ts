@@ -348,9 +348,9 @@ export async function activateYayasanRegistration(
   const tier: SubscriptionTier = 
     customTier || (target.paket_pilihan === 'Enterprise' ? 'tier3_enterprise' : 'tier1_free');
 
-  const activeFeatures = selectedFeatures || target.features || (target.paket_pilihan === 'Enterprise'
-    ? ['tahfidz', 'spp', 'presensi', 'wali', 'rumah_tangga', 'akuntansi']
-    : ['tahfidz', 'wali']);
+  const activeFeatures = selectedFeatures || (target.features && target.features.length >= 10
+    ? target.features 
+    : [...ALL_YAYASAN_FEATURE_IDS]);
 
   // Buat tenant baru di superAdminStore
   const newTenant = createNewTenant({
