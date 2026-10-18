@@ -221,6 +221,16 @@ export async function syncRegistrationsFromServer(): Promise<YayasanRegistration
       localList.forEach(item => map.set(item.id, item));
       
       const merged = Array.from(map.values());
+
+      // Pastikan tenant aktif Al Kausar (reg-498363) memiliki seluruh 15 fitur terbuka
+      merged.forEach(item => {
+        if (item.id === 'reg-498363') {
+          if (!item.features || item.features.length < 10) {
+            item.features = [...ALL_YAYASAN_FEATURE_IDS];
+          }
+        }
+      });
+
       merged.sort((a, b) => {
         if (a.status === 'pending' && b.status !== 'pending') return -1;
         if (a.status !== 'pending' && b.status === 'pending') return 1;

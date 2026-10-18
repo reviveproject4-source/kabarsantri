@@ -103,9 +103,25 @@ export async function GET() {
 
     if (!error && Array.isArray(data)) {
       if (data.length > 0) {
+        const allFeats = [
+          'dashboard', 'tahfidz', 'kbm', 'e_raport', 'presensi', 'adab', 
+          'kesiswaan', 'perizinan', 'kepegawaian', 'spp', 'rumah_tangga', 
+          'wali', 'laporan', 'wa_gateway', 'akuntansi'
+        ];
+
+        // Pastikan reg-498363 memiliki seluruh fitur terbuka
+        const upgradedData = data.map((d: any) => {
+          if (d.id === 'reg-498363' && (!d.features || d.features.length < 10)) {
+            // Update Supabase asynchronous di background
+            supabase.from('yayasan_registrations').update({ features: allFeats }).eq('id', 'reg-498363').then(() => {});
+            return { ...d, features: allFeats };
+          }
+          return d;
+        });
+
         // Gabungkan data Supabase dengan memoryStore jika ada yang belum terunggah
-        const existingIds = new Set(data.map((d: any) => d.id));
-        const combined = [...data];
+        const existingIds = new Set(upgradedData.map((d: any) => d.id));
+        const combined = [...upgradedData];
         for (const m of memoryStore) {
           if (!existingIds.has(m.id)) {
             combined.push(m);
